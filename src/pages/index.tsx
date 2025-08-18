@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, LayoutDashboard, Calendar, Workflow, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, LayoutDashboard, Calendar, Workflow, Sparkles, Layers } from 'lucide-react';
 import ReactFlow, {
   Controls,
   Background,
@@ -374,6 +374,21 @@ const Home: NextPage = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <motion.div 
+                        onClick={() => addNode('action')} 
+                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Layers className="h-5 w-5 text-primary" />
+                        <span className="text-xs text-primary mt-1">Consolidate</span>
+                      </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">Consolidate Files Task</TooltipContent>
+                  </Tooltip>
+                  
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.div 
                         onClick={() => addNode('decision')} 
                         className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-warning/10 border border-warning/20 p-2 transition-all hover:bg-warning/20 hover:scale-105 group"
                         whileHover={{ scale: 1.05 }}
@@ -424,7 +439,6 @@ const Home: NextPage = () => {
                   className="bg-transparent"
                 >
                   <Controls className="!bottom-4 !left-4" />
-                  <Background color="hsl(var(--muted-foreground))" gap={20} size={1} />
                 </ReactFlow>
               </motion.main>
               
