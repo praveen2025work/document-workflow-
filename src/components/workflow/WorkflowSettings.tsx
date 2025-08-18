@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import CalendarManager from './CalendarManager';
 
 interface Calendar {
   id: number;
@@ -24,7 +23,6 @@ import api from '@/lib/api';
 
 const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, onSave, settings }) => {
   const [localSettings, setLocalSettings] = useState(settings);
-  const [isCalendarManagerOpen, setIsCalendarManagerOpen] = useState(false);
   const [calendars, setCalendars] = useState<Calendar[]>([]);
 
   useEffect(() => {
@@ -46,10 +44,6 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
   const handleSave = () => {
     onSave(localSettings);
     onClose();
-  };
-
-  const handleAddCalendar = (calendar: Calendar) => {
-    setCalendars([...calendars, calendar]);
   };
 
   const handleTriggerChange = (value: string) => {
@@ -164,8 +158,8 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" onClick={() => setIsCalendarManagerOpen(true)}>
-                  Manage
+                <Button variant="outline" size="sm" onClick={fetchCalendars}>
+                  Refresh
                 </Button>
               </div>
             </div>
@@ -176,12 +170,6 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <CalendarManager
-        isOpen={isCalendarManagerOpen}
-        onClose={() => setIsCalendarManagerOpen(false)}
-        calendars={calendars}
-        onAddCalendar={handleAddCalendar}
-      />
     </>
   );
 };
