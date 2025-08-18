@@ -12,6 +12,7 @@ import PropertiesPanel from '@/components/workflow/PropertiesPanel';
 import WorkflowSettings from '@/components/workflow/WorkflowSettings';
 import { WorkflowNode as WorkflowNodeType, Connection as ConnectionType, NodeType, Position, NodeData } from '@/components/workflow/types';
 import withAuth from '@/components/auth/withAuth';
+import api from '@/lib/api';
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -38,6 +39,8 @@ const Home: NextPage = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStart, setConnectionStart] = useState<{ nodeId: string; position: Position } | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [workflowId, setWorkflowId] = useState<number | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -62,14 +65,69 @@ const Home: NextPage = () => {
     toast.success('New workflow created!');
   };
 
-  const handleDeploy = () => {
-    const deploymentData = {
-      settings: workflowSettings,
-      nodes,
-      connections,
-    };
-    console.log('Deploying workflow:', deploymentData);
-    toast.info('Workflow deployment data logged to console.');
+  const handleDeploy = async () => {
+    setIsDeploying(true);
+    toast.info('Deploying workflow...');
+
+    try {
+      // Step 1: Create the workflow
+      const { name, trigger, frequency, startTime, start_working_day, calendar_id } = workflowSettings;
+      const workflowPayload = {
+        name,
+        trigger_mechanism: trigger,
+        frequency,
+        start_time: startTime,
+        start_working_day,
+        calendar_id,
+      };
+
+      const workflowResponse = await api.post('/workflows', workflowPayload);
+      const newWorkflowId = workflowResponse.data.id;
+      setWorkflowId(newWorkflowId);
+      toast.success(`Workflow created with ID: ${newWorkflowId}`);
+
+      // Step 2: Create tasks (nodes)
+      const taskIdMap: { [frontendId: string]: string } = {};
+      const taskPromises = nodes
+        .filter((node) => node.type !== 'start' && node.type !== 'end')
+        .map(async (node) => {
+          const taskPayload = {
+            type: node.type === 'action' ? 'FileUpload' : 'Decision', // Example mapping
+            name: node.data.description,
+            role_id: 1, // Mock role_id, this should come from node data
+            expected_completion_day: 1, // Mock data
+            expected_completion_time: '09:00', // Mock data
+          };
+          const taskResponse = await api.post(`/workflows/${newWorkflowId}/tasks`, taskPayload);
+          taskIdMap[node.id] = taskResponse.data.id;
+        });
+      
+      await Promise.all(taskPromises);
+      toast.info('Tasks created successfully.');
+
+      // Step 3: Create connections
+      const connectionPromises = connections.map(async (conn) => {
+        const connectionPayload = {
+          from_task_id: conn.source === 'start' ? 'Start' : taskIdMap[conn.source],
+          to_task_id: conn.target === 'end' ? 'End' : taskIdMap[conn.target],
+          outcome: null, // Mock data
+        };
+        await api.post(`/workflows/${newWorkflowId}/connections`, connectionPayload);
+      });
+
+      await Promise.all(connectionPromises);
+      toast.info('Connections created successfully.');
+
+      // Step 4: Deploy the workflow
+      await api.post(`/workflows/${newWorkflowId}/deploy`);
+      toast.success('Workflow deployed successfully!');
+
+    } catch (error) {
+      // Error is handled by the interceptor
+      console.error('Deployment failed', error);
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   const handleNodeMove = useCallback((id: string, position: Position) => {
@@ -153,9 +211,8 @@ const Home: NextPage = () => {
               <Plus className="mr-2 h-4 w-4" />
               Create New
             </Button>
-            <Button onClick={handleDeploy} variant="outline" className="border-green-500 text-green-400 hover:bg-green-500 hover:text-white">
-              <Play className="mr-2 h-4 w-4" />
-              Deploy
+            <Button onClick={handleDeploy} variant="outline" className="border-green-500 text-green-400 hover:bg-green-500 hover:text-white" disabled={isDeploying}>
+              {isDeploying ? 'Deploying...' : <><Play className="mr-2 h-4 w-4" /> Deploy</>}
             </Button>
             <Button
               variant="outline"

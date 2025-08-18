@@ -131,6 +131,19 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
                     className="col-span-3 bg-gray-700 border-gray-600"
                   />
                 </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="startWorkingDay" className="text-right">
+                    Start Day
+                  </Label>
+                  <Input
+                    id="startWorkingDay"
+                    type="number"
+                    value={localSettings.start_working_day || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, start_working_day: Number(e.target.value) })}
+                    className="col-span-3 bg-gray-700 border-gray-600"
+                    placeholder="e.g., 1"
+                  />
+                </div>
               </>
             )}
             <div className="grid grid-cols-4 items-center gap-4">
