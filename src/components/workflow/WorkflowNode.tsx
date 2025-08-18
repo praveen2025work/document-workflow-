@@ -13,6 +13,7 @@ interface WorkflowNodeProps {
   onSelect: (nodeId: string) => void;
   isConnecting: boolean;
   connectionStartNodeId: string | null;
+  zoom: number;
 }
 
 const nodeIcons = {
@@ -33,6 +34,7 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
   onSelect,
   isConnecting,
   connectionStartNodeId,
+  zoom,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -44,8 +46,8 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
     setIsDragging(true);
     const rect = nodeRef.current!.getBoundingClientRect();
     setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: (e.clientX - rect.left) / zoom,
+      y: (e.clientY - rect.top) / zoom,
     });
     onSelect(node.id);
     e.preventDefault();
@@ -55,18 +57,18 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging) return;
 
-    const container = document.getElementById('workflow-container');
+    const container = document.getElementById('workflow-canvas');
     if (!container) return;
     const containerRect = container.getBoundingClientRect();
 
-    const newX = e.clientX - containerRect.left - dragOffset.x;
-    const newY = e.clientY - containerRect.top - dragOffset.y;
+    const newX = (e.clientX - containerRect.left) / zoom - dragOffset.x;
+    const newY = (e.clientY - containerRect.top) / zoom - dragOffset.y;
 
     onNodeMove(node.id, {
-      x: Math.max(0, Math.min(newX, containerRect.width - 150)),
-      y: Math.max(0, Math.min(newY, containerRect.height - 100)),
+      x: Math.max(0, Math.min(newX, container.offsetWidth - 150)),
+      y: Math.max(0, Math.min(newY, container.offsetHeight - 100)),
     });
-  }, [isDragging, dragOffset, node.id, onNodeMove]);
+  }, [isDragging, dragOffset, node.id, onNodeMove, zoom]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);

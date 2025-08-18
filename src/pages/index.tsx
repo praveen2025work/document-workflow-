@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -34,6 +34,11 @@ const Home: NextPage = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStart, setConnectionStart] = useState<{ nodeId: string; position: Position } | null>(null);
+  const [zoom, setZoom] = useState(1);
+
+  const handleZoomIn = () => setZoom((z) => Math.min(z + 0.1, 2));
+  const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.3));
+  const handleResetZoom = () => setZoom(1);
 
   const handleSaveSettings = (settings: any) => {
     setWorkflowSettings(settings);
@@ -237,37 +242,56 @@ const Home: NextPage = () => {
             }}
             onClick={handleCanvasClick}
           >
-            <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-              <defs>
-                <marker
-                  id="arrowhead"
-                  markerWidth="10"
-                  markerHeight="7"
-                  refX="9"
-                  refY="3.5"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#4a5568" />
-                </marker>
-              </defs>
-              {connections.map((conn) => (
-                <Connection key={conn.id} connection={conn} nodes={nodes} />
-              ))}
-            </svg>
+            <div className="absolute bottom-4 right-4 z-30 flex items-center gap-2">
+              <Button onClick={handleZoomOut} variant="outline" size="icon" className="bg-gray-800 border-gray-600">
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium bg-gray-800 px-2 py-1 rounded">{Math.round(zoom * 100)}%</span>
+              <Button onClick={handleZoomIn} variant="outline" size="icon" className="bg-gray-800 border-gray-600">
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button onClick={handleResetZoom} variant="outline" size="icon" className="bg-gray-800 border-gray-600">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            <motion.div
+              id="workflow-canvas"
+              className="relative w-full h-full"
+              style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
+            >
+              <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                <defs>
+                  <marker
+                    id="arrowhead"
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="9"
+                    refY="3.5"
+                    orient="auto"
+                  >
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#4a5568" />
+                  </marker>
+                </defs>
+                {connections.map((conn) => (
+                  <Connection key={conn.id} connection={conn} nodes={nodes} />
+                ))}
+              </svg>
 
-            {nodes.map((node) => (
-              <WorkflowNode
-                key={node.id}
-                node={node}
-                onNodeMove={handleNodeMove}
-                onConnectionStart={handleConnectionStart}
-                onConnectionEnd={handleConnectionEnd}
-                isSelected={selectedNodeId === node.id}
-                onSelect={handleNodeSelect}
-                isConnecting={isConnecting}
-                connectionStartNodeId={connectionStart?.nodeId || null}
-              />
-            ))}
+              {nodes.map((node) => (
+                <WorkflowNode
+                  key={node.id}
+                  node={node}
+                  onNodeMove={handleNodeMove}
+                  onConnectionStart={handleConnectionStart}
+                  onConnectionEnd={handleConnectionEnd}
+                  isSelected={selectedNodeId === node.id}
+                  onSelect={handleNodeSelect}
+                  isConnecting={isConnecting}
+                  connectionStartNodeId={connectionStart?.nodeId || null}
+                  zoom={zoom}
+                />
+              ))}
+            </motion.div>
           </motion.main>
           
           <PropertiesPanel
