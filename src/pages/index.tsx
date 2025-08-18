@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import type { NextPage } from 'next';
+import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,8 +11,10 @@ import Connection from '@/components/workflow/Connection';
 import PropertiesPanel from '@/components/workflow/PropertiesPanel';
 import WorkflowSettings from '@/components/workflow/WorkflowSettings';
 import { WorkflowNode as WorkflowNodeType, Connection as ConnectionType, NodeType, Position, NodeData } from '@/components/workflow/types';
+import withAuth from '@/components/auth/withAuth';
 
 const Home: NextPage = () => {
+  const router = useRouter();
   const initialNodes: WorkflowNodeType[] = [
     { id: 'start', type: 'start', position: { x: 50, y: 200 }, data: { description: 'Workflow Start' } },
     { id: 'upload-1', type: 'action', position: { x: 350, y: 200 }, data: { description: 'Upload Invoice' } },
@@ -35,6 +38,12 @@ const Home: NextPage = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStart, setConnectionStart] = useState<{ nodeId: string; position: Position } | null>(null);
   const [zoom, setZoom] = useState(1);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    toast.success('Logged out successfully');
+    router.push('/login');
+  };
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.1, 2));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.3));
@@ -156,6 +165,10 @@ const Home: NextPage = () => {
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
+            </Button>
+            <Button onClick={handleLogout} variant="outline" className="border-gray-500 text-gray-400 hover:bg-gray-700 hover:text-white">
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
             </Button>
           </div>
         </motion.header>
@@ -312,4 +325,4 @@ const Home: NextPage = () => {
   );
 };
 
-export default Home;
+export default withAuth(Home);
