@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getCalendars, createCalendar } from '@/lib/api';
 import { toast } from 'sonner';
-import api from '@/lib/api';
 
 interface Calendar {
   id: number;
@@ -13,119 +13,105 @@ interface Calendar {
   holidays: string[];
 }
 
-interface CalendarManagerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  calendars: Calendar[];
-  onAddCalendar: (calendar: Calendar) => void;
-}
-
-const weekDays = [
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
-  { value: 7, label: 'Sunday' },
-];
-
-const CalendarManager: React.FC<CalendarManagerProps> = ({ isOpen, onClose, calendars, onAddCalendar }) => {
+const CalendarManager: React.FC = () => {
+  const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [newCalendarName, setNewCalendarName] = useState('');
-  const [selectedWeekendDays, setSelectedWeekendDays] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [newWeekendDays, setNewWeekendDays] = useState('6,7');
+  const [newHolidays, setNewHolidays] = useState('');
 
-  const handleAddCalendar = async () => {
+  useEffect(() => {
+    fetchCalendars();
+  }, []);
+
+  const fetchCalendars = async () => {
+    try {
+      const response = await getCalendars();
+      setCalendars(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch calendars.');
+    }
+  };
+
+  const handleCreateCalendar = async () => {
     if (!newCalendarName) {
-      toast.error('Please enter a name for the calendar.');
+      toast.error('Calendar name is required.');
       return;
     }
-    setIsLoading(true);
+
+    const weekendDays = newWeekendDays.split(',').map(day => parseInt(day.trim(), 10)).filter(day => !isNaN(day));
+    const holidays = newHolidays.split(',').map(day => day.trim()).filter(day => day);
+
     try {
-      const response = await api.post('/calendars', {
+      await createCalendar({
         name: newCalendarName,
-        weekend_days: selectedWeekendDays,
-        holidays: [], // Holiday selection will be implemented later
+        weekend_days: weekendDays,
+        holidays: holidays,
       });
-      onAddCalendar({ ...response.data, name: newCalendarName, weekend_days: selectedWeekendDays, holidays: [] });
+      toast.success('Calendar created successfully.');
       setNewCalendarName('');
-      setSelectedWeekendDays([]);
-      toast.success('Calendar added successfully!');
+      setNewWeekendDays('6,7');
+      setNewHolidays('');
+      fetchCalendars();
     } catch (error) {
-      // Error is already handled by the interceptor
-    } finally {
-      setIsLoading(false);
+      toast.error('Failed to create calendar.');
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[625px] bg-gray-800 text-white border-gray-700">
-        <DialogHeader>
-          <DialogTitle>Calendar Management</DialogTitle>
-          <DialogDescription>
-            Create and manage calendars for your workflows.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-6 py-4">
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Create New Calendar</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div>
-            <h3 className="text-lg font-semibold mb-2">Existing Calendars</h3>
-            <div className="space-y-2">
-              {calendars.map((cal) => (
-                <div key={cal.id} className="flex items-center justify-between p-2 bg-gray-700 rounded-md">
-                  <span>{cal.name}</span>
-                  <span className="text-sm text-gray-400">
-                    {cal.weekend_days.map(d => weekDays.find(wd => wd.value === d)?.label).join(', ')}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <Label htmlFor="calendarName">Calendar Name</Label>
+            <Input
+              id="calendarName"
+              value={newCalendarName}
+              onChange={(e) => setNewCalendarName(e.target.value)}
+              placeholder="e.g., Standard Calendar"
+            />
           </div>
-          <div className="border-t border-gray-700 pt-6">
-            <h3 className="text-lg font-semibold mb-4">Create New Calendar</h3>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="calendar-name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="calendar-name"
-                value={newCalendarName}
-                onChange={(e) => setNewCalendarName(e.target.value)}
-                className="col-span-3 bg-gray-700 border-gray-600"
-                placeholder="e.g., US Standard Calendar"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4 mt-4">
-              <Label className="text-right">Weekend Days</Label>
-              <div className="col-span-3 flex flex-wrap gap-2">
-                {weekDays.map((day) => (
-                  <Button
-                    key={day.value}
-                    variant={selectedWeekendDays.includes(day.value) ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      setSelectedWeekendDays((prev) =>
-                        prev.includes(day.value)
-                          ? prev.filter((d) => d !== day.value)
-                          : [...prev, day.value]
-                      );
-                    }}
-                  >
-                    {day.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
+          <div>
+            <Label htmlFor="weekendDays">Weekend Days (comma-separated, 1=Mon, 7=Sun)</Label>
+            <Input
+              id="weekendDays"
+              value={newWeekendDays}
+              onChange={(e) => setNewWeekendDays(e.target.value)}
+              placeholder="e.g., 6,7"
+            />
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>Close</Button>
-          <Button onClick={handleAddCalendar} disabled={isLoading}>
-            {isLoading ? 'Adding...' : 'Add Calendar'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <div>
+            <Label htmlFor="holidays">Holidays (comma-separated, YYYY-MM-DD)</Label>
+            <Input
+              id="holidays"
+              value={newHolidays}
+              onChange={(e) => setNewHolidays(e.target.value)}
+              placeholder="e.g., 2025-12-25,2026-01-01"
+            />
+          </div>
+          <Button onClick={handleCreateCalendar}>Create Calendar</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Existing Calendars</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2">
+            {calendars.map((calendar) => (
+              <li key={calendar.id} className="p-2 border rounded">
+                <p><strong>Name:</strong> {calendar.name}</p>
+                <p><strong>Weekend Days:</strong> {calendar.weekend_days.join(', ')}</p>
+                <p><strong>Holidays:</strong> {calendar.holidays.join(', ')}</p>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
