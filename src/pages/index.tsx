@@ -12,9 +12,19 @@ import PropertiesPanel from '@/components/workflow/PropertiesPanel';
 import WorkflowSettings from '@/components/workflow/WorkflowSettings';
 import CalendarManager from '@/components/workflow/CalendarManager';
 import { WorkflowNode as WorkflowNodeType, Connection as ConnectionType, NodeType, Position, NodeData } from '@/components/workflow/types';
-import api from '@/lib/api';
+import { createWorkflow, addWorkflowRole, mapUserToRole, addWorkflowTask, addWorkflowConnection, deployWorkflow } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
 import { useRouter } from 'next/router';
+
+interface Role {
+  id: number;
+  name: string;
+}
+
+interface UserForRole {
+  user_id: number;
+  role_id: number;
+}
 
 interface WorkflowSettings {
   name: string;
@@ -23,6 +33,8 @@ interface WorkflowSettings {
   startTime?: string;
   start_working_day?: number;
   calendar_id?: number;
+  roles?: Role[];
+  usersForRoles?: UserForRole[];
 }
 
 const Home: NextPage = () => {
@@ -41,6 +53,8 @@ const Home: NextPage = () => {
   const initialSettings: WorkflowSettings = {
     name: 'My Awesome Workflow',
     trigger: 'MANUAL',
+    roles: [],
+    usersForRoles: [],
   };
 
   const [workflowSettings, setWorkflowSettings] = useState<WorkflowSettings>(initialSettings);
@@ -89,45 +103,62 @@ const Home: NextPage = () => {
         calendar_id,
       };
 
-      const workflowResponse = await api.post('/workflows', workflowPayload);
+      const workflowResponse = await createWorkflow(workflowPayload);
       const newWorkflowId = workflowResponse.data.id;
       setWorkflowId(newWorkflowId);
       toast.success(`Workflow created with ID: ${newWorkflowId}`);
 
-      // Step 2: Create tasks (nodes)
+      // Step 2: Add roles and map users
+      const roleIdMap: { [roleName: string]: number } = {};
+      if (workflowSettings.roles) {
+        for (const role of workflowSettings.roles) {
+          const roleResponse = await addWorkflowRole(newWorkflowId, { name: role.name });
+          const newRoleId = roleResponse.data.id;
+          roleIdMap[role.name] = newRoleId;
+
+          if (workflowSettings.usersForRoles) {
+            const usersForRole = workflowSettings.usersForRoles.filter(u => u.role_id === role.id);
+            for (const user of usersForRole) {
+              await mapUserToRole(newWorkflowId, newRoleId, { user_id: user.user_id, role_id: newRoleId });
+            }
+          }
+        }
+        toast.info('Roles and users mapped successfully.');
+      }
+
+      // Step 3: Create tasks (nodes)
       const taskIdMap: { [frontendId: string]: string } = {};
-      const taskPromises = nodes
-        .filter((node) => node.type !== 'start' && node.type !== 'end')
-        .map(async (node) => {
-          const taskPayload = {
-            type: node.type === 'action' ? 'FileUpload' : 'Decision', // Example mapping
-            name: node.data.description,
-            role_id: 1, // Mock role_id, this should come from node data
-            expected_completion_day: 1, // Mock data
-            expected_completion_time: '09:00', // Mock data
-          };
-          const taskResponse = await api.post(`/workflows/${newWorkflowId}/tasks`, taskPayload);
-          taskIdMap[node.id] = taskResponse.data.id;
-        });
-      
-      await Promise.all(taskPromises);
+      for (const node of nodes.filter(n => n.type !== 'start' && n.type !== 'end')) {
+        const taskPayload = {
+          type: node.data.taskType || (node.type === 'action' ? 'FileUpload' : 'Decision'),
+          name: node.data.description,
+          role_id: roleIdMap[node.data.role || ''],
+          expected_completion_day: node.data.completionDay,
+          expected_completion_time: node.data.completionTime,
+          escalation_remind_before_mins: node.data.remindBefore,
+          escalation_remind_at_time: node.data.remindAtTime,
+          escalation_after_mins: node.data.escalateAfter,
+          files: node.data.files,
+          outcomes: node.data.outcomes,
+        };
+        const taskResponse = await addWorkflowTask(newWorkflowId, taskPayload);
+        taskIdMap[node.id] = taskResponse.data.id;
+      }
       toast.info('Tasks created successfully.');
 
-      // Step 3: Create connections
-      const connectionPromises = connections.map(async (conn) => {
+      // Step 4: Create connections
+      for (const conn of connections) {
         const connectionPayload = {
           from_task_id: conn.source === 'start' ? 'Start' : taskIdMap[conn.source],
           to_task_id: conn.target === 'end' ? 'End' : taskIdMap[conn.target],
-          outcome: null, // Mock data
+          outcome: conn.outcome || null,
         };
-        await api.post(`/workflows/${newWorkflowId}/connections`, connectionPayload);
-      });
-
-      await Promise.all(connectionPromises);
+        await addWorkflowConnection(newWorkflowId, connectionPayload);
+      }
       toast.info('Connections created successfully.');
 
-      // Step 4: Deploy the workflow
-      await api.post(`/workflows/${newWorkflowId}/deploy`);
+      // Step 5: Deploy the workflow
+      await deployWorkflow(newWorkflowId);
       toast.success('Workflow deployed successfully!');
 
     } catch (error) {
@@ -395,6 +426,7 @@ const Home: NextPage = () => {
                 selectedNode={selectedNode}
                 onUpdateNode={handleUpdateNode}
                 onClose={() => setSelectedNodeId(null)}
+                roles={workflowSettings.roles || []}
               />
 
               <WorkflowSettings

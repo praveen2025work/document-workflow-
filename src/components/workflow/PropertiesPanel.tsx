@@ -7,14 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+
+interface Role {
+  id: number;
+  name: string;
+}
 
 interface PropertiesPanelProps {
   selectedNode: WorkflowNode | null;
   onUpdateNode: (nodeId: string, data: NodeData) => void;
   onClose: () => void;
+  roles: Role[];
 }
 
-const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdateNode, onClose }) => {
+const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdateNode, onClose, roles }) => {
   const [formData, setFormData] = useState<NodeData>({});
 
   useEffect(() => {
@@ -84,18 +91,86 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
   const renderActionProperties = () => (
     <div className="space-y-4">
-       <div>
-        <Label htmlFor="description">Description</Label>
+      <div>
+        <Label htmlFor="description">Task Name</Label>
         <Input
           id="description"
           value={formData.description || ''}
           onChange={(e) => handleInputChange('description', e.target.value)}
-          placeholder="Describe the action"
+          placeholder="e.g., Upload Invoice"
         />
       </div>
       <div>
-        <Label>Action Type</Label>
-        <p className="text-sm text-gray-400">Configuration for different action types will be available here.</p>
+        <Label htmlFor="role">Role</Label>
+        <Select value={formData.role || ''} onValueChange={(value) => handleInputChange('role', value)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent>
+            {roles.map(role => (
+              <SelectItem key={role.id} value={role.name}>{role.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="completionDay">Expected Completion Day</Label>
+        <Input
+          id="completionDay"
+          type="number"
+          value={formData.completionDay || ''}
+          onChange={(e) => handleInputChange('completionDay', Number(e.target.value))}
+          placeholder="e.g., 1"
+        />
+      </div>
+      <div>
+        <Label htmlFor="completionTime">Expected Completion Time</Label>
+        <Input
+          id="completionTime"
+          type="time"
+          value={formData.completionTime || ''}
+          onChange={(e) => handleInputChange('completionTime', e.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <h4 className="font-semibold">Escalation</h4>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="remindAtTime">Remind at Time</Label>
+          <Switch
+            id="remindAtTime"
+            checked={formData.remindAtTime || false}
+            onCheckedChange={(checked) => handleInputChange('remindAtTime', checked)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="remindBefore">Remind Before (minutes)</Label>
+          <Input
+            id="remindBefore"
+            type="number"
+            value={formData.remindBefore || ''}
+            onChange={(e) => handleInputChange('remindBefore', Number(e.target.value))}
+            placeholder="e.g., 30"
+          />
+        </div>
+        <div>
+          <Label htmlFor="escalateAfter">Escalate After (minutes)</Label>
+          <Input
+            id="escalateAfter"
+            type="number"
+            value={formData.escalateAfter || ''}
+            onChange={(e) => handleInputChange('escalateAfter', Number(e.target.value))}
+            placeholder="e.g., 60"
+          />
+        </div>
+      </div>
+      <div>
+        <Label htmlFor="files">Files (comma-separated)</Label>
+        <Input
+          id="files"
+          value={Array.isArray(formData.files) ? formData.files.join(',') : ''}
+          onChange={(e) => handleInputChange('files', e.target.value.split(','))}
+          placeholder="e.g., invoice.pdf,receipt.png"
+        />
       </div>
     </div>
   );
