@@ -20,28 +20,36 @@ interface WorkflowSettingsProps {
   settings: any;
 }
 
-const mockCalendars: Calendar[] = [
-  { id: 1, name: 'Standard Calendar', weekend_days: [6, 7], holidays: [] },
-  { id: 2, name: 'Trading Desk Calendar', weekend_days: [], holidays: [] },
-];
+import api from '@/lib/api';
 
 const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, onSave, settings }) => {
   const [localSettings, setLocalSettings] = useState(settings);
   const [isCalendarManagerOpen, setIsCalendarManagerOpen] = useState(false);
-  const [calendars, setCalendars] = useState<Calendar[]>(mockCalendars);
+  const [calendars, setCalendars] = useState<Calendar[]>([]);
 
   useEffect(() => {
     setLocalSettings(settings);
-  }, [settings]);
+    if (isOpen) {
+      fetchCalendars();
+    }
+  }, [settings, isOpen]);
+
+  const fetchCalendars = async () => {
+    try {
+      const response = await api.get('/calendars');
+      setCalendars(response.data);
+    } catch (error) {
+      // Error is handled by interceptor
+    }
+  };
 
   const handleSave = () => {
     onSave(localSettings);
     onClose();
   };
 
-  const handleAddCalendar = (calendar: Omit<Calendar, 'id'>) => {
-    const newCalendar = { ...calendar, id: Date.now() };
-    setCalendars([...calendars, newCalendar]);
+  const handleAddCalendar = (calendar: Calendar) => {
+    setCalendars([...calendars, calendar]);
   };
 
   const handleTriggerChange = (value: string) => {

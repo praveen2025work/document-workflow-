@@ -3,8 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import api from '@/lib/api';
 
 interface Calendar {
   id: number;
@@ -17,7 +17,7 @@ interface CalendarManagerProps {
   isOpen: boolean;
   onClose: () => void;
   calendars: Calendar[];
-  onAddCalendar: (calendar: Omit<Calendar, 'id'>) => void;
+  onAddCalendar: (calendar: Calendar) => void;
 }
 
 const weekDays = [
@@ -33,20 +33,29 @@ const weekDays = [
 const CalendarManager: React.FC<CalendarManagerProps> = ({ isOpen, onClose, calendars, onAddCalendar }) => {
   const [newCalendarName, setNewCalendarName] = useState('');
   const [selectedWeekendDays, setSelectedWeekendDays] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddCalendar = () => {
+  const handleAddCalendar = async () => {
     if (!newCalendarName) {
       toast.error('Please enter a name for the calendar.');
       return;
     }
-    onAddCalendar({
-      name: newCalendarName,
-      weekend_days: selectedWeekendDays,
-      holidays: [], // Holiday selection will be implemented later
-    });
-    setNewCalendarName('');
-    setSelectedWeekendDays([]);
-    toast.success('Calendar added successfully!');
+    setIsLoading(true);
+    try {
+      const response = await api.post('/calendars', {
+        name: newCalendarName,
+        weekend_days: selectedWeekendDays,
+        holidays: [], // Holiday selection will be implemented later
+      });
+      onAddCalendar({ ...response.data, name: newCalendarName, weekend_days: selectedWeekendDays, holidays: [] });
+      setNewCalendarName('');
+      setSelectedWeekendDays([]);
+      toast.success('Calendar added successfully!');
+    } catch (error) {
+      // Error is already handled by the interceptor
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -110,8 +119,10 @@ const CalendarManager: React.FC<CalendarManagerProps> = ({ isOpen, onClose, cale
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button onClick={handleAddCalendar}>Add Calendar</Button>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>Close</Button>
+          <Button onClick={handleAddCalendar} disabled={isLoading}>
+            {isLoading ? 'Adding...' : 'Add Calendar'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
