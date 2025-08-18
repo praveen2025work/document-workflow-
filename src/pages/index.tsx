@@ -14,7 +14,12 @@ import { WorkflowNode as WorkflowNodeType, Connection as ConnectionType, NodeTyp
 const Home: NextPage = () => {
   const initialNodes: WorkflowNodeType[] = [
     { id: 'start', type: 'start', position: { x: 50, y: 200 }, data: { description: 'Workflow Start' } },
+    { id: 'upload-1', type: 'action', position: { x: 350, y: 200 }, data: { description: 'Upload Invoice' } },
     { id: 'end', type: 'end', position: { x: 650, y: 200 }, data: { description: 'Workflow End' } },
+  ];
+
+  const initialConnections: ConnectionType[] = [
+    { id: 'conn-start-upload-1', source: 'start', target: 'upload-1' },
   ];
 
   const initialSettings = {
@@ -25,7 +30,7 @@ const Home: NextPage = () => {
   const [workflowSettings, setWorkflowSettings] = useState(initialSettings);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [nodes, setNodes] = useState<WorkflowNodeType[]>(initialNodes);
-  const [connections, setConnections] = useState<ConnectionType[]>([]);
+  const [connections, setConnections] = useState<ConnectionType[]>(initialConnections);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStart, setConnectionStart] = useState<{ nodeId: string; position: Position } | null>(null);
@@ -37,7 +42,7 @@ const Home: NextPage = () => {
 
   const handleCreateNew = () => {
     setNodes(initialNodes);
-    setConnections([]);
+    setConnections(initialConnections);
     setWorkflowSettings(initialSettings);
     setSelectedNodeId(null);
     toast.success('New workflow created!');
