@@ -1,8 +1,3 @@
-export interface Position {
-  x: number;
-  y: number;
-}
-
 export type NodeType = 'start' | 'end' | 'decision' | 'action' | 'api' | 'database';
 
 export interface NodeData {
@@ -31,16 +26,3 @@ export interface NodeData {
   query?: string;
 }
 
-export interface WorkflowNode {
-  id: string;
-  type: NodeType;
-  position: Position;
-  data: NodeData;
-}
-
-export interface Connection {
-  id:string;
-  source: string;
-  target: string;
-  label?: string;
-}

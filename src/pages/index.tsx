@@ -1,17 +1,27 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw, LayoutDashboard, Calendar } from 'lucide-react';
+import ReactFlow, {
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  Connection as ReactFlowConnection,
+  Edge,
+  Node,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import WorkflowNode from '@/components/workflow/WorkflowNode';
-import Connection from '@/components/workflow/Connection';
 import PropertiesPanel from '@/components/workflow/PropertiesPanel';
 import WorkflowSettings from '@/components/workflow/WorkflowSettings';
 import CalendarManager from '@/components/workflow/CalendarManager';
-import { WorkflowNode as WorkflowNodeType, Connection as ConnectionType, NodeType, Position, NodeData } from '@/components/workflow/types';
+import { NodeType, NodeData } from '@/components/workflow/types';
 import { createWorkflow, addWorkflowRole, mapUserToRole, addWorkflowTask, addWorkflowConnection, deployWorkflow } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
 import { useRouter } from 'next/router';
@@ -40,14 +50,15 @@ interface WorkflowSettings {
 const Home: NextPage = () => {
   const router = useRouter();
   const { user, loading } = useUser();
-  const initialNodes: WorkflowNodeType[] = [
+
+  const initialNodes: Node<NodeData>[] = [
     { id: 'start', type: 'start', position: { x: 50, y: 200 }, data: { description: 'Workflow Start' } },
     { id: 'upload-1', type: 'action', position: { x: 350, y: 200 }, data: { description: 'Upload Invoice' } },
     { id: 'end', type: 'end', position: { x: 650, y: 200 }, data: { description: 'Workflow End' } },
   ];
 
-  const initialConnections: ConnectionType[] = [
-    { id: 'conn-start-upload-1', source: 'start', target: 'upload-1' },
+  const initialEdges: Edge[] = [
+    { id: 'e-start-upload-1', source: 'start', target: 'upload-1', animated: true },
   ];
 
   const initialSettings: WorkflowSettings = {
@@ -59,20 +70,16 @@ const Home: NextPage = () => {
 
   const [workflowSettings, setWorkflowSettings] = useState<WorkflowSettings>(initialSettings);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [nodes, setNodes] = useState<WorkflowNodeType[]>(initialNodes);
-  const [connections, setConnections] = useState<ConnectionType[]>(initialConnections);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionStart, setConnectionStart] = useState<{ nodeId: string; position: Position } | null>(null);
-  const [zoom, setZoom] = useState(1);
   const [isDeploying, setIsDeploying] = useState(false);
   const [workflowId, setWorkflowId] = useState<number | null>(null);
 
-
-
-  const handleZoomIn = () => setZoom((z) => Math.min(z + 0.1, 2));
-  const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.3));
-  const handleResetZoom = () => setZoom(1);
+  const onConnect = useCallback(
+    (params: ReactFlowConnection | Edge) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
+    [setEdges]
+  );
 
   const handleSaveSettings = (settings: any) => {
     setWorkflowSettings(settings);
@@ -81,7 +88,7 @@ const Home: NextPage = () => {
 
   const handleCreateNew = () => {
     setNodes(initialNodes);
-    setConnections(initialConnections);
+    setEdges(initialEdges);
     setWorkflowSettings(initialSettings);
     setSelectedNodeId(null);
     toast.success('New workflow created!');
@@ -147,11 +154,11 @@ const Home: NextPage = () => {
       toast.info('Tasks created successfully.');
 
       // Step 4: Create connections
-      for (const conn of connections) {
+      for (const edge of edges) {
         const connectionPayload = {
-          from_task_id: conn.source === 'start' ? 'Start' : taskIdMap[conn.source],
-          to_task_id: conn.target === 'end' ? 'End' : taskIdMap[conn.target],
-          outcome: conn.outcome || null,
+          from_task_id: edge.source === 'start' ? 'Start' : taskIdMap[edge.source],
+          to_task_id: edge.target === 'end' ? 'End' : taskIdMap[edge.target!],
+          outcome: edge.label || null,
         };
         await addWorkflowConnection(newWorkflowId, connectionPayload);
       }
@@ -169,67 +176,46 @@ const Home: NextPage = () => {
     }
   };
 
-  const handleNodeMove = useCallback((id: string, position: Position) => {
-    setNodes((prev) => prev.map((node) => (node.id === id ? { ...node, position } : node)));
-  }, []);
-
-  const handleNodeSelect = useCallback((nodeId: string) => {
-    setSelectedNodeId(nodeId);
-  }, []);
-
-  const handleCanvasClick = useCallback(() => {
-    setSelectedNodeId(null);
-    setIsConnecting(false);
-    setConnectionStart(null);
-  }, []);
-
-  const handleConnectionStart = useCallback((nodeId: string, position: Position) => {
-    setIsConnecting(true);
-    setConnectionStart({ nodeId, position });
-  }, []);
-
-  const handleConnectionEnd = useCallback((sourceNodeId: string, targetNodeId: string) => {
-    if (sourceNodeId !== targetNodeId) {
-      const newConnection: ConnectionType = {
-        id: `conn-${sourceNodeId}-${targetNodeId}`,
-        source: sourceNodeId,
-        target: targetNodeId,
-      };
-      setConnections((prev) => [...prev, newConnection]);
-    }
-    setIsConnecting(false);
-    setConnectionStart(null);
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
   }, []);
 
   const addNode = (type: NodeType) => {
-    const newNode: WorkflowNodeType = {
+    const newNode: Node<NodeData> = {
       id: `node-${Date.now()}`,
       type,
-      position: { x: 300, y: 150 },
+      position: { x: Math.random() * 400, y: Math.random() * 400 },
       data: { description: `New ${type} node` },
     };
-    setNodes((prev) => [...prev, newNode]);
+    setNodes((nds) => nds.concat(newNode));
   };
 
   const handleUpdateNode = useCallback((nodeId: string, data: NodeData) => {
-    setNodes((prev) =>
-      prev.map((node) =>
+    setNodes((nds) =>
+      nds.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
       )
     );
-  }, []);
+  }, [setNodes]);
 
   const handleDeleteNode = useCallback(() => {
     if (!selectedNodeId || ['start', 'end'].includes(selectedNodeId)) return;
 
-    setNodes((prev) => prev.filter((node) => node.id !== selectedNodeId));
-    setConnections((prev) =>
-      prev.filter((conn) => conn.source !== selectedNodeId && conn.target !== selectedNodeId)
-    );
+    setNodes((nds) => nds.filter((node) => node.id !== selectedNodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== selectedNodeId && edge.target !== selectedNodeId));
     setSelectedNodeId(null);
-  }, [selectedNodeId]);
+  }, [selectedNodeId, setNodes, setEdges]);
 
-  const selectedNode = nodes.find((node) => node.id === selectedNodeId) || null;
+  const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) || null, [nodes, selectedNodeId]);
+
+  const nodeTypes = useMemo(() => ({
+    start: WorkflowNode,
+    end: WorkflowNode,
+    action: WorkflowNode,
+    decision: WorkflowNode,
+    api: WorkflowNode,
+    database: WorkflowNode,
+  }), []);
 
   return (
     <TooltipProvider>
@@ -359,67 +345,25 @@ const Home: NextPage = () => {
 
               {/* Workflow Canvas */}
               <motion.main
-                id="workflow-container"
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.4, ease: 'easeOut' }}
                 className="flex-1 bg-gray-900 relative"
-                style={{
-                  backgroundImage: 'radial-gradient(#4a5568 1px, transparent 1px)',
-                  backgroundSize: '20px 20px',
-                }}
-                onClick={handleCanvasClick}
               >
-                <div className="absolute bottom-4 right-4 z-30 flex items-center gap-2">
-                  <Button onClick={handleZoomOut} variant="outline" size="icon" className="bg-gray-800 border-gray-600">
-                    <ZoomOut className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm font-medium bg-gray-800 px-2 py-1 rounded">{Math.round(zoom * 100)}%</span>
-                  <Button onClick={handleZoomIn} variant="outline" size="icon" className="bg-gray-800 border-gray-600">
-                    <ZoomIn className="h-4 w-4" />
-                  </Button>
-                  <Button onClick={handleResetZoom} variant="outline" size="icon" className="bg-gray-800 border-gray-600">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-                <motion.div
-                  id="workflow-canvas"
-                  className="relative w-full h-full"
-                  style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  onNodeClick={onNodeClick}
+                  nodeTypes={nodeTypes}
+                  fitView
+                  className="bg-gray-900"
                 >
-                  <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                    <defs>
-                      <marker
-                        id="arrowhead"
-                        markerWidth="10"
-                        markerHeight="7"
-                        refX="9"
-                        refY="3.5"
-                        orient="auto"
-                      >
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#4a5568" />
-                      </marker>
-                    </defs>
-                    {connections.map((conn) => (
-                      <Connection key={conn.id} connection={conn} nodes={nodes} />
-                    ))}
-                  </svg>
-
-                  {nodes.map((node) => (
-                    <WorkflowNode
-                      key={node.id}
-                      node={node}
-                      onNodeMove={handleNodeMove}
-                      onConnectionStart={handleConnectionStart}
-                      onConnectionEnd={handleConnectionEnd}
-                      isSelected={selectedNodeId === node.id}
-                      onSelect={handleNodeSelect}
-                      isConnecting={isConnecting}
-                      connectionStartNodeId={connectionStart?.nodeId || null}
-                      zoom={zoom}
-                    />
-                  ))}
-                </motion.div>
+                  <Controls />
+                  <Background color="#4a5568" gap={16} />
+                </ReactFlow>
               </motion.main>
               
               <PropertiesPanel
