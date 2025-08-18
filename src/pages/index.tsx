@@ -14,6 +14,15 @@ import { WorkflowNode as WorkflowNodeType, Connection as ConnectionType, NodeTyp
 import withAuth from '@/components/auth/withAuth';
 import api from '@/lib/api';
 
+interface WorkflowSettings {
+  name: string;
+  trigger: 'MANUAL' | 'AUTO';
+  frequency?: string;
+  startTime?: string;
+  start_working_day?: number;
+  calendar_id?: number;
+}
+
 const Home: NextPage = () => {
   const router = useRouter();
   const initialNodes: WorkflowNodeType[] = [
@@ -26,12 +35,12 @@ const Home: NextPage = () => {
     { id: 'conn-start-upload-1', source: 'start', target: 'upload-1' },
   ];
 
-  const initialSettings = {
+  const initialSettings: WorkflowSettings = {
     name: 'My Awesome Workflow',
     trigger: 'MANUAL',
   };
 
-  const [workflowSettings, setWorkflowSettings] = useState(initialSettings);
+  const [workflowSettings, setWorkflowSettings] = useState<WorkflowSettings>(initialSettings);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [nodes, setNodes] = useState<WorkflowNodeType[]>(initialNodes);
   const [connections, setConnections] = useState<ConnectionType[]>(initialConnections);
