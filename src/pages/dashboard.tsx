@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getUserDashboard, pickupTask, completeTask, sendChatMessage } from '@/lib/api';
 import { useRouter } from 'next/router';
-import { GitBranch, MessageSquare } from 'lucide-react';
+import { GitBranch, MessageSquare, Eye } from 'lucide-react';
 
 interface Task {
   id: number;
@@ -51,6 +51,10 @@ const DashboardPage: NextPage = () => {
 
   const handleNavigateToDesigner = () => {
     router.push('/');
+  };
+
+  const handleNavigateToMonitoring = () => {
+    router.push('/monitoring');
   };
 
   const handlePickUpTask = async (taskId: number) => {
@@ -149,6 +153,10 @@ const DashboardPage: NextPage = () => {
           <div className="flex items-center gap-2">
             <Button onClick={handleNavigateToDesigner} variant="outline">
               Workflow Designer
+            </Button>
+            <Button onClick={handleNavigateToMonitoring} variant="outline">
+              <Eye className="mr-2 h-4 w-4" />
+              Monitoring
             </Button>
           </div>
         </header>
