@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw, LogOut } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw, LogOut, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -222,6 +222,10 @@ const Home: NextPage = () => {
             </Button>
             <Button onClick={handleDeploy} variant="outline" className="border-green-500 text-green-400 hover:bg-green-500 hover:text-white" disabled={isDeploying}>
               {isDeploying ? 'Deploying...' : <><Play className="mr-2 h-4 w-4" /> Deploy</>}
+            </Button>
+            <Button onClick={() => router.push('/dashboard')} variant="outline">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Dashboard
             </Button>
             <Button
               variant="outline"
