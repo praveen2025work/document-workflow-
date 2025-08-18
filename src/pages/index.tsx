@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointerSquare } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -200,7 +200,7 @@ const Home: NextPage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div onClick={() => addNode('decision')} className="flex h-14 w-14 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-700 p-2 transition-all hover:bg-yellow-500">
-                    <MousePointerSquare className="h-6 w-6" />
+                    <MousePointer className="h-6 w-6" />
                     <span className="text-xs">Decision</span>
                   </div>
                 </TooltipTrigger>
