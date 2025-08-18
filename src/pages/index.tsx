@@ -1,8 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import type { NextPage } from 'next';
-import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw, LogOut, LayoutDashboard } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -11,8 +10,9 @@ import Connection from '@/components/workflow/Connection';
 import PropertiesPanel from '@/components/workflow/PropertiesPanel';
 import WorkflowSettings from '@/components/workflow/WorkflowSettings';
 import { WorkflowNode as WorkflowNodeType, Connection as ConnectionType, NodeType, Position, NodeData } from '@/components/workflow/types';
-import withAuth from '@/components/auth/withAuth';
 import api from '@/lib/api';
+import { useUser } from '@/context/UserContext';
+import { useRouter } from 'next/router';
 
 interface WorkflowSettings {
   name: string;
@@ -25,6 +25,7 @@ interface WorkflowSettings {
 
 const Home: NextPage = () => {
   const router = useRouter();
+  const { user, loading } = useUser();
   const initialNodes: WorkflowNodeType[] = [
     { id: 'start', type: 'start', position: { x: 50, y: 200 }, data: { description: 'Workflow Start' } },
     { id: 'upload-1', type: 'action', position: { x: 350, y: 200 }, data: { description: 'Upload Invoice' } },
@@ -51,11 +52,7 @@ const Home: NextPage = () => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [workflowId, setWorkflowId] = useState<number | null>(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    toast.success('Logged out successfully');
-    router.push('/login');
-  };
+
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.1, 2));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.3));
@@ -216,6 +213,13 @@ const Home: NextPage = () => {
             <h1 className="text-xl font-semibold">Workflow Designer</h1>
           </div>
           <div className="flex items-center gap-2">
+            {loading ? (
+              <p>Loading user...</p>
+            ) : user ? (
+              <p>Welcome, {user.name}</p>
+            ) : (
+              <p>Could not load user data.</p>
+            )}
             <Button onClick={handleCreateNew} variant="outline" className="border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white">
               <Plus className="mr-2 h-4 w-4" />
               Create New
@@ -235,10 +239,6 @@ const Home: NextPage = () => {
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
-            </Button>
-            <Button onClick={handleLogout} variant="outline" className="border-gray-500 text-gray-400 hover:bg-gray-700 hover:text-white">
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
             </Button>
           </div>
         </motion.header>
@@ -395,4 +395,4 @@ const Home: NextPage = () => {
   );
 };
 
-export default withAuth(Home);
+export default Home;
