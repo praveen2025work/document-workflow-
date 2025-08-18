@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, ZoomIn, ZoomOut, RefreshCw, LayoutDashboard, Calendar } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, LayoutDashboard, Calendar, Workflow, Sparkles } from 'lucide-react';
 import ReactFlow, {
   Controls,
   Background,
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from '@/components/ui/badge';
 import WorkflowNode from '@/components/workflow/WorkflowNode';
 import PropertiesPanel from '@/components/workflow/PropertiesPanel';
 import WorkflowSettings from '@/components/workflow/WorkflowSettings';
@@ -25,6 +26,7 @@ import { NodeType, NodeData } from '@/components/workflow/types';
 import { createWorkflow, addWorkflowRole, mapUserToRole, addWorkflowTask, addWorkflowConnection, deployWorkflow } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
 import { useRouter } from 'next/router';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 interface Role {
   id: number;
@@ -52,9 +54,9 @@ const Home: NextPage = () => {
   const { user, loading } = useUser();
 
   const initialNodes: Node<NodeData>[] = [
-    { id: 'start', type: 'start', position: { x: 50, y: 200 }, data: { description: 'Workflow Start' } },
-    { id: 'upload-1', type: 'action', position: { x: 350, y: 200 }, data: { description: 'Upload Invoice' } },
-    { id: 'end', type: 'end', position: { x: 650, y: 200 }, data: { description: 'Workflow End' } },
+    { id: 'start', type: 'start', position: { x: 100, y: 200 }, data: { description: 'Workflow Start' } },
+    { id: 'upload-1', type: 'action', position: { x: 400, y: 200 }, data: { description: 'Upload Invoice' } },
+    { id: 'end', type: 'end', position: { x: 700, y: 200 }, data: { description: 'Workflow End' } },
   ];
 
   const initialEdges: Edge[] = [
@@ -184,7 +186,7 @@ const Home: NextPage = () => {
     const newNode: Node<NodeData> = {
       id: `node-${Date.now()}`,
       type,
-      position: { x: Math.random() * 400, y: Math.random() * 400 },
+      position: { x: Math.random() * 400 + 200, y: Math.random() * 300 + 100 },
       data: { description: `New ${type} node` },
     };
     setNodes((nds) => nds.concat(newNode));
@@ -219,124 +221,184 @@ const Home: NextPage = () => {
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen w-full flex-col bg-gray-900 text-white">
+      <div className="flex h-screen w-full flex-col bg-background">
         {/* Header */}
         <motion.header
           initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="flex h-16 items-center justify-between border-b border-gray-700 bg-gray-800 px-6"
+          className="glass border-b border-border/50 px-6 py-4"
         >
-          <div className="flex items-center gap-4">
-            <GitBranch className="h-7 w-7 text-blue-400" />
-            <h1 className="text-xl font-semibold">Workflow Management</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            {loading ? (
-              <p>Loading user...</p>
-            ) : user ? (
-              <p>Welcome, {user.name}</p>
-            ) : (
-              <p>Could not load user data.</p>
-            )}
-            <Button onClick={handleCreateNew} variant="outline" className="border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white">
-              <Plus className="mr-2 h-4 w-4" />
-              Create New
-            </Button>
-            <Button onClick={handleDeploy} variant="outline" className="border-green-500 text-green-400 hover:bg-green-500 hover:text-white" disabled={isDeploying}>
-              {isDeploying ? 'Deploying...' : <><Play className="mr-2 h-4 w-4" /> Deploy</>}
-            </Button>
-            <Button onClick={() => router.push('/dashboard')} variant="outline">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Dashboard
-            </Button>
-            <Button
-              variant="outline"
-              className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleDeleteNode}
-              disabled={!selectedNodeId || ['start', 'end'].includes(selectedNodeId)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
+                  <Workflow className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">Workflow Designer</h1>
+                  <p className="text-sm text-muted-foreground">Build and manage your workflows</p>
+                </div>
+              </div>
+              {workflowSettings.name && (
+                <Badge variant="secondary" className="ml-4">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  {workflowSettings.name}
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {loading ? (
+                <div className="text-sm text-muted-foreground">Loading user...</div>
+              ) : user ? (
+                <div className="text-sm text-muted-foreground">Welcome, {user.name}</div>
+              ) : (
+                <div className="text-sm text-muted-foreground">Could not load user data.</div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <Button onClick={handleCreateNew} variant="outline" size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New
+                </Button>
+                <Button 
+                  onClick={handleDeploy} 
+                  variant="default" 
+                  size="sm"
+                  disabled={isDeploying}
+                  className="bg-success hover:bg-success/90"
+                >
+                  {isDeploying ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                      Deploying...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-4 w-4" />
+                      Deploy
+                    </>
+                  )}
+                </Button>
+                <Button onClick={() => router.push('/dashboard')} variant="outline" size="sm">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteNode}
+                  disabled={!selectedNodeId || ['start', 'end'].includes(selectedNodeId)}
+                  className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <ThemeSwitcher />
+              </div>
+            </div>
           </div>
         </motion.header>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-hidden p-4">
+        <div className="flex-1 overflow-hidden p-6">
           <Tabs defaultValue="designer" className="h-full flex flex-col">
-            <TabsList className="mb-4">
-              <TabsTrigger value="designer">
-                <GitBranch className="mr-2 h-4 w-4" />
+            <TabsList className="mb-6 glass">
+              <TabsTrigger value="designer" className="flex items-center gap-2">
+                <GitBranch className="h-4 w-4" />
                 Workflow Designer
               </TabsTrigger>
-              <TabsTrigger value="calendars">
-                <Calendar className="mr-2 h-4 w-4" />
+              <TabsTrigger value="calendars" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
                 Calendars
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="designer" className="flex-1 overflow-hidden relative flex">
+            
+            <TabsContent value="designer" className="flex-1 overflow-hidden relative flex gap-6">
               {/* Left Palette */}
               <motion.aside
                 initial={{ x: -80, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-                className="w-20 border-r border-gray-700 bg-gray-800 p-2"
+                className="w-24 glass rounded-xl p-4"
               >
-                <div className="flex flex-col items-center gap-4 py-4">
-                  <h2 className="text-sm font-medium text-gray-400">Tasks</h2>
+                <div className="flex flex-col items-center gap-4">
+                  <h2 className="text-sm font-semibold text-foreground mb-2">Tools</h2>
+                  
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div onClick={() => addNode('action')} className="flex h-14 w-14 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-700 p-2 transition-all hover:bg-blue-500">
-                        <Upload className="h-6 w-6" />
-                        <span className="text-xs">Upload</span>
-                      </div>
+                      <motion.div 
+                        onClick={() => addNode('action')} 
+                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Upload className="h-5 w-5 text-primary group-hover:text-primary" />
+                        <span className="text-xs text-primary mt-1">Upload</span>
+                      </motion.div>
                     </TooltipTrigger>
                     <TooltipContent side="right">File Upload Task</TooltipContent>
                   </Tooltip>
+                  
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div onClick={() => addNode('action')} className="flex h-14 w-14 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-700 p-2 transition-all hover:bg-blue-500">
-                        <Download className="h-6 w-6" />
-                        <span className="text-xs">Download</span>
-                      </div>
+                      <motion.div 
+                        onClick={() => addNode('action')} 
+                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Download className="h-5 w-5 text-primary" />
+                        <span className="text-xs text-primary mt-1">Download</span>
+                      </motion.div>
                     </TooltipTrigger>
                     <TooltipContent side="right">File Download Task</TooltipContent>
                   </Tooltip>
+                  
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div onClick={() => addNode('action')} className="flex h-14 w-14 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-700 p-2 transition-all hover:bg-blue-500">
-                        <FileUp className="h-6 w-6" />
-                        <span className="text-xs">Update</span>
-                      </div>
+                      <motion.div 
+                        onClick={() => addNode('action')} 
+                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <FileUp className="h-5 w-5 text-primary" />
+                        <span className="text-xs text-primary mt-1">Update</span>
+                      </motion.div>
                     </TooltipTrigger>
                     <TooltipContent side="right">File Update Task</TooltipContent>
                   </Tooltip>
+                  
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div onClick={() => addNode('action')} className="flex h-14 w-14 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-700 p-2 transition-all hover:bg-blue-500">
-                        <FileText className="h-6 w-6" />
-                        <span className="text-xs">Consolidate</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Consolidate Files Task</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div onClick={() => addNode('decision')} className="flex h-14 w-14 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-700 p-2 transition-all hover:bg-yellow-500">
-                        <MousePointer className="h-6 w-6" />
-                        <span className="text-xs">Decision</span>
-                      </div>
+                      <motion.div 
+                        onClick={() => addNode('decision')} 
+                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-warning/10 border border-warning/20 p-2 transition-all hover:bg-warning/20 hover:scale-105 group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <MousePointer className="h-5 w-5 text-warning" />
+                        <span className="text-xs text-warning mt-1">Decision</span>
+                      </motion.div>
                     </TooltipTrigger>
                     <TooltipContent side="right">Decision Task</TooltipContent>
                   </Tooltip>
-                  <div className="my-2 h-px w-full bg-gray-600" />
+                  
+                  <div className="my-2 h-px w-full bg-border" />
+                  
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div onClick={() => setIsSettingsOpen(true)} className="flex h-14 w-14 cursor-pointer flex-col items-center justify-center rounded-lg bg-gray-700 p-2 transition-all hover:bg-yellow-500">
-                        <Settings className="h-6 w-6" />
-                        <span className="text-xs">Settings</span>
-                      </div>
+                      <motion.div 
+                        onClick={() => setIsSettingsOpen(true)} 
+                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-muted/50 border border-border p-2 transition-all hover:bg-muted hover:scale-105 group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Settings className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
+                        <span className="text-xs text-muted-foreground group-hover:text-foreground mt-1">Settings</span>
+                      </motion.div>
                     </TooltipTrigger>
                     <TooltipContent side="right">Workflow Settings</TooltipContent>
                   </Tooltip>
@@ -348,7 +410,7 @@ const Home: NextPage = () => {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.4, ease: 'easeOut' }}
-                className="flex-1 bg-gray-900 relative"
+                className="flex-1 glass rounded-xl overflow-hidden"
               >
                 <ReactFlow
                   nodes={nodes}
@@ -359,10 +421,10 @@ const Home: NextPage = () => {
                   onNodeClick={onNodeClick}
                   nodeTypes={nodeTypes}
                   fitView
-                  className="bg-gray-900"
+                  className="bg-transparent"
                 >
-                  <Controls />
-                  <Background color="#4a5568" gap={16} />
+                  <Controls className="!bottom-4 !left-4" />
+                  <Background color="hsl(var(--muted-foreground))" gap={20} size={1} />
                 </ReactFlow>
               </motion.main>
               
@@ -380,8 +442,11 @@ const Home: NextPage = () => {
                 settings={workflowSettings}
               />
             </TabsContent>
-            <TabsContent value="calendars" className="flex-1 overflow-auto p-4 bg-gray-800 rounded-lg">
-              <CalendarManager />
+            
+            <TabsContent value="calendars" className="flex-1 overflow-auto">
+              <div className="glass rounded-xl p-6">
+                <CalendarManager />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
