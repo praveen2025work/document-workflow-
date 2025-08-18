@@ -5,10 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import withAuth from '@/components/auth/withAuth';
 import api from '@/lib/api';
 import { useRouter } from 'next/router';
-import { LogOut, GitBranch } from 'lucide-react';
+import { GitBranch } from 'lucide-react';
 
 interface Task {
   id: number;
@@ -42,12 +41,6 @@ const DashboardPage: NextPage = () => {
 
     fetchDashboardData();
   }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    toast.success('Logged out successfully');
-    router.push('/login');
-  };
 
   const handleNavigateToDesigner = () => {
     router.push('/');
@@ -105,10 +98,6 @@ const DashboardPage: NextPage = () => {
           <Button onClick={handleNavigateToDesigner} variant="outline">
             Workflow Designer
           </Button>
-          <Button onClick={handleLogout} variant="outline">
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
         </div>
       </header>
       <main className="flex-1 p-6 overflow-auto">
@@ -160,4 +149,4 @@ const DashboardPage: NextPage = () => {
   );
 };
 
-export default withAuth(DashboardPage);
+export default DashboardPage;
