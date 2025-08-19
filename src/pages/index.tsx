@@ -1,10 +1,9 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, FileUp, FileText, GitBranch, Settings, MousePointer, LayoutDashboard, Calendar, Workflow, Sparkles, Layers } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, FileUp, Settings, MousePointer, Workflow, Sparkles, Layers } from 'lucide-react';
 import ReactFlow, {
   Controls,
-  Background,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -15,19 +14,14 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
+import MainLayout from '@/components/MainLayout';
 import WorkflowNode from '@/components/workflow/WorkflowNode';
 import PropertiesPanel from '@/components/workflow/PropertiesPanel';
 import WorkflowSettings from '@/components/workflow/WorkflowSettings';
-import CalendarManager from '@/components/workflow/CalendarManager';
 import { NodeType, NodeData } from '@/components/workflow/types';
 import { createWorkflow, addWorkflowRole, mapUserToRole, addWorkflowTask, addWorkflowConnection, deployWorkflow } from '@/lib/api';
-import { useUser } from '@/context/UserContext';
-import { useRouter } from 'next/router';
-import ThemeSwitcher from '@/components/ThemeSwitcher';
-import { config, debugLog } from '@/lib/config';
 
 interface Role {
   id: number;
@@ -51,9 +45,6 @@ interface WorkflowSettings {
 }
 
 const Home: NextPage = () => {
-  const router = useRouter();
-  const { user, loading, error } = useUser();
-
   const initialNodes: Node<NodeData>[] = [
     { id: 'start', type: 'start', position: { x: 100, y: 200 }, data: { description: 'Workflow Start' } },
     { id: 'upload-1', type: 'action', position: { x: 400, y: 200 }, data: { description: 'Upload Invoice' } },
@@ -65,7 +56,7 @@ const Home: NextPage = () => {
   ];
 
   const initialSettings: WorkflowSettings = {
-    name: 'My Awesome Workflow',
+    name: 'Custom Workflow',
     trigger: 'MANUAL',
     roles: [],
     usersForRoles: [],
@@ -220,270 +211,202 @@ const Home: NextPage = () => {
     database: WorkflowNode,
   }), []);
 
+  // Header actions for workflow designer
+  const headerActions = (
+    <>
+      {workflowSettings.name && (
+        <Badge variant="secondary" className="ml-4">
+          <Sparkles className="h-3 w-3 mr-1" />
+          {workflowSettings.name}
+        </Badge>
+      )}
+      <Button onClick={handleCreateNew} variant="outline" size="sm">
+        <Plus className="mr-2 h-4 w-4" />
+        New
+      </Button>
+      <Button 
+        onClick={handleDeploy} 
+        variant="default" 
+        size="sm"
+        disabled={isDeploying}
+        className="bg-success hover:bg-success/90"
+      >
+        {isDeploying ? (
+          <>
+            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+            Deploying...
+          </>
+        ) : (
+          <>
+            <Play className="mr-2 h-4 w-4" />
+            Deploy
+          </>
+        )}
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleDeleteNode}
+        disabled={!selectedNodeId || ['start', 'end'].includes(selectedNodeId)}
+        className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50"
+      >
+        <Trash2 className="mr-2 h-4 w-4" />
+        Delete
+      </Button>
+    </>
+  );
+
   return (
-    <TooltipProvider>
-      <div className="flex h-screen w-full flex-col bg-background">
-        {/* Header */}
-        <motion.header
-          initial={{ y: -60, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="glass border-b border-border/50 px-6 py-4"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
-                  <Workflow className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Workflow Designer</h1>
-                  <p className="text-sm text-muted-foreground">Build and manage your workflows</p>
-                </div>
-              </div>
-              {workflowSettings.name && (
-                <Badge variant="secondary" className="ml-4">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  {workflowSettings.name}
-                </Badge>
-              )}
-              {config.features.debug && (
-                <Badge variant="outline" className="ml-2">
-                  {config.app.env.toUpperCase()}
-                </Badge>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {loading ? (
-                <div className="text-sm text-muted-foreground">Loading user...</div>
-              ) : user ? (
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-muted-foreground">Welcome, {user.name}</div>
-                  {error && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="destructive" className="text-xs">Mock</Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Using mock user data - service unavailable</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">Could not load user data.</div>
-              )}
+    <MainLayout
+      title="Workflow Designer"
+      subtitle="Build and manage your workflows"
+      icon={Workflow}
+      headerActions={headerActions}
+    >
+      <div className="flex-1 overflow-hidden p-6">
+        <div className="h-full flex">
+          {/* Left Palette */}
+          <motion.aside
+            initial={{ x: -80, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+            className="w-24 glass rounded-l-xl rounded-r-none p-4 z-10"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <h2 className="text-sm font-semibold text-foreground mb-2">Tools</h2>
               
-              <div className="flex items-center gap-2">
-                <Button onClick={handleCreateNew} variant="outline" size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  New
-                </Button>
-                <Button 
-                  onClick={handleDeploy} 
-                  variant="default" 
-                  size="sm"
-                  disabled={isDeploying}
-                  className="bg-success hover:bg-success/90"
-                >
-                  {isDeploying ? (
-                    <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                      Deploying...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="mr-2 h-4 w-4" />
-                      Deploy
-                    </>
-                  )}
-                </Button>
-                <Button onClick={() => router.push('/dashboard')} variant="outline" size="sm">
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Dashboard
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDeleteNode}
-                  disabled={!selectedNodeId || ['start', 'end'].includes(selectedNodeId)}
-                  className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </Button>
-                <ThemeSwitcher />
-              </div>
-            </div>
-          </div>
-        </motion.header>
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden p-6">
-          <Tabs defaultValue="designer" className="h-full flex flex-col">
-            <TabsList className="mb-6 glass">
-              <TabsTrigger value="designer" className="flex items-center gap-2">
-                <GitBranch className="h-4 w-4" />
-                Workflow Designer
-              </TabsTrigger>
-              <TabsTrigger value="calendars" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Calendars
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="designer" className="flex-1 overflow-hidden relative flex">
-              {/* Left Palette */}
-              <motion.aside
-                initial={{ x: -80, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-                className="w-24 glass rounded-l-xl rounded-r-none p-4 z-10"
-              >
-                <div className="flex flex-col items-center gap-4">
-                  <h2 className="text-sm font-semibold text-foreground mb-2">Tools</h2>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div 
-                        onClick={() => addNode('action')} 
-                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Upload className="h-5 w-5 text-primary group-hover:text-primary" />
-                        <span className="text-xs text-primary mt-1">Upload</span>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">File Upload Task</TooltipContent>
-                  </Tooltip>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div 
-                        onClick={() => addNode('action')} 
-                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Download className="h-5 w-5 text-primary" />
-                        <span className="text-xs text-primary mt-1">Download</span>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">File Download Task</TooltipContent>
-                  </Tooltip>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div 
-                        onClick={() => addNode('action')} 
-                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <FileUp className="h-5 w-5 text-primary" />
-                        <span className="text-xs text-primary mt-1">Update</span>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">File Update Task</TooltipContent>
-                  </Tooltip>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div 
-                        onClick={() => addNode('action')} 
-                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Layers className="h-5 w-5 text-primary" />
-                        <span className="text-xs text-primary mt-1">Consolidate</span>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Consolidate Files Task</TooltipContent>
-                  </Tooltip>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div 
-                        onClick={() => addNode('decision')} 
-                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-warning/10 border border-warning/20 p-2 transition-all hover:bg-warning/20 hover:scale-105 group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <MousePointer className="h-5 w-5 text-warning" />
-                        <span className="text-xs text-warning mt-1">Decision</span>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Decision Task</TooltipContent>
-                  </Tooltip>
-                  
-                  <div className="my-2 h-px w-full bg-border" />
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div 
-                        onClick={() => setIsSettingsOpen(true)} 
-                        className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-muted/50 border border-border p-2 transition-all hover:bg-muted hover:scale-105 group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Settings className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
-                        <span className="text-xs text-muted-foreground group-hover:text-foreground mt-1">Settings</span>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Workflow Settings</TooltipContent>
-                  </Tooltip>
-                </div>
-              </motion.aside>
-
-              {/* Workflow Canvas */}
-              <motion.main
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.4, ease: 'easeOut' }}
-                className="flex-1 glass rounded-r-xl rounded-l-none overflow-hidden"
-              >
-                <ReactFlow
-                  nodes={nodes}
-                  edges={edges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onConnect={onConnect}
-                  onNodeClick={onNodeClick}
-                  nodeTypes={nodeTypes}
-                  fitView
-                  className="bg-transparent"
-                >
-                  <Controls className="!bottom-4 !left-4" />
-                </ReactFlow>
-              </motion.main>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div 
+                    onClick={() => addNode('action')} 
+                    className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Upload className="h-5 w-5 text-primary group-hover:text-primary" />
+                    <span className="text-xs text-primary mt-1">Upload</span>
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="right">File Upload Task</TooltipContent>
+              </Tooltip>
               
-              <PropertiesPanel
-                selectedNode={selectedNode}
-                onUpdateNode={handleUpdateNode}
-                onClose={() => setSelectedNodeId(null)}
-                roles={workflowSettings.roles || []}
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div 
+                    onClick={() => addNode('action')} 
+                    className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Download className="h-5 w-5 text-primary" />
+                    <span className="text-xs text-primary mt-1">Download</span>
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="right">File Download Task</TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div 
+                    onClick={() => addNode('action')} 
+                    className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FileUp className="h-5 w-5 text-primary" />
+                    <span className="text-xs text-primary mt-1">Update</span>
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="right">File Update Task</TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div 
+                    onClick={() => addNode('action')} 
+                    className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Layers className="h-5 w-5 text-primary" />
+                    <span className="text-xs text-primary mt-1">Consolidate</span>
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="right">Consolidate Files Task</TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div 
+                    onClick={() => addNode('decision')} 
+                    className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-warning/10 border border-warning/20 p-2 transition-all hover:bg-warning/20 hover:scale-105 group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <MousePointer className="h-5 w-5 text-warning" />
+                    <span className="text-xs text-warning mt-1">Decision</span>
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="right">Decision Task</TooltipContent>
+              </Tooltip>
+              
+              <div className="my-2 h-px w-full bg-border" />
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div 
+                    onClick={() => setIsSettingsOpen(true)} 
+                    className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-muted/50 border border-border p-2 transition-all hover:bg-muted hover:scale-105 group"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Settings className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
+                    <span className="text-xs text-muted-foreground group-hover:text-foreground mt-1">Settings</span>
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="right">Workflow Settings</TooltipContent>
+              </Tooltip>
+            </div>
+          </motion.aside>
 
-              <WorkflowSettings
-                isOpen={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-                onSave={handleSaveSettings}
-                settings={workflowSettings}
-              />
-            </TabsContent>
-            
-            <TabsContent value="calendars" className="flex-1 overflow-auto">
-              <div className="glass rounded-xl p-6">
-                <CalendarManager />
-              </div>
-            </TabsContent>
-          </Tabs>
+          {/* Workflow Canvas */}
+          <motion.main
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4, ease: 'easeOut' }}
+            className="flex-1 glass rounded-r-xl rounded-l-none overflow-hidden"
+          >
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              nodeTypes={nodeTypes}
+              fitView
+              className="bg-transparent"
+            >
+              <Controls className="!bottom-4 !left-4" />
+            </ReactFlow>
+          </motion.main>
+          
+          <PropertiesPanel
+            selectedNode={selectedNode}
+            onUpdateNode={handleUpdateNode}
+            onClose={() => setSelectedNodeId(null)}
+            roles={workflowSettings.roles || []}
+          />
+
+          <WorkflowSettings
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            onSave={handleSaveSettings}
+            settings={workflowSettings}
+          />
         </div>
       </div>
-    </TooltipProvider>
+    </MainLayout>
   );
 };
 

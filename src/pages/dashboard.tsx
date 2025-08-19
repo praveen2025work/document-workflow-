@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getUserDashboard, pickupTask, completeTask, sendChatMessage } from '@/lib/api';
-import { useRouter } from 'next/router';
-import { GitBranch, MessageSquare, Eye } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, RefreshCw } from 'lucide-react';
+import MainLayout from '@/components/MainLayout';
 
 interface Task {
   id: number;
@@ -31,7 +31,6 @@ const DashboardPage: NextPage = () => {
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [receiverUserId, setReceiverUserId] = useState('');
-  const router = useRouter();
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -48,14 +47,6 @@ const DashboardPage: NextPage = () => {
   useEffect(() => {
     fetchDashboardData();
   }, []);
-
-  const handleNavigateToDesigner = () => {
-    router.push('/');
-  };
-
-  const handleNavigateToMonitoring = () => {
-    router.push('/monitoring');
-  };
 
   const handlePickUpTask = async (taskId: number) => {
     toast.info('Picking up task...');
@@ -106,19 +97,19 @@ const DashboardPage: NextPage = () => {
 
   const renderTaskList = (tasks: Task[], type: 'pending' | 'in_progress' | 'completed') => {
     if (isLoading) {
-      return <p>Loading tasks...</p>;
+      return <p className="text-muted-foreground">Loading tasks...</p>;
     }
     if (!tasks || tasks.length === 0) {
-      return <p>No tasks in this category.</p>;
+      return <p className="text-muted-foreground">No tasks in this category.</p>;
     }
     return (
       <div className="space-y-4">
         {tasks.map((task) => (
-          <Card key={task.id} className="bg-gray-800 border-gray-700">
+          <Card key={task.id} className="glass">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <p className="font-semibold">{task.task_name}</p>
-                <p className="text-sm text-gray-400">Workflow ID: {task.workflow_id}</p>
+                <p className="font-semibold text-foreground">{task.task_name}</p>
+                <p className="text-sm text-muted-foreground">Workflow ID: {task.workflow_id}</p>
               </div>
               <div className="flex items-center gap-2">
                 {type === 'pending' && (
@@ -142,40 +133,43 @@ const DashboardPage: NextPage = () => {
     );
   };
 
+  // Header actions for dashboard
+  const headerActions = (
+    <Button 
+      onClick={fetchDashboardData} 
+      variant="outline" 
+      size="sm"
+      disabled={isLoading}
+    >
+      <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+      Refresh
+    </Button>
+  );
+
   return (
     <>
-      <div className="flex h-screen w-full flex-col bg-gray-900 text-white">
-        <header className="flex h-16 items-center justify-between border-b border-gray-700 bg-gray-800 px-6">
-          <div className="flex items-center gap-4">
-            <GitBranch className="h-7 w-7 text-blue-400" />
-            <h1 className="text-xl font-semibold">User Dashboard</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={handleNavigateToDesigner} variant="outline">
-              Workflow Designer
-            </Button>
-            <Button onClick={handleNavigateToMonitoring} variant="outline">
-              <Eye className="mr-2 h-4 w-4" />
-              Monitoring
-            </Button>
-          </div>
-        </header>
-        <main className="flex-1 p-6 overflow-auto">
+      <MainLayout
+        title="User Dashboard"
+        subtitle="Manage your tasks and workflow activities"
+        icon={LayoutDashboard}
+        headerActions={headerActions}
+      >
+        <div className="flex-1 p-6 overflow-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-gray-800">
+              <TabsList className="grid w-full grid-cols-3 glass">
                 <TabsTrigger value="pending">Pending</TabsTrigger>
                 <TabsTrigger value="in_progress">In Progress</TabsTrigger>
                 <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
               <TabsContent value="pending">
-                <Card className="bg-gray-800/50 border-gray-700">
+                <Card className="glass">
                   <CardHeader>
-                    <CardTitle>Pending Tasks</CardTitle>
+                    <CardTitle className="text-foreground">Pending Tasks</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {renderTaskList(dashboardData?.pending || [], 'pending')}
@@ -183,9 +177,9 @@ const DashboardPage: NextPage = () => {
                 </Card>
               </TabsContent>
               <TabsContent value="in_progress">
-                <Card className="bg-gray-800/50 border-gray-700">
+                <Card className="glass">
                   <CardHeader>
-                    <CardTitle>In Progress Tasks</CardTitle>
+                    <CardTitle className="text-foreground">In Progress Tasks</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {renderTaskList(dashboardData?.in_progress || [], 'in_progress')}
@@ -193,9 +187,9 @@ const DashboardPage: NextPage = () => {
                 </Card>
               </TabsContent>
               <TabsContent value="completed">
-                <Card className="bg-gray-800/50 border-gray-700">
+                <Card className="glass">
                   <CardHeader>
-                    <CardTitle>Completed Tasks</CardTitle>
+                    <CardTitle className="text-foreground">Completed Tasks</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {renderTaskList(dashboardData?.completed || [], 'completed')}
@@ -204,32 +198,33 @@ const DashboardPage: NextPage = () => {
               </TabsContent>
             </Tabs>
           </motion.div>
-        </main>
-      </div>
+        </div>
+      </MainLayout>
+      
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700">
+        <DialogContent className="glass border-border">
           <DialogHeader>
-            <DialogTitle>Send Chat Message</DialogTitle>
+            <DialogTitle className="text-foreground">Send Chat Message</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="receiverUserId">Receiver User ID</Label>
+              <Label htmlFor="receiverUserId" className="text-foreground">Receiver User ID</Label>
               <Input
                 id="receiverUserId"
                 value={receiverUserId}
                 onChange={(e) => setReceiverUserId(e.target.value)}
                 placeholder="Enter user ID"
-                className="bg-gray-700 border-gray-600"
+                className="glass border-border"
               />
             </div>
             <div>
-              <Label htmlFor="chatMessage">Message</Label>
+              <Label htmlFor="chatMessage" className="text-foreground">Message</Label>
               <Input
                 id="chatMessage"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder="Type your message..."
-                className="bg-gray-700 border-gray-600"
+                className="glass border-border"
               />
             </div>
           </div>
