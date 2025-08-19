@@ -144,12 +144,10 @@ const GoBackEdge: React.FC<EdgeProps> = ({
 const Home: NextPage = () => {
   const initialNodes: Node<NodeData>[] = [
     { id: 'start', type: 'start', position: { x: 100, y: 200 }, data: { description: 'Workflow Start' } },
-    { id: 'upload-1', type: 'action', position: { x: 400, y: 200 }, data: { description: 'Upload Invoice' } },
+    { id: 'end', type: 'end', position: { x: 700, y: 200 }, data: { description: 'Workflow End' } },
   ];
 
-  const initialEdges: Edge[] = [
-    { id: 'e-start-upload-1', source: 'start', target: 'upload-1', animated: true },
-  ];
+  const initialEdges: Edge[] = [];
 
   const initialSettings: WorkflowSettings = {
     name: 'Custom Workflow',
@@ -163,35 +161,75 @@ const Home: NextPage = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [workflowId, setWorkflowId] = useState<number | null>(null);
 
   const onConnect = useCallback(
     (params: ReactFlowConnection | Edge) => {
-      // Check if this is a connection from a decision node to an action node
-      const sourceNode = nodes.find(node => node.id === params.source);
-      const targetNode = nodes.find(node => node.id === params.target);
-      
-      let edgeType = 'smoothstep';
-      let edgeStyle = { stroke: '#3b82f6', strokeWidth: 2 };
-      
-      // If connecting from a decision node to an action node, make it a "go back" connection
-      if (sourceNode?.type === 'decision' && targetNode?.type === 'action') {
-        edgeType = 'goBack';
-        edgeStyle = { stroke: '#ef4444', strokeWidth: 2 };
-      }
-      
+      // All connections are solid blue by default
       const newEdge = {
         ...params,
-        type: edgeType,
+        type: 'smoothstep',
         animated: true,
-        style: edgeStyle
+        style: { stroke: '#3b82f6', strokeWidth: 2 }
       };
       
       setEdges((eds) => addEdge(newEdge, eds));
     },
-    [setEdges, nodes]
+    [setEdges]
   );
+
+  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
+    setSelectedEdgeId(edge.id);
+    setSelectedNodeId(null); // Clear node selection when edge is selected
+  }, []);
+
+  const handleDeleteEdge = useCallback(() => {
+    if (!selectedEdgeId) return;
+    
+    setEdges((eds) => eds.filter((edge) => edge.id !== selectedEdgeId));
+    setSelectedEdgeId(null);
+    toast.success('Connection removed!');
+  }, [selectedEdgeId, setEdges]);
+
+  const handleToggleEdgeType = useCallback(() => {
+    if (!selectedEdgeId) return;
+    
+    setEdges((eds) => 
+      eds.map((edge) => {
+        if (edge.id === selectedEdgeId) {
+          const isGoBack = edge.type === 'goBack';
+          return {
+            ...edge,
+            type: isGoBack ? 'smoothstep' : 'goBack',
+            style: isGoBack 
+              ? { stroke: '#3b82f6', strokeWidth: 2 }
+              : { stroke: '#ef4444', strokeWidth: 2 }
+          };
+        }
+        return edge;
+      })
+    );
+    
+    const edge = edges.find(e => e.id === selectedEdgeId);
+    const isGoBack = edge?.type === 'goBack';
+    toast.success(`Connection changed to ${isGoBack ? 'solid' : 'dotted'} line!`);
+  }, [selectedEdgeId, setEdges, edges]);
+
+  const validateWorkflow = useCallback(() => {
+    // Check if there's at least one node between start and end
+    const actionNodes = nodes.filter(node => 
+      node.type !== 'start' && node.type !== 'end'
+    );
+    
+    if (actionNodes.length === 0) {
+      toast.error('Please add at least one task between Start and End to save the workflow.');
+      return false;
+    }
+    
+    return true;
+  }, [nodes]);
 
   const handleSaveSettings = (settings: any) => {
     setWorkflowSettings(settings);
@@ -203,10 +241,15 @@ const Home: NextPage = () => {
     setEdges(initialEdges);
     setWorkflowSettings(initialSettings);
     setSelectedNodeId(null);
+    setSelectedEdgeId(null);
     toast.success('New workflow created!');
   };
 
   const handleDeploy = async () => {
+    if (!validateWorkflow()) {
+      return;
+    }
+
     setIsDeploying(true);
     toast.info('Deploying workflow...');
 
@@ -290,6 +333,7 @@ const Home: NextPage = () => {
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
+    setSelectedEdgeId(null); // Clear edge selection when node is selected
   }, []);
 
   const addNode = (type: NodeType, taskType?: string) => {
@@ -341,9 +385,11 @@ const Home: NextPage = () => {
     setNodes((nds) => nds.filter((node) => node.id !== selectedNodeId));
     setEdges((eds) => eds.filter((edge) => edge.source !== selectedNodeId && edge.target !== selectedNodeId));
     setSelectedNodeId(null);
+    toast.success('Node deleted!');
   }, [selectedNodeId, setNodes, setEdges]);
 
   const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) || null, [nodes, selectedNodeId]);
+  const selectedEdge = useMemo(() => edges.find((edge) => edge.id === selectedEdgeId) || null, [edges, selectedEdgeId]);
 
   const nodeTypes = useMemo(() => ({
     start: WorkflowNode,
@@ -390,16 +436,38 @@ const Home: NextPage = () => {
           </>
         )}
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleDeleteNode}
-        disabled={!selectedNodeId || ['start', 'end'].includes(selectedNodeId)}
-        className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50"
-      >
-        <Trash2 className="mr-2 h-4 w-4" />
-        Delete
-      </Button>
+      {selectedNodeId && !['start', 'end'].includes(selectedNodeId) && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDeleteNode}
+          className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete Node
+        </Button>
+      )}
+      {selectedEdgeId && (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleEdgeType}
+            className="border-blue-300 text-blue-700 hover:bg-blue-50"
+          >
+            {selectedEdge?.type === 'goBack' ? 'Make Solid' : 'Make Dotted'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteEdge}
+            className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Connection
+          </Button>
+        </>
+      )}
     </>
   );
 
@@ -523,6 +591,7 @@ const Home: NextPage = () => {
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onNodeClick={onNodeClick}
+              onEdgeClick={onEdgeClick}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
               fitView
