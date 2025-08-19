@@ -288,8 +288,7 @@ const Home: NextPage = () => {
       icon={Workflow}
       headerActions={headerActions}
     >
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full flex">
+      <div className="h-full flex">
           {/* Left Palette */}
           <motion.aside
             initial={{ x: -80, opacity: 0 }}
