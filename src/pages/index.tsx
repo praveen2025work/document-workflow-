@@ -27,6 +27,7 @@ import { createWorkflow, addWorkflowRole, mapUserToRole, addWorkflowTask, addWor
 import { useUser } from '@/context/UserContext';
 import { useRouter } from 'next/router';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+import { config, debugLog } from '@/lib/config';
 
 interface Role {
   id: number;
@@ -51,7 +52,7 @@ interface WorkflowSettings {
 
 const Home: NextPage = () => {
   const router = useRouter();
-  const { user, loading } = useUser();
+  const { user, loading, error } = useUser();
 
   const initialNodes: Node<NodeData>[] = [
     { id: 'start', type: 'start', position: { x: 100, y: 200 }, data: { description: 'Workflow Start' } },
@@ -246,13 +247,30 @@ const Home: NextPage = () => {
                   {workflowSettings.name}
                 </Badge>
               )}
+              {config.features.debug && (
+                <Badge variant="outline" className="ml-2">
+                  {config.app.env.toUpperCase()}
+                </Badge>
+              )}
             </div>
             
             <div className="flex items-center gap-3">
               {loading ? (
                 <div className="text-sm text-muted-foreground">Loading user...</div>
               ) : user ? (
-                <div className="text-sm text-muted-foreground">Welcome, {user.name}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-muted-foreground">Welcome, {user.name}</div>
+                  {error && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="destructive" className="text-xs">Mock</Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Using mock user data - service unavailable</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
               ) : (
                 <div className="text-sm text-muted-foreground">Could not load user data.</div>
               )}
@@ -315,13 +333,13 @@ const Home: NextPage = () => {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="designer" className="flex-1 overflow-hidden relative flex gap-6">
+            <TabsContent value="designer" className="flex-1 overflow-hidden relative flex">
               {/* Left Palette */}
               <motion.aside
                 initial={{ x: -80, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-                className="w-24 glass rounded-xl p-4"
+                className="w-24 glass rounded-l-xl rounded-r-none p-4 z-10"
               >
                 <div className="flex flex-col items-center gap-4">
                   <h2 className="text-sm font-semibold text-foreground mb-2">Tools</h2>
@@ -425,7 +443,7 @@ const Home: NextPage = () => {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.4, ease: 'easeOut' }}
-                className="flex-1 glass rounded-xl overflow-hidden"
+                className="flex-1 glass rounded-r-xl rounded-l-none overflow-hidden"
               >
                 <ReactFlow
                   nodes={nodes}

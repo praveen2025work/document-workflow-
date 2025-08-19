@@ -7,9 +7,21 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:local": "cp .env.local .env && next dev",
+    "dev:dev": "cp .env.dev .env && next dev",
     "build": "next build",
+    "build:dev": "cp .env.dev .env && next build",
+    "build:uat": "cp .env.uat .env && next build",
+    "build:prod": "cp .env.prod .env && next build",
     "start": "next start",
-    "lint": "next lint"
+    "start:dev": "cp .env.dev .env && next start",
+    "start:uat": "cp .env.uat .env && next start",
+    "start:prod": "cp .env.prod .env && next start",
+    "lint": "next lint",
+    "env:local": "cp .env.local .env",
+    "env:dev": "cp .env.dev .env",
+    "env:uat": "cp .env.uat .env",
+    "env:prod": "cp .env.prod .env"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",

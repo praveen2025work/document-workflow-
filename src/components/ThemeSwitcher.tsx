@@ -1,28 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Moon, Sun, Palette, Monitor, Zap, Leaf, Flame } from 'lucide-react';
+
+type Theme = 'light' | 'dark' | 'blue' | 'green' | 'purple' | 'orange';
+
+const themes = [
+  { id: 'light' as Theme, name: 'Light', icon: Sun },
+  { id: 'dark' as Theme, name: 'Dark', icon: Moon },
+  { id: 'blue' as Theme, name: 'Ocean Blue', icon: Monitor },
+  { id: 'green' as Theme, name: 'Forest Green', icon: Leaf },
+  { id: 'purple' as Theme, name: 'Royal Purple', icon: Zap },
+  { id: 'orange' as Theme, name: 'Sunset Orange', icon: Flame },
+];
 
 const ThemeSwitcher: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<Theme>('light');
 
   useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setIsDarkMode(isDark);
+    const savedTheme = localStorage.getItem('theme') as Theme || 'light';
+    applyTheme(savedTheme);
+    setCurrentTheme(savedTheme);
   }, []);
 
-  const toggleTheme = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-    } else {
+  const applyTheme = (theme: Theme) => {
+    // Remove all theme classes
+    document.documentElement.classList.remove('dark', 'theme-blue', 'theme-green', 'theme-purple', 'theme-orange');
+    
+    // Apply new theme
+    if (theme === 'dark') {
       document.documentElement.classList.add('dark');
+    } else if (theme !== 'light') {
+      document.documentElement.classList.add(`theme-${theme}`);
     }
-    setIsDarkMode(!isDarkMode);
+    
+    localStorage.setItem('theme', theme);
   };
 
+  const handleThemeChange = (theme: Theme) => {
+    applyTheme(theme);
+    setCurrentTheme(theme);
+  };
+
+  const currentThemeData = themes.find(t => t.id === currentTheme) || themes[0];
+  const CurrentIcon = currentThemeData.icon;
+
   return (
-    <Button onClick={toggleTheme} variant="outline" size="icon">
-      {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon" className="relative">
+          <CurrentIcon className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {themes.map((theme) => {
+          const Icon = theme.icon;
+          return (
+            <DropdownMenuItem
+              key={theme.id}
+              onClick={() => handleThemeChange(theme.id)}
+              className={`flex items-center gap-2 cursor-pointer ${
+                currentTheme === theme.id ? 'bg-accent' : ''
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{theme.name}</span>
+              {currentTheme === theme.id && (
+                <div className="ml-auto h-2 w-2 rounded-full bg-primary" />
+              )}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

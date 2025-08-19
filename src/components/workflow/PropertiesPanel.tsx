@@ -133,7 +133,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
         />
       </div>
       <div className="space-y-2">
-        <h4 className="font-semibold">Escalation</h4>
+        <h4 className="font-semibold text-foreground">Escalation</h4>
         <div className="flex items-center justify-between">
           <Label htmlFor="remindAtTime">Remind at Time</Label>
           <Switch
@@ -184,7 +184,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       case 'action':
         return renderActionProperties();
       default:
-        return <p className="text-gray-400">No configurable properties for this node type.</p>;
+        return <p className="text-muted-foreground">No configurable properties for this node type.</p>;
     }
   };
 
@@ -196,10 +196,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="absolute right-0 top-0 h-full w-80 bg-gray-800 border-l border-gray-700 z-30 flex flex-col"
+          className="absolute right-0 top-0 h-full w-80 glass border-l border-border z-30 flex flex-col"
         >
-          <div className="flex items-center justify-between p-4 border-b border-gray-700">
-            <h2 className="text-lg font-semibold capitalize">{selectedNode.type} Properties</h2>
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <h2 className="text-lg font-semibold capitalize text-foreground">{selectedNode.type} Properties</h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-5 w-5" />
             </Button>
@@ -207,7 +207,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
           <div className="flex-1 p-4 overflow-y-auto">
             {renderProperties()}
           </div>
-          <div className="p-4 border-t border-gray-700 flex gap-2">
+          <div className="p-4 border-t border-border flex gap-2">
             <Button onClick={handleSave} className="flex-1">Save</Button>
             <Button onClick={onClose} variant="outline" className="flex-1">Cancel</Button>
           </div>
