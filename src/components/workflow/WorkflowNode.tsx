@@ -21,67 +21,58 @@ import {
 } from 'lucide-react';
 import { NodeData } from './types';
 
-// Custom Update Icon Component (up and down arrows within U-like box)
+// Modern Update Icon Component (sync/refresh with arrows)
 const UpdateIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="2.5"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {/* U-shaped container */}
-    <path d="M6 4v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4" />
-    {/* Up arrow */}
-    <path d="M10 10l2-2 2 2" />
-    <path d="M12 8v4" />
-    {/* Down arrow */}
-    <path d="M10 16l2 2 2-2" />
-    <path d="M12 14v4" />
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+    <path d="M3 21v-5h5" />
   </svg>
 );
 
-// Custom Consolidate Icon Component (reverse Y shape with horizontal arrows merging)
+// Modern Consolidate Icon Component (merge/combine)
 const ConsolidateIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="2.5"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {/* Left horizontal arrow */}
-    <path d="M2 8h8" />
-    <path d="M6 4l4 4-4 4" />
-    {/* Right horizontal arrow */}
-    <path d="M14 8h8" />
-    <path d="M18 4l4 4-4 4" />
-    {/* Merging point and vertical arrow */}
-    <path d="M12 8v8" />
-    <path d="M8 20l4-4 4 4" />
+    <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+    <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+    <path d="M3 8h3a2 2 0 0 1 2 2v3" />
+    <path d="M21 8h-3a2 2 0 0 0-2 2v3" />
+    <path d="M8 13v3a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-3" />
+    <path d="M12 13v8" />
   </svg>
 );
 
-// Custom Decision Icon Component (diamond/decision box shape)
+// Modern Decision Icon Component (diamond with branching paths)
 const DecisionIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="2.5"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {/* Diamond shape */}
-    <path d="M12 2l8 10-8 10-8-10z" />
-    {/* Question mark inside */}
-    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-    <circle cx="12" cy="17" r="0.5" />
+    <path d="M12 2L22 12L12 22L2 12Z" />
+    <path d="M8 12h8" />
+    <path d="M12 8v8" />
   </svg>
 );
 
@@ -116,38 +107,41 @@ const getNodeIcon = (type: string, description?: string): React.ReactNode => {
 
 // Function to get colors based on node type and description
 const getNodeColors = (type: string, description?: string) => {
-  // Start node - Modern pleasant green
+  // Start node - Dark emerald green
   if (type === 'start') {
     return {
-      bg: 'bg-emerald-100',
-      border: 'border-emerald-300',
-      selectedBg: 'bg-emerald-200',
-      selectedBorder: 'border-emerald-500',
-      icon: 'text-emerald-600',
+      bg: 'bg-emerald-700',
+      border: 'border-emerald-600',
+      selectedBg: 'bg-emerald-600',
+      selectedBorder: 'border-emerald-400',
+      icon: 'text-white',
+      text: 'text-white',
       selectedRing: 'ring-emerald-400'
     };
   }
   
-  // End node - Red background
+  // End node - Dark red background
   if (type === 'end') {
     return {
-      bg: 'bg-red-100',
-      border: 'border-red-300',
-      selectedBg: 'bg-red-200',
-      selectedBorder: 'border-red-500',
-      icon: 'text-red-600',
+      bg: 'bg-red-700',
+      border: 'border-red-600',
+      selectedBg: 'bg-red-600',
+      selectedBorder: 'border-red-400',
+      icon: 'text-white',
+      text: 'text-white',
       selectedRing: 'ring-red-400'
     };
   }
   
-  // Decision node - Blue background
+  // Decision node - Dark blue background
   if (type === 'decision') {
     return {
-      bg: 'bg-blue-100',
-      border: 'border-blue-300',
-      selectedBg: 'bg-blue-200',
-      selectedBorder: 'border-blue-500',
-      icon: 'text-blue-600',
+      bg: 'bg-blue-700',
+      border: 'border-blue-600',
+      selectedBg: 'bg-blue-600',
+      selectedBorder: 'border-blue-400',
+      icon: 'text-white',
+      text: 'text-white',
       selectedRing: 'ring-blue-400'
     };
   }
@@ -156,26 +150,28 @@ const getNodeColors = (type: string, description?: string) => {
   if (type === 'action' && description) {
     const desc = description.toLowerCase();
     
-    // Upload - Sea blue green
+    // Upload - Dark teal
     if (desc.includes('upload')) {
       return {
-        bg: 'bg-teal-100',
-        border: 'border-teal-300',
-        selectedBg: 'bg-teal-200',
-        selectedBorder: 'border-teal-500',
-        icon: 'text-teal-600',
+        bg: 'bg-teal-700',
+        border: 'border-teal-600',
+        selectedBg: 'bg-teal-600',
+        selectedBorder: 'border-teal-400',
+        icon: 'text-white',
+        text: 'text-white',
         selectedRing: 'ring-teal-400'
       };
     }
     
-    // Update - Purple background
+    // Update - Dark purple background
     if (desc.includes('update') || desc.includes('edit') || desc.includes('modify')) {
       return {
-        bg: 'bg-purple-100',
-        border: 'border-purple-300',
-        selectedBg: 'bg-purple-200',
-        selectedBorder: 'border-purple-500',
-        icon: 'text-purple-600',
+        bg: 'bg-purple-700',
+        border: 'border-purple-600',
+        selectedBg: 'bg-purple-600',
+        selectedBorder: 'border-purple-400',
+        icon: 'text-white',
+        text: 'text-white',
         selectedRing: 'ring-purple-400'
       };
     }
@@ -183,23 +179,25 @@ const getNodeColors = (type: string, description?: string) => {
     // Consolidate - Dark green
     if (desc.includes('consolidate') || desc.includes('merge') || desc.includes('combine')) {
       return {
-        bg: 'bg-green-100',
-        border: 'border-green-400',
-        selectedBg: 'bg-green-200',
-        selectedBorder: 'border-green-600',
-        icon: 'text-green-700',
-        selectedRing: 'ring-green-500'
+        bg: 'bg-green-700',
+        border: 'border-green-600',
+        selectedBg: 'bg-green-600',
+        selectedBorder: 'border-green-400',
+        icon: 'text-white',
+        text: 'text-white',
+        selectedRing: 'ring-green-400'
       };
     }
     
-    // Download - Default teal (sea blue green)
+    // Download - Dark teal
     if (desc.includes('download')) {
       return {
-        bg: 'bg-teal-100',
-        border: 'border-teal-300',
-        selectedBg: 'bg-teal-200',
-        selectedBorder: 'border-teal-500',
-        icon: 'text-teal-600',
+        bg: 'bg-teal-700',
+        border: 'border-teal-600',
+        selectedBg: 'bg-teal-600',
+        selectedBorder: 'border-teal-400',
+        icon: 'text-white',
+        text: 'text-white',
         selectedRing: 'ring-teal-400'
       };
     }
@@ -207,11 +205,12 @@ const getNodeColors = (type: string, description?: string) => {
   
   // Default colors for other types
   return {
-    bg: 'bg-slate-100',
-    border: 'border-slate-300',
-    selectedBg: 'bg-slate-200',
-    selectedBorder: 'border-slate-500',
-    icon: 'text-slate-600',
+    bg: 'bg-slate-700',
+    border: 'border-slate-600',
+    selectedBg: 'bg-slate-600',
+    selectedBorder: 'border-slate-400',
+    icon: 'text-white',
+    text: 'text-white',
     selectedRing: 'ring-slate-400'
   };
 };
@@ -269,12 +268,12 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
       {/* Node Content */}
       <div className={cn("flex items-center gap-2 mb-2", colors.icon)}>
         {getNodeIcon(type, data.description)}
-        <span className="font-semibold text-sm capitalize text-foreground">
+        <span className={cn("font-semibold text-sm capitalize", colors.text)}>
           {type}
         </span>
       </div>
       
-      <p className="text-xs text-muted-foreground text-center leading-tight px-1">
+      <p className={cn("text-xs text-center leading-tight px-1", colors.text)}>
         {data.description || 'No description'}
       </p>
 

@@ -3,67 +3,58 @@ import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Play, Upload, Download, FileUp, Settings, MousePointer, Workflow, Sparkles, Layers } from 'lucide-react';
 
-// Custom Update Icon Component (up and down arrows within U-like box)
+// Modern Update Icon Component (sync/refresh with arrows)
 const UpdateIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="2.5"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {/* U-shaped container */}
-    <path d="M6 4v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4" />
-    {/* Up arrow */}
-    <path d="M10 10l2-2 2 2" />
-    <path d="M12 8v4" />
-    {/* Down arrow */}
-    <path d="M10 16l2 2 2-2" />
-    <path d="M12 14v4" />
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+    <path d="M3 21v-5h5" />
   </svg>
 );
 
-// Custom Consolidate Icon Component (reverse Y shape with horizontal arrows merging)
+// Modern Consolidate Icon Component (merge/combine)
 const ConsolidateIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="2.5"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {/* Left horizontal arrow */}
-    <path d="M2 8h8" />
-    <path d="M6 4l4 4-4 4" />
-    {/* Right horizontal arrow */}
-    <path d="M14 8h8" />
-    <path d="M18 4l4 4-4 4" />
-    {/* Merging point and vertical arrow */}
-    <path d="M12 8v8" />
-    <path d="M8 20l4-4 4 4" />
+    <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+    <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+    <path d="M3 8h3a2 2 0 0 1 2 2v3" />
+    <path d="M21 8h-3a2 2 0 0 0-2 2v3" />
+    <path d="M8 13v3a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-3" />
+    <path d="M12 13v8" />
   </svg>
 );
 
-// Custom Decision Icon Component (diamond/decision box shape)
+// Modern Decision Icon Component (diamond with branching paths)
 const DecisionIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="2.5"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    {/* Diamond shape */}
-    <path d="M12 2l8 10-8 10-8-10z" />
-    {/* Question mark inside */}
-    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-    <circle cx="12" cy="17" r="0.5" />
+    <path d="M12 2L22 12L12 22L2 12Z" />
+    <path d="M8 12h8" />
+    <path d="M12 8v8" />
   </svg>
 );
 import ReactFlow, {
@@ -367,11 +358,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'upload')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-teal-100 border border-teal-300 p-2 transition-all hover:bg-teal-200 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-teal-700 border border-teal-600 p-2 transition-all hover:bg-teal-600 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Upload className="h-6 w-6 text-teal-600" />
+                    <Upload className="h-6 w-6 text-white" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">File Upload Task</TooltipContent>
@@ -381,11 +372,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'download')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-teal-100 border border-teal-300 p-2 transition-all hover:bg-teal-200 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-teal-700 border border-teal-600 p-2 transition-all hover:bg-teal-600 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Download className="h-6 w-6 text-teal-600" />
+                    <Download className="h-6 w-6 text-white" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">File Download Task</TooltipContent>
@@ -395,11 +386,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'update')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-purple-100 border border-purple-300 p-2 transition-all hover:bg-purple-200 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-purple-700 border border-purple-600 p-2 transition-all hover:bg-purple-600 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <UpdateIcon className="h-6 w-6 text-purple-600" />
+                    <UpdateIcon className="h-6 w-6 text-white" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">File Update Task</TooltipContent>
@@ -409,11 +400,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'consolidate')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-green-100 border border-green-400 p-2 transition-all hover:bg-green-200 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-green-700 border border-green-600 p-2 transition-all hover:bg-green-600 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <ConsolidateIcon className="h-6 w-6 text-green-700" />
+                    <ConsolidateIcon className="h-6 w-6 text-white" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">Consolidate Files Task</TooltipContent>
@@ -423,11 +414,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('decision', 'decision')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-blue-100 border border-blue-300 p-2 transition-all hover:bg-blue-200 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-blue-700 border border-blue-600 p-2 transition-all hover:bg-blue-600 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <DecisionIcon className="h-6 w-6 text-blue-600" />
+                    <DecisionIcon className="h-6 w-6 text-white" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">Decision Task</TooltipContent>
