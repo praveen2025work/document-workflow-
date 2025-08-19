@@ -2,6 +2,70 @@ import React, { useState, useCallback, useMemo } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Play, Upload, Download, FileUp, Settings, MousePointer, Workflow, Sparkles, Layers } from 'lucide-react';
+
+// Custom Update Icon Component (up and down arrows within U-like box)
+const UpdateIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* U-shaped container */}
+    <path d="M6 4v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4" />
+    {/* Up arrow */}
+    <path d="M10 10l2-2 2 2" />
+    <path d="M12 8v4" />
+    {/* Down arrow */}
+    <path d="M10 16l2 2 2-2" />
+    <path d="M12 14v4" />
+  </svg>
+);
+
+// Custom Consolidate Icon Component (reverse Y shape with horizontal arrows merging)
+const ConsolidateIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* Left horizontal arrow */}
+    <path d="M2 8h8" />
+    <path d="M6 4l4 4-4 4" />
+    {/* Right horizontal arrow */}
+    <path d="M14 8h8" />
+    <path d="M18 4l4 4-4 4" />
+    {/* Merging point and vertical arrow */}
+    <path d="M12 8v8" />
+    <path d="M8 20l4-4 4 4" />
+  </svg>
+);
+
+// Custom Decision Icon Component (diamond/decision box shape)
+const DecisionIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* Diamond shape */}
+    <path d="M12 2l8 10-8 10-8-10z" />
+    {/* Question mark inside */}
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <circle cx="12" cy="17" r="0.5" />
+  </svg>
+);
 import ReactFlow, {
   Controls,
   useNodesState,
@@ -335,10 +399,7 @@ const Home: NextPage = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <div className="relative h-6 w-6">
-                      <Upload className="h-4 w-4 absolute -top-0.5 -left-0.5 text-purple-600" />
-                      <Download className="h-4 w-4 absolute top-0.5 left-0.5 text-purple-600" />
-                    </div>
+                    <UpdateIcon className="h-6 w-6 text-purple-600" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">File Update Task</TooltipContent>
@@ -352,10 +413,7 @@ const Home: NextPage = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <svg viewBox="0 0 20 20" className="h-6 w-6 text-green-700" fill="currentColor">
-                      <path d="M3 8l4-4v3h4V4l4 4-4 4V9H7v3L3 8z" />
-                      <path d="M15 12v3l4-4-4-4v3H9v2h6z" />
-                    </svg>
+                    <ConsolidateIcon className="h-6 w-6 text-green-700" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">Consolidate Files Task</TooltipContent>
@@ -369,7 +427,7 @@ const Home: NextPage = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <MousePointer className="h-6 w-6 text-blue-600" />
+                    <DecisionIcon className="h-6 w-6 text-blue-600" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">Decision Task</TooltipContent>

@@ -21,22 +21,68 @@ import {
 } from 'lucide-react';
 import { NodeData } from './types';
 
-// Custom Update Icon Component (Upload + Download combined)
+// Custom Update Icon Component (up and down arrows within U-like box)
 const UpdateIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={cn("relative", className)}>
-    <Upload className="h-3 w-3 absolute -top-0.5 -left-0.5" />
-    <Download className="h-3 w-3 absolute top-0.5 left-0.5" />
-  </div>
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* U-shaped container */}
+    <path d="M6 4v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4" />
+    {/* Up arrow */}
+    <path d="M10 10l2-2 2 2" />
+    <path d="M12 8v4" />
+    {/* Down arrow */}
+    <path d="M10 16l2 2 2-2" />
+    <path d="M12 14v4" />
+  </svg>
 );
 
-// Custom Consolidate Icon Component (Two arrows merging into one)
+// Custom Consolidate Icon Component (reverse Y shape with horizontal arrows merging)
 const ConsolidateIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={cn("relative", className)}>
-    <svg viewBox="0 0 20 20" className="h-5 w-5" fill="currentColor">
-      <path d="M3 8l4-4v3h4V4l4 4-4 4V9H7v3L3 8z" />
-      <path d="M15 12v3l4-4-4-4v3H9v2h6z" />
-    </svg>
-  </div>
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* Left horizontal arrow */}
+    <path d="M2 8h8" />
+    <path d="M6 4l4 4-4 4" />
+    {/* Right horizontal arrow */}
+    <path d="M14 8h8" />
+    <path d="M18 4l4 4-4 4" />
+    {/* Merging point and vertical arrow */}
+    <path d="M12 8v8" />
+    <path d="M8 20l4-4 4 4" />
+  </svg>
+);
+
+// Custom Decision Icon Component (diamond/decision box shape)
+const DecisionIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* Diamond shape */}
+    <path d="M12 2l8 10-8 10-8-10z" />
+    {/* Question mark inside */}
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <circle cx="12" cy="17" r="0.5" />
+  </svg>
 );
 
 // Function to get the appropriate icon based on node type and description
@@ -45,7 +91,7 @@ const getNodeIcon = (type: string, description?: string): React.ReactNode => {
   const baseIcons: { [key: string]: React.ReactNode } = {
     start: <Play className="h-5 w-5" />,
     end: <Square className="h-5 w-5" />,
-    decision: <MousePointer className="h-5 w-5" />,
+    decision: <DecisionIcon className="h-5 w-5" />,
     api: <MessageSquare className="h-5 w-5" />,
     database: <Database className="h-5 w-5" />,
   };
