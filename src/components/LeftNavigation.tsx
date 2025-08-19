@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { 
@@ -76,6 +76,26 @@ const LeftNavigation: React.FC<LeftNavigationProps> = ({
   onToggleCollapse 
 }) => {
   const router = useRouter();
+  const navRef = useRef<HTMLElement>(null);
+
+  // Handle clicks outside the navigation to auto-collapse
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        navRef.current && 
+        !navRef.current.contains(event.target as Node) && 
+        !isCollapsed && 
+        onToggleCollapse
+      ) {
+        onToggleCollapse();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCollapsed, onToggleCollapse]);
 
   const handleNavigation = (path: string) => {
     router.push(path);
@@ -90,6 +110,7 @@ const LeftNavigation: React.FC<LeftNavigationProps> = ({
 
   return (
     <motion.aside
+      ref={navRef}
       initial={{ x: -280, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
