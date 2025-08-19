@@ -131,22 +131,19 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* Connection Handles */}
+      {/* Input Connection Handles - for receiving connections */}
       {type !== 'start' && (
         <>
           <Handle
             type="target"
             position={Position.Top}
+            id="target-top"
             className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
           />
           <Handle
             type="target"
             position={Position.Left}
-            className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
-          />
-          <Handle
-            type="target"
-            position={Position.Right}
+            id="target-left"
             className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
           />
         </>
@@ -174,21 +171,19 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
         />
       )}
 
+      {/* Output Connection Handles - for creating connections */}
       {type !== 'end' && (
         <>
           <Handle
             type="source"
             position={Position.Bottom}
-            className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
-          />
-          <Handle
-            type="source"
-            position={Position.Left}
+            id="source-bottom"
             className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
           />
           <Handle
             type="source"
             position={Position.Right}
+            id="source-right"
             className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
           />
         </>
