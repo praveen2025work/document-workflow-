@@ -107,16 +107,16 @@ const getNodeIcon = (type: string, description?: string): React.ReactNode => {
 
 // Function to get colors based on node type and description
 const getNodeColors = (type: string, description?: string) => {
-  // Start node - Dark emerald green
+  // Start node - Light green with blue mix
   if (type === 'start') {
     return {
-      bg: 'bg-emerald-700',
-      border: 'border-emerald-600',
-      selectedBg: 'bg-emerald-600',
-      selectedBorder: 'border-emerald-400',
+      bg: 'bg-gradient-to-br from-green-400 to-blue-500',
+      border: 'border-green-400',
+      selectedBg: 'bg-gradient-to-br from-green-300 to-blue-400',
+      selectedBorder: 'border-green-300',
       icon: 'text-white',
       text: 'text-white',
-      selectedRing: 'ring-emerald-400'
+      selectedRing: 'ring-green-400'
     };
   }
   
@@ -150,16 +150,16 @@ const getNodeColors = (type: string, description?: string) => {
   if (type === 'action' && description) {
     const desc = description.toLowerCase();
     
-    // Upload - Dark teal
+    // Upload - Sea blue
     if (desc.includes('upload')) {
       return {
-        bg: 'bg-teal-700',
-        border: 'border-teal-600',
-        selectedBg: 'bg-teal-600',
-        selectedBorder: 'border-teal-400',
+        bg: 'bg-cyan-600',
+        border: 'border-cyan-500',
+        selectedBg: 'bg-cyan-500',
+        selectedBorder: 'border-cyan-400',
         icon: 'text-white',
         text: 'text-white',
-        selectedRing: 'ring-teal-400'
+        selectedRing: 'ring-cyan-400'
       };
     }
     

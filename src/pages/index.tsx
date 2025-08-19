@@ -358,7 +358,7 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'upload')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-teal-700 border border-teal-600 p-2 transition-all hover:bg-teal-600 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-cyan-600 border border-cyan-500 p-2 transition-all hover:bg-cyan-500 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
