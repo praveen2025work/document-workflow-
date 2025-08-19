@@ -18,7 +18,6 @@ import {
   MousePointer
 } from 'lucide-react';
 import { NodeData } from './types';
-=======
 
 // Function to get the appropriate icon based on node type and description
 const getNodeIcon = (type: string, description?: string): React.ReactNode => {
