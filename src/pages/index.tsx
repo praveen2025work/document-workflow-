@@ -358,11 +358,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'upload')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-cyan-600 border border-cyan-500 p-2 transition-all hover:bg-cyan-500 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:border-border hover:bg-muted/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Upload className="h-6 w-6 text-white" />
+                    <Upload className="h-6 w-6 text-muted-foreground group-hover:text-foreground" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">File Upload Task</TooltipContent>
@@ -372,11 +372,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'download')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-teal-700 border border-teal-600 p-2 transition-all hover:bg-teal-600 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:border-border hover:bg-muted/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Download className="h-6 w-6 text-white" />
+                    <Download className="h-6 w-6 text-muted-foreground group-hover:text-foreground" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">File Download Task</TooltipContent>
@@ -386,11 +386,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'update')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-purple-700 border border-purple-600 p-2 transition-all hover:bg-purple-600 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:border-border hover:bg-muted/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <UpdateIcon className="h-6 w-6 text-white" />
+                    <UpdateIcon className="h-6 w-6 text-muted-foreground group-hover:text-foreground" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">File Update Task</TooltipContent>
@@ -400,11 +400,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('action', 'consolidate')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-green-700 border border-green-600 p-2 transition-all hover:bg-green-600 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:border-border hover:bg-muted/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <ConsolidateIcon className="h-6 w-6 text-white" />
+                    <ConsolidateIcon className="h-6 w-6 text-muted-foreground group-hover:text-foreground" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">Consolidate Files Task</TooltipContent>
@@ -414,11 +414,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => addNode('decision', 'decision')} 
-                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-blue-700 border border-blue-600 p-2 transition-all hover:bg-blue-600 hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:border-border hover:bg-muted/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <DecisionIcon className="h-6 w-6 text-white" />
+                    <DecisionIcon className="h-6 w-6 text-muted-foreground group-hover:text-foreground" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">Decision Task</TooltipContent>
@@ -430,12 +430,11 @@ const Home: NextPage = () => {
                 <TooltipTrigger asChild>
                   <motion.div 
                     onClick={() => setIsSettingsOpen(true)} 
-                    className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-muted/50 border border-border p-2 transition-all hover:bg-muted hover:scale-105 group"
+                    className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:border-border hover:bg-muted/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Settings className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
-                    <span className="text-xs text-muted-foreground group-hover:text-foreground mt-1">Settings</span>
+                    <Settings className="h-6 w-6 text-muted-foreground group-hover:text-foreground" />
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="right">Workflow Settings</TooltipContent>
