@@ -424,7 +424,7 @@ const Home: NextPage = () => {
         variant="default" 
         size="sm"
         disabled={isDeploying}
-        className="bg-success hover:bg-success/90"
+        className="bg-success text-success-foreground hover:bg-success/90"
       >
         {isDeploying ? (
           <>
