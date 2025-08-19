@@ -2,16 +2,51 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { cn } from '@/lib/utils';
-import { FileUp, GitBranch, Mail, MessageSquare, Database, AlertTriangle, Play, Square } from 'lucide-react';
+import { 
+  FileUp, 
+  GitBranch, 
+  Mail, 
+  MessageSquare, 
+  Database, 
+  AlertTriangle, 
+  Play, 
+  Square,
+  Upload,
+  Download,
+  Edit,
+  Layers,
+  MousePointer
+} from 'lucide-react';
 import { NodeData } from './types';
+=======
 
-const nodeIcons: { [key: string]: React.ReactNode } = {
-  start: <Play className="h-5 w-5" />,
-  end: <Square className="h-5 w-5" />,
-  decision: <AlertTriangle className="h-5 w-5" />,
-  action: <Mail className="h-5 w-5" />,
-  api: <MessageSquare className="h-5 w-5" />,
-  database: <Database className="h-5 w-5" />,
+// Function to get the appropriate icon based on node type and description
+const getNodeIcon = (type: string, description?: string): React.ReactNode => {
+  // Base icons for node types
+  const baseIcons: { [key: string]: React.ReactNode } = {
+    start: <Play className="h-5 w-5" />,
+    end: <Square className="h-5 w-5" />,
+    decision: <MousePointer className="h-5 w-5" />,
+    api: <MessageSquare className="h-5 w-5" />,
+    database: <Database className="h-5 w-5" />,
+  };
+
+  // For action nodes, determine icon based on description
+  if (type === 'action' && description) {
+    const desc = description.toLowerCase();
+    if (desc.includes('upload')) {
+      return <Upload className="h-5 w-5" />;
+    } else if (desc.includes('download')) {
+      return <Download className="h-5 w-5" />;
+    } else if (desc.includes('update') || desc.includes('edit') || desc.includes('modify')) {
+      return <Edit className="h-5 w-5" />;
+    } else if (desc.includes('consolidate') || desc.includes('merge') || desc.includes('combine')) {
+      return <Layers className="h-5 w-5" />;
+    }
+  }
+
+  // Return base icon or default
+  return baseIcons[type] || <FileUp className="h-5 w-5" />;
 };
 
 const nodeColors = {
@@ -120,7 +155,7 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
 
       {/* Node Content */}
       <div className={cn("flex items-center gap-2 mb-2", colors.icon)}>
-        {nodeIcons[type] || <FileUp className="h-5 w-5" />}
+        {getNodeIcon(type, data.description)}
         <span className="font-semibold text-sm capitalize text-foreground">
           {type}
         </span>

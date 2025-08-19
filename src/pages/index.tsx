@@ -174,12 +174,37 @@ const Home: NextPage = () => {
     setSelectedNodeId(node.id);
   }, []);
 
-  const addNode = (type: NodeType) => {
+  const addNode = (type: NodeType, taskType?: string) => {
+    let description = `New ${type} node`;
+    
+    // Set specific descriptions based on task type
+    if (taskType) {
+      switch (taskType) {
+        case 'upload':
+          description = 'Upload File';
+          break;
+        case 'download':
+          description = 'Download File';
+          break;
+        case 'update':
+          description = 'Update File';
+          break;
+        case 'consolidate':
+          description = 'Consolidate Files';
+          break;
+        case 'decision':
+          description = 'Decision Point';
+          break;
+        default:
+          description = `New ${type} node`;
+      }
+    }
+
     const newNode: Node<NodeData> = {
       id: `node-${Date.now()}`,
       type,
       position: { x: Math.random() * 400 + 200, y: Math.random() * 300 + 100 },
-      data: { description: `New ${type} node` },
+      data: { description },
     };
     setNodes((nds) => nds.concat(newNode));
   };
@@ -263,7 +288,7 @@ const Home: NextPage = () => {
       icon={Workflow}
       headerActions={headerActions}
     >
-      <div className="flex-1 overflow-hidden p-6">
+      <div className="flex-1 overflow-hidden">
         <div className="h-full flex">
           {/* Left Palette */}
           <motion.aside
@@ -278,7 +303,7 @@ const Home: NextPage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.div 
-                    onClick={() => addNode('action')} 
+                    onClick={() => addNode('action', 'upload')} 
                     className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -293,7 +318,7 @@ const Home: NextPage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.div 
-                    onClick={() => addNode('action')} 
+                    onClick={() => addNode('action', 'download')} 
                     className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -308,7 +333,7 @@ const Home: NextPage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.div 
-                    onClick={() => addNode('action')} 
+                    onClick={() => addNode('action', 'update')} 
                     className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -323,7 +348,7 @@ const Home: NextPage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.div 
-                    onClick={() => addNode('action')} 
+                    onClick={() => addNode('action', 'consolidate')} 
                     className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 border border-primary/20 p-2 transition-all hover:bg-primary/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -338,7 +363,7 @@ const Home: NextPage = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.div 
-                    onClick={() => addNode('decision')} 
+                    onClick={() => addNode('decision', 'decision')} 
                     className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl bg-warning/10 border border-warning/20 p-2 transition-all hover:bg-warning/20 hover:scale-105 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
