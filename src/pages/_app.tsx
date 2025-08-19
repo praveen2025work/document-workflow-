@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app'
 import '../styles/globals.css';
 import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { useEffect, useState } from 'react';
 import { UserProvider } from '@/context/UserContext';
 import api from '@/lib/api';
@@ -28,10 +29,12 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <UserProvider>
-      <div className="min-h-screen">
-        <Component {...pageProps} />
-        <Toaster />
-      </div>
+      <TooltipProvider>
+        <div className="min-h-screen">
+          <Component {...pageProps} />
+          <Toaster />
+        </div>
+      </TooltipProvider>
     </UserProvider>
   )
 }

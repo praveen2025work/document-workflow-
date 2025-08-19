@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import LeftNavigation from '@/components/LeftNavigation';
 import MainHeader from '@/components/MainHeader';
 
@@ -25,32 +24,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   };
 
   return (
-    <TooltipProvider>
-      <div className="flex h-screen w-full bg-background">
-        {/* Left Navigation */}
-        <LeftNavigation 
-          isCollapsed={isNavCollapsed}
-          onToggleCollapse={toggleNavCollapse}
-        />
+    <div className="flex h-screen w-full bg-background relative z-20">
+      {/* Left Navigation */}
+      <LeftNavigation 
+        isCollapsed={isNavCollapsed}
+        onToggleCollapse={toggleNavCollapse}
+      />
+      
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <MainHeader 
+          title={title}
+          subtitle={subtitle}
+          icon={icon}
+        >
+          {headerActions}
+        </MainHeader>
         
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <MainHeader 
-            title={title}
-            subtitle={subtitle}
-            icon={icon}
-          >
-            {headerActions}
-          </MainHeader>
-          
-          {/* Page Content */}
-          <main className="flex-1 overflow-hidden">
-            {children}
-          </main>
-        </div>
+        {/* Page Content */}
+        <main className="flex-1 overflow-hidden">
+          {children}
+        </main>
       </div>
-    </TooltipProvider>
+    </div>
   );
 };
 
