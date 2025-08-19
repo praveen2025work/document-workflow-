@@ -254,29 +254,29 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
             type="target"
             position={Position.Top}
             id="target-top"
-            className="!w-4 !h-4 !border-2 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
-            style={{ top: -8 }}
+            className="!w-6 !h-6 !border-3 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-125 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-90 hover:!opacity-100 !rounded-full"
+            style={{ top: -12 }}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="target-left"
-            className="!w-4 !h-4 !border-2 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
-            style={{ left: -8 }}
+            className="!w-6 !h-6 !border-3 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-125 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-90 hover:!opacity-100 !rounded-full"
+            style={{ left: -12 }}
           />
           <Handle
             type="target"
             position={Position.Bottom}
             id="target-bottom"
-            className="!w-4 !h-4 !border-2 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
-            style={{ bottom: -8 }}
+            className="!w-6 !h-6 !border-3 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-125 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-90 hover:!opacity-100 !rounded-full"
+            style={{ bottom: -12 }}
           />
           <Handle
             type="target"
             position={Position.Right}
             id="target-right"
-            className="!w-4 !h-4 !border-2 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
-            style={{ right: -8 }}
+            className="!w-6 !h-6 !border-3 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-125 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-90 hover:!opacity-100 !rounded-full"
+            style={{ right: -12 }}
           />
         </>
       )}
@@ -310,29 +310,29 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
             type="source"
             position={Position.Top}
             id="source-top"
-            className="!w-4 !h-4 !border-2 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
-            style={{ top: -8 }}
+            className="!w-6 !h-6 !border-3 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-125 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-90 hover:!opacity-100 !rounded-full"
+            style={{ top: -12 }}
           />
           <Handle
             type="source"
             position={Position.Left}
             id="source-left"
-            className="!w-4 !h-4 !border-2 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
-            style={{ left: -8 }}
+            className="!w-6 !h-6 !border-3 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-125 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-90 hover:!opacity-100 !rounded-full"
+            style={{ left: -12 }}
           />
           <Handle
             type="source"
             position={Position.Bottom}
             id="source-bottom"
-            className="!w-4 !h-4 !border-2 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
-            style={{ bottom: -8 }}
+            className="!w-6 !h-6 !border-3 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-125 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-90 hover:!opacity-100 !rounded-full"
+            style={{ bottom: -12 }}
           />
           <Handle
             type="source"
             position={Position.Right}
             id="source-right"
-            className="!w-4 !h-4 !border-2 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
-            style={{ right: -8 }}
+            className="!w-6 !h-6 !border-3 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-125 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-90 hover:!opacity-100 !rounded-full"
+            style={{ right: -12 }}
           />
         </>
       )}

@@ -129,7 +129,7 @@ const GoBackEdge: React.FC<EdgeProps> = ({
         style={{
           ...style,
           stroke: '#ef4444',
-          strokeWidth: 2,
+          strokeWidth: 3,
           strokeDasharray: '8,4',
           fill: 'none',
         }}
@@ -171,8 +171,8 @@ const Home: NextPage = () => {
       const newEdge = {
         ...params,
         type: 'smoothstep',
-        animated: true,
-        style: { stroke: '#3b82f6', strokeWidth: 2 }
+        animated: false,
+        style: { stroke: '#3b82f6', strokeWidth: 3 }
       };
       
       setEdges((eds) => addEdge(newEdge, eds));
@@ -204,8 +204,8 @@ const Home: NextPage = () => {
             ...edge,
             type: isGoBack ? 'smoothstep' : 'goBack',
             style: isGoBack 
-              ? { stroke: '#3b82f6', strokeWidth: 2 }
-              : { stroke: '#ef4444', strokeWidth: 2 }
+              ? { stroke: '#3b82f6', strokeWidth: 3 }
+              : { stroke: '#ef4444', strokeWidth: 3 }
           };
         }
         return edge;
@@ -597,17 +597,17 @@ const Home: NextPage = () => {
               fitView
               className="bg-transparent"
               connectionLineType="smoothstep"
-              connectionLineStyle={{ stroke: '#3b82f6', strokeWidth: 3 }}
+              connectionLineStyle={{ stroke: '#3b82f6', strokeWidth: 4 }}
               defaultEdgeOptions={{
                 type: 'smoothstep',
-                animated: true,
-                style: { stroke: '#3b82f6', strokeWidth: 2 }
+                animated: false,
+                style: { stroke: '#3b82f6', strokeWidth: 3 }
               }}
               snapToGrid={true}
-              snapGrid={[15, 15]}
-              connectionRadius={30}
-              minZoom={0.2}
-              maxZoom={2}
+              snapGrid={[20, 20]}
+              connectionRadius={50}
+              minZoom={0.1}
+              maxZoom={3}
               proOptions={{ hideAttribution: true }}
             >
               <Controls className="!bottom-4 !left-4" />
