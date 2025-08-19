@@ -254,13 +254,29 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
             type="target"
             position={Position.Top}
             id="target-top"
-            className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
+            className="!w-4 !h-4 !border-2 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
+            style={{ top: -8 }}
           />
           <Handle
             type="target"
             position={Position.Left}
             id="target-left"
-            className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
+            className="!w-4 !h-4 !border-2 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
+            style={{ left: -8 }}
+          />
+          <Handle
+            type="target"
+            position={Position.Bottom}
+            id="target-bottom"
+            className="!w-4 !h-4 !border-2 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
+            style={{ bottom: -8 }}
+          />
+          <Handle
+            type="target"
+            position={Position.Right}
+            id="target-right"
+            className="!w-4 !h-4 !border-2 !border-white !bg-blue-500 hover:!bg-blue-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
+            style={{ right: -8 }}
           />
         </>
       )}
@@ -292,15 +308,31 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
         <>
           <Handle
             type="source"
+            position={Position.Top}
+            id="source-top"
+            className="!w-4 !h-4 !border-2 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
+            style={{ top: -8 }}
+          />
+          <Handle
+            type="source"
+            position={Position.Left}
+            id="source-left"
+            className="!w-4 !h-4 !border-2 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
+            style={{ left: -8 }}
+          />
+          <Handle
+            type="source"
             position={Position.Bottom}
             id="source-bottom"
-            className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
+            className="!w-4 !h-4 !border-2 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
+            style={{ bottom: -8 }}
           />
           <Handle
             type="source"
             position={Position.Right}
             id="source-right"
-            className="!w-3 !h-3 !border-2 !border-background !bg-primary hover:!bg-primary hover:!scale-125 !transition-all !duration-200"
+            className="!w-4 !h-4 !border-2 !border-white !bg-green-500 hover:!bg-green-400 hover:!scale-150 !transition-all !duration-200 !shadow-lg hover:!shadow-xl !opacity-80 hover:!opacity-100"
+            style={{ right: -8 }}
           />
         </>
       )}

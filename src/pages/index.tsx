@@ -459,6 +459,19 @@ const Home: NextPage = () => {
               nodeTypes={nodeTypes}
               fitView
               className="bg-transparent"
+              connectionLineType="smoothstep"
+              connectionLineStyle={{ stroke: '#3b82f6', strokeWidth: 3 }}
+              defaultEdgeOptions={{
+                type: 'smoothstep',
+                animated: true,
+                style: { stroke: '#3b82f6', strokeWidth: 2 }
+              }}
+              snapToGrid={true}
+              snapGrid={[15, 15]}
+              connectionRadius={30}
+              minZoom={0.2}
+              maxZoom={2}
+              attributionPosition="bottom-left"
             >
               <Controls className="!bottom-4 !left-4" />
             </ReactFlow>
