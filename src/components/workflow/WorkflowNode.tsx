@@ -15,9 +15,29 @@ import {
   Download,
   Edit,
   Layers,
-  MousePointer
+  MousePointer,
+  RefreshCw,
+  Merge
 } from 'lucide-react';
 import { NodeData } from './types';
+
+// Custom Update Icon Component (Upload + Download combined)
+const UpdateIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={cn("relative", className)}>
+    <Upload className="h-3 w-3 absolute -top-0.5 -left-0.5" />
+    <Download className="h-3 w-3 absolute top-0.5 left-0.5" />
+  </div>
+);
+
+// Custom Consolidate Icon Component (Two arrows merging into one)
+const ConsolidateIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={cn("relative", className)}>
+    <svg viewBox="0 0 20 20" className="h-5 w-5" fill="currentColor">
+      <path d="M3 8l4-4v3h4V4l4 4-4 4V9H7v3L3 8z" />
+      <path d="M15 12v3l4-4-4-4v3H9v2h6z" />
+    </svg>
+  </div>
+);
 
 // Function to get the appropriate icon based on node type and description
 const getNodeIcon = (type: string, description?: string): React.ReactNode => {
@@ -38,9 +58,9 @@ const getNodeIcon = (type: string, description?: string): React.ReactNode => {
     } else if (desc.includes('download')) {
       return <Download className="h-5 w-5" />;
     } else if (desc.includes('update') || desc.includes('edit') || desc.includes('modify')) {
-      return <Edit className="h-5 w-5" />;
+      return <UpdateIcon className="h-5 w-5" />;
     } else if (desc.includes('consolidate') || desc.includes('merge') || desc.includes('combine')) {
-      return <Layers className="h-5 w-5" />;
+      return <ConsolidateIcon className="h-5 w-5" />;
     }
   }
 
@@ -48,59 +68,110 @@ const getNodeIcon = (type: string, description?: string): React.ReactNode => {
   return baseIcons[type] || <FileUp className="h-5 w-5" />;
 };
 
-const nodeColors = {
-  start: {
-    bg: 'bg-success/10',
-    border: 'border-success/30',
-    selectedBg: 'bg-success/20',
-    selectedBorder: 'border-success',
-    icon: 'text-success',
-    selectedRing: 'ring-success/50'
-  },
-  end: {
-    bg: 'bg-destructive/10',
-    border: 'border-destructive/30',
-    selectedBg: 'bg-destructive/20',
-    selectedBorder: 'border-destructive',
-    icon: 'text-destructive',
-    selectedRing: 'ring-destructive/50'
-  },
-  decision: {
-    bg: 'bg-warning/10',
-    border: 'border-warning/30',
-    selectedBg: 'bg-warning/20',
-    selectedBorder: 'border-warning',
-    icon: 'text-warning',
-    selectedRing: 'ring-warning/50'
-  },
-  action: {
-    bg: 'bg-primary/10',
-    border: 'border-primary/30',
-    selectedBg: 'bg-primary/20',
-    selectedBorder: 'border-primary',
-    icon: 'text-primary',
-    selectedRing: 'ring-primary/50'
-  },
-  api: {
-    bg: 'bg-info/10',
-    border: 'border-info/30',
-    selectedBg: 'bg-info/20',
-    selectedBorder: 'border-info',
-    icon: 'text-info',
-    selectedRing: 'ring-info/50'
-  },
-  database: {
-    bg: 'bg-chart-4/10',
-    border: 'border-chart-4/30',
-    selectedBg: 'bg-chart-4/20',
-    selectedBorder: 'border-chart-4',
-    icon: 'text-chart-4',
-    selectedRing: 'ring-chart-4/50'
+// Function to get colors based on node type and description
+const getNodeColors = (type: string, description?: string) => {
+  // Start node - Modern pleasant green
+  if (type === 'start') {
+    return {
+      bg: 'bg-emerald-100',
+      border: 'border-emerald-300',
+      selectedBg: 'bg-emerald-200',
+      selectedBorder: 'border-emerald-500',
+      icon: 'text-emerald-600',
+      selectedRing: 'ring-emerald-400'
+    };
   }
+  
+  // End node - Red background
+  if (type === 'end') {
+    return {
+      bg: 'bg-red-100',
+      border: 'border-red-300',
+      selectedBg: 'bg-red-200',
+      selectedBorder: 'border-red-500',
+      icon: 'text-red-600',
+      selectedRing: 'ring-red-400'
+    };
+  }
+  
+  // Decision node - Blue background
+  if (type === 'decision') {
+    return {
+      bg: 'bg-blue-100',
+      border: 'border-blue-300',
+      selectedBg: 'bg-blue-200',
+      selectedBorder: 'border-blue-500',
+      icon: 'text-blue-600',
+      selectedRing: 'ring-blue-400'
+    };
+  }
+  
+  // Action nodes - specific colors based on description
+  if (type === 'action' && description) {
+    const desc = description.toLowerCase();
+    
+    // Upload - Sea blue green
+    if (desc.includes('upload')) {
+      return {
+        bg: 'bg-teal-100',
+        border: 'border-teal-300',
+        selectedBg: 'bg-teal-200',
+        selectedBorder: 'border-teal-500',
+        icon: 'text-teal-600',
+        selectedRing: 'ring-teal-400'
+      };
+    }
+    
+    // Update - Purple background
+    if (desc.includes('update') || desc.includes('edit') || desc.includes('modify')) {
+      return {
+        bg: 'bg-purple-100',
+        border: 'border-purple-300',
+        selectedBg: 'bg-purple-200',
+        selectedBorder: 'border-purple-500',
+        icon: 'text-purple-600',
+        selectedRing: 'ring-purple-400'
+      };
+    }
+    
+    // Consolidate - Dark green
+    if (desc.includes('consolidate') || desc.includes('merge') || desc.includes('combine')) {
+      return {
+        bg: 'bg-green-100',
+        border: 'border-green-400',
+        selectedBg: 'bg-green-200',
+        selectedBorder: 'border-green-600',
+        icon: 'text-green-700',
+        selectedRing: 'ring-green-500'
+      };
+    }
+    
+    // Download - Default teal (sea blue green)
+    if (desc.includes('download')) {
+      return {
+        bg: 'bg-teal-100',
+        border: 'border-teal-300',
+        selectedBg: 'bg-teal-200',
+        selectedBorder: 'border-teal-500',
+        icon: 'text-teal-600',
+        selectedRing: 'ring-teal-400'
+      };
+    }
+  }
+  
+  // Default colors for other types
+  return {
+    bg: 'bg-slate-100',
+    border: 'border-slate-300',
+    selectedBg: 'bg-slate-200',
+    selectedBorder: 'border-slate-500',
+    icon: 'text-slate-600',
+    selectedRing: 'ring-slate-400'
+  };
 };
 
 const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) => {
-  const colors = nodeColors[type as keyof typeof nodeColors] || nodeColors.action;
+  const colors = getNodeColors(type, data.description);
 
   const nodeClasses = cn(
     'relative w-40 min-h-[90px] p-4 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-xl',
