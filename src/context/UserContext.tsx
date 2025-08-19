@@ -6,6 +6,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  username?: string;
 }
 
 interface UserContextType {
@@ -43,6 +44,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       debugLog('Fetching user info from:', userInfoUrl);
       
       const response = await axios.get(userInfoUrl, {
+        withCredentials: true,
         timeout: 10000, // 10 second timeout for user service
       });
       
