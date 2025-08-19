@@ -429,7 +429,6 @@ const Home: NextPage = () => {
             settings={workflowSettings}
           />
         </div>
-      </div>
     </MainLayout>
   );
 };
