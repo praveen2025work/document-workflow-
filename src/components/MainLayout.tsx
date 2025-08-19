@@ -18,7 +18,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   headerActions,
   children
 }) => {
-  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+  const [isNavCollapsed, setIsNavCollapsed] = useState(true);
 
   const toggleNavCollapse = () => {
     setIsNavCollapsed(!isNavCollapsed);
