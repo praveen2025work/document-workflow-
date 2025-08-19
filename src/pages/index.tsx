@@ -145,15 +145,10 @@ const Home: NextPage = () => {
   const initialNodes: Node<NodeData>[] = [
     { id: 'start', type: 'start', position: { x: 100, y: 200 }, data: { description: 'Workflow Start' } },
     { id: 'upload-1', type: 'action', position: { x: 400, y: 200 }, data: { description: 'Upload Invoice' } },
-    { id: 'decision-1', type: 'decision', position: { x: 700, y: 200 }, data: { description: 'Review Decision' } },
-    { id: 'end', type: 'end', position: { x: 1000, y: 200 }, data: { description: 'Workflow End' } },
   ];
 
   const initialEdges: Edge[] = [
     { id: 'e-start-upload-1', source: 'start', target: 'upload-1', animated: true },
-    { id: 'e-upload-1-decision-1', source: 'upload-1', target: 'decision-1', animated: true },
-    { id: 'e-decision-1-end', source: 'decision-1', target: 'end', animated: true, label: 'Approve' },
-    { id: 'e-decision-1-upload-1', source: 'decision-1', target: 'upload-1', type: 'goBack', label: 'Reject' },
   ];
 
   const initialSettings: WorkflowSettings = {
@@ -172,8 +167,30 @@ const Home: NextPage = () => {
   const [workflowId, setWorkflowId] = useState<number | null>(null);
 
   const onConnect = useCallback(
-    (params: ReactFlowConnection | Edge) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
-    [setEdges]
+    (params: ReactFlowConnection | Edge) => {
+      // Check if this is a connection from a decision node to an action node
+      const sourceNode = nodes.find(node => node.id === params.source);
+      const targetNode = nodes.find(node => node.id === params.target);
+      
+      let edgeType = 'smoothstep';
+      let edgeStyle = { stroke: '#3b82f6', strokeWidth: 2 };
+      
+      // If connecting from a decision node to an action node, make it a "go back" connection
+      if (sourceNode?.type === 'decision' && targetNode?.type === 'action') {
+        edgeType = 'goBack';
+        edgeStyle = { stroke: '#ef4444', strokeWidth: 2 };
+      }
+      
+      const newEdge = {
+        ...params,
+        type: edgeType,
+        animated: true,
+        style: edgeStyle
+      };
+      
+      setEdges((eds) => addEdge(newEdge, eds));
+    },
+    [setEdges, nodes]
   );
 
   const handleSaveSettings = (settings: any) => {
