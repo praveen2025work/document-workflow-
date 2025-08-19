@@ -170,9 +170,9 @@ const Home: NextPage = () => {
       // All connections are solid blue by default
       const newEdge = {
         ...params,
-        type: 'smoothstep',
+        type: 'default',
         animated: false,
-        style: { stroke: '#3b82f6', strokeWidth: 3 }
+        style: { stroke: '#3b82f6', strokeWidth: 2 }
       };
       
       setEdges((eds) => addEdge(newEdge, eds));
@@ -202,9 +202,9 @@ const Home: NextPage = () => {
           const isGoBack = edge.type === 'goBack';
           return {
             ...edge,
-            type: isGoBack ? 'smoothstep' : 'goBack',
+            type: isGoBack ? 'default' : 'goBack',
             style: isGoBack 
-              ? { stroke: '#3b82f6', strokeWidth: 3 }
+              ? { stroke: '#3b82f6', strokeWidth: 2 }
               : { stroke: '#ef4444', strokeWidth: 3 }
           };
         }
@@ -596,12 +596,12 @@ const Home: NextPage = () => {
               edgeTypes={edgeTypes}
               fitView
               className="bg-transparent"
-              connectionLineType="smoothstep"
-              connectionLineStyle={{ stroke: '#3b82f6', strokeWidth: 4 }}
+              connectionLineType="default"
+              connectionLineStyle={{ stroke: '#3b82f6', strokeWidth: 3 }}
               defaultEdgeOptions={{
-                type: 'smoothstep',
+                type: 'default',
                 animated: false,
-                style: { stroke: '#3b82f6', strokeWidth: 3 }
+                style: { stroke: '#3b82f6', strokeWidth: 2 }
               }}
               snapToGrid={true}
               snapGrid={[20, 20]}
