@@ -66,6 +66,7 @@ import ReactFlow, {
   Edge,
   Node,
   getBezierPath,
+  getSmoothStepPath,
   EdgeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -113,13 +114,14 @@ const GoBackEdge: React.FC<EdgeProps> = ({
   style = {},
   markerEnd,
 }) => {
-  const [edgePath] = getBezierPath({
+  const [edgePath] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
+    borderRadius: 16,
   });
 
   return (
