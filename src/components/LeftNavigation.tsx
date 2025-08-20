@@ -5,6 +5,7 @@ import {
   Workflow, 
   Calendar, 
   Users, 
+  Shield,
   UserCheck, 
   BarChart3, 
   LayoutDashboard,
@@ -50,6 +51,13 @@ const navigationItems: NavigationItem[] = [
     icon: Users,
     path: '/users',
     description: 'User management'
+  },
+  {
+    id: 'roles',
+    label: 'Roles',
+    icon: Shield,
+    path: '/roles',
+    description: 'Manage user roles'
   },
   {
     id: 'user-groups',
