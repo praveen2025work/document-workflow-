@@ -8,7 +8,8 @@ import {
   UserCheck, 
   BarChart3, 
   LayoutDashboard,
-  ChevronRight
+  ChevronRight,
+  Layers
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
