@@ -30,6 +30,13 @@ const navigationItems: NavigationItem[] = [
     description: 'Create and manage workflows'
   },
   {
+    id: 'canvas-workflow',
+    label: 'Canvas Workflow',
+    icon: Layers,
+    path: '/canvas-workflow',
+    description: 'Visualize running workflow instances'
+  },
+  {
     id: 'calendars',
     label: 'Calendars',
     icon: Calendar,
