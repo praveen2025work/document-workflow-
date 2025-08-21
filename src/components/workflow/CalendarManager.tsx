@@ -183,7 +183,7 @@ const CalendarManager: React.FC = () => {
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={newСalendar.endDate ? new Date(newCalendar.endDate) : undefined}
+                      selected={newCalendar.endDate ? new Date(newCalendar.endDate) : undefined}
                       onSelect={(date) => handleDateChange(date, 'endDate')}
                       initialFocus
                     />
