@@ -53,10 +53,8 @@ const CalendarManager: React.FC = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchCalendars();
-    }
-  }, [user]);
+    fetchCalendars();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -64,7 +62,7 @@ const CalendarManager: React.FC = () => {
   };
 
   const handleCreate = async () => {
-    if (!newCalendar.name || !user) {
+    if (!newCalendar.name) {
       toast.error('Calendar name is required.');
       return;
     }
@@ -75,7 +73,7 @@ const CalendarManager: React.FC = () => {
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
         recurrence: 'WEEKLY',
-        createdBy: user.email
+        createdBy: user?.email || 'mock.user@workflow.com'
       });
       toast.success('Calendar created successfully.');
       setAddDialogOpen(false);

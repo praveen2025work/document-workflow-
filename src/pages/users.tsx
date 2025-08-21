@@ -85,14 +85,14 @@ const UsersPage: NextPage = () => {
   };
 
   const handleAddUser = async () => {
-    if (!newUser.username.trim() || !newUser.firstName.trim() || !newUser.lastName.trim() || !newUser.email.trim() || !currentUser) {
+    if (!newUser.username.trim() || !newUser.firstName.trim() || !newUser.lastName.trim() || !newUser.email.trim()) {
       return;
     }
     try {
       await createUser({
         ...newUser,
         isActive: newUser.isActive ? 'Y' : 'N',
-        createdBy: currentUser.email,
+        createdBy: currentUser?.email || 'mock.user@workflow.com',
       });
       setAddUserDialogOpen(false);
       setNewUser({ username: '', firstName: '', lastName: '', email: '', isActive: true });
@@ -109,17 +109,17 @@ const UsersPage: NextPage = () => {
   };
 
   const handleUpdateUser = async () => {
-    if (!selectedUser || !editingUser || !currentUser) {
+    if (!selectedUser || !editingUser) {
       return;
     }
     try {
       const { isActive, ...updateData } = editingUser;
-      await updateUser(selectedUser.userId, {
+      await updateUser(String(selectedUser.userId), {
         ...updateData,
-        updatedBy: currentUser.email,
+        updatedBy: currentUser?.email || 'mock.user@workflow.com',
       });
       if ((editingUser.isActive ? 'Y' : 'N') !== selectedUser.isActive) {
-        await toggleUserStatus(selectedUser.userId, editingUser.isActive ? 'Y' : 'N');
+        await toggleUserStatus(String(selectedUser.userId), editingUser.isActive ? 'Y' : 'N');
       }
       setEditUserDialogOpen(false);
       setSelectedUser(null);

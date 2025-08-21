@@ -41,7 +41,7 @@ export const searchUsers = async (
 // Get a single user by ID
 export const getUserById = async (userId: number): Promise<WorkflowUserDto> => {
   if (config.app.isMock) {
-    const user = mockUsers.find((u) => u.id === String(userId));
+    const user = mockUsers.find((u) => u.userId === userId);
     if (user) {
       return Promise.resolve(user);
     } else {
@@ -54,14 +54,14 @@ export const getUserById = async (userId: number): Promise<WorkflowUserDto> => {
 
 // Create a new user
 export const createUser = async (
-  userData: Omit<WorkflowUserDto, 'id' | 'createdAt' | 'updatedAt'>
+  userData: Omit<WorkflowUserDto, 'userId' | 'createdOn' | 'updatedOn'>
 ): Promise<WorkflowUserDto> => {
   if (config.app.isMock) {
     const newUser: WorkflowUserDto = {
-      id: String(mockUsers.length + 1),
+      userId: mockUsers.length + 1,
       ...userData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdOn: new Date().toISOString(),
+      updatedOn: new Date().toISOString(),
     };
     mockUsers.push(newUser);
     return Promise.resolve(newUser);
@@ -73,12 +73,12 @@ export const createUser = async (
 // Update an existing user
 export const updateUser = async (
   userId: string,
-  userData: Partial<Omit<WorkflowUserDto, 'id' | 'createdAt' | 'updatedAt'>>
+  userData: Partial<Omit<WorkflowUserDto, 'userId' | 'createdOn' | 'updatedOn'>>
 ): Promise<WorkflowUserDto> => {
   if (config.app.isMock) {
-    const userIndex = mockUsers.findIndex((u) => u.id === userId);
+    const userIndex = mockUsers.findIndex((u) => u.userId === parseInt(userId));
     if (userIndex > -1) {
-      const updatedUser = { ...mockUsers[userIndex], ...userData, updatedAt: new Date().toISOString() };
+      const updatedUser = { ...mockUsers[userIndex], ...userData, updatedOn: new Date().toISOString() };
       mockUsers[userIndex] = updatedUser;
       return Promise.resolve(updatedUser);
     } else {
@@ -92,18 +92,18 @@ export const updateUser = async (
 // Toggle user status
 export const toggleUserStatus = async (
   userId: string,
-  isActive: boolean
+  isActive: 'Y' | 'N'
 ): Promise<WorkflowUserDto> => {
   if (config.app.isMock) {
-    const userIndex = mockUsers.findIndex((u) => u.id === userId);
+    const userIndex = mockUsers.findIndex((u) => u.userId === parseInt(userId));
     if (userIndex > -1) {
       mockUsers[userIndex].isActive = isActive;
-      mockUsers[userIndex].updatedAt = new Date().toISOString();
+      mockUsers[userIndex].updatedOn = new Date().toISOString();
       return Promise.resolve(mockUsers[userIndex]);
     } else {
       return Promise.reject(new Error('User not found'));
     }
   }
-  const response = await api.patch(`/api/users/${userId}/status?isActive=${isActive ? 'Y' : 'N'}`);
+  const response = await api.patch(`/api/users/${userId}/status?isActive=${isActive}`);
   return response.data;
 };
