@@ -10,7 +10,8 @@ import {
   BarChart3, 
   LayoutDashboard,
   ChevronRight,
-  Layers
+  Layers,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -37,6 +38,13 @@ const navigationItems: NavigationItem[] = [
     icon: Layers,
     path: '/canvas-workflow',
     description: 'Visualize running workflow instances'
+  },
+  {
+    id: 'workflows',
+    label: 'Workflows',
+    icon: FileText,
+    path: '/workflows',
+    description: 'Manage and configure workflows'
   },
   {
     id: 'calendars',
