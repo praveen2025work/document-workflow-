@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Plus, Search, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { Users, Plus, Search, MoreHorizontal, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,16 +32,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useUser } from '@/context/UserContext';
@@ -52,10 +42,6 @@ const UsersPage: NextPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAddUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [isEditUserDialogOpen, setEditUserDialogOpen] = useState(false);
->>>>>>> REPLACE
-<<<<<<< SEARCH
-  const [editingUser, setEditingUser] = useState<Partial<WorkflowUserDto> | null>(null);
-=======
   const [selectedUser, setSelectedUser] = useState<WorkflowUserDto | null>(null);
   const [newUser, setNewUser] = useState({
     username: '',
@@ -66,60 +52,12 @@ const UsersPage: NextPage = () => {
   });
   const [editingUser, setEditingUser] = useState<Partial<WorkflowUserDto> & { isActive: boolean } | null>(null);
   const { user: currentUser } = useUser();
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await getUsers({ page: 0, size: 10 });
-      setUsersResponse(response);
-      setError(null);
-    } catch (err) {
-      setError('Failed to fetch users. Please try again later.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setNewUser((prev) => ({ ...prev, [id]: value }));
-  };
-
-  const handleAddUser = async () => {
-    if (!newUser.username.trim() || !newUser.firstName.trim() || !newUser.lastName.trim() || !newUser.email.trim() || !currentUser) {
-      return;
-    }
-    try {
-      await createUser({
-        ...newUser,
-        isActive: newUser.isActive ? 'Y' : 'N',
-        createdBy: currentUser.email,
-      });
-      setAddUserDialogOpen(false);
-      setNewUser({ username: '', firstName: '', lastName: '', email: '', isActive: true });
-      fetchUsers();
-    } catch (error) {
-      console.error("Failed to create user:", error);
-    }
-  };
-
-  const handleEditUser = (user: WorkflowUserDto) => {
-    setSelectedUser(user);
-    setEditingUser({ ...user, isActive: user.isActive === 'Y' });
-    setEditUserDialogOpen(true);
-  };
-
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchUsers = async (query = '') => {
     try {
       setLoading(true);
-      const response = query 
+      const response = query
         ? await searchUsers({ username: query, firstName: query, page: 0, size: 10 })
         : await getUsers({ page: 0, size: 10 });
       setUsersResponse(response);
@@ -139,6 +77,36 @@ const UsersPage: NextPage = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
+
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setNewUser((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleAddUser = async () => {
+    if (!newUser.username.trim() || !newUser.firstName.trim() || !newUser.lastName.trim() || !newUser.email.trim() || !currentUser) {
+      return;
+    }
+    try {
+      await createUser({
+        ...newUser,
+        isActive: newUser.isActive ? 'Y' : 'N',
+        createdBy: currentUser.email,
+      });
+      setAddUserDialogOpen(false);
+      setNewUser({ username: '', firstName: '', lastName: '', email: '', isActive: true });
+      fetchUsers(searchQuery);
+    } catch (error) {
+      console.error("Failed to create user:", error);
+    }
+  };
+
+  const handleEditUser = (user: WorkflowUserDto) => {
+    setSelectedUser(user);
+    setEditingUser({ ...user, isActive: user.isActive === 'Y' });
+    setEditUserDialogOpen(true);
+  };
 
   const handleUpdateUser = async () => {
     if (!selectedUser || !editingUser || !currentUser) {
@@ -240,6 +208,7 @@ const UsersPage: NextPage = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -305,25 +274,6 @@ const UsersPage: NextPage = () => {
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
->>>>>>> REPLACE
-<<<<<<< SEARCH
-      {/* Delete User Confirmation Dialog */}
-      <AlertDialog open={isDeleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user
-              "{selectedUser?.firstName} {selectedUser?.lastName}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteUser}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-=======
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -349,23 +299,23 @@ const UsersPage: NextPage = () => {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="username" className="text-right">Username</Label>
-                <Input id="username" value={editingUser.username} onChange={handleEditingInputChange} className="col-span-3" />
+                <Input id="username" value={editingUser.username || ''} onChange={handleEditingInputChange} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="firstName" className="text-right">First Name</Label>
-                <Input id="firstName" value={editingUser.firstName} onChange={handleEditingInputChange} className="col-span-3" />
+                <Input id="firstName" value={editingUser.firstName || ''} onChange={handleEditingInputChange} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="lastName" className="text-right">Last Name</Label>
-                <Input id="lastName" value={editingUser.lastName} onChange={handleEditingInputChange} className="col-span-3" />
+                <Input id="lastName" value={editingUser.lastName || ''} onChange={handleEditingInputChange} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">Email</Label>
-                <Input id="email" type="email" value={editingUser.email} onChange={handleEditingInputChange} className="col-span-3" />
+                <Input id="email" type="email" value={editingUser.email || ''} onChange={handleEditingInputChange} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="isActive" className="text-right">Active</Label>
-                <Switch id="isActive" checked={editingUser.isActive as boolean} onCheckedChange={(checked) => setEditingUser(prev => (prev ? {...prev, isActive: checked} : null))} />
+                <Switch id="isActive" checked={editingUser.isActive} onCheckedChange={(checked) => setEditingUser(prev => (prev ? {...prev, isActive: checked} : null))} />
               </div>
             </div>
           )}
@@ -374,22 +324,6 @@ const UsersPage: NextPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Delete User Confirmation Dialog */}
-      <AlertDialog open={isDeleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user
-              "{selectedUser?.firstName} {selectedUser?.lastName}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteUser}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </MainLayout>
   );
 };
