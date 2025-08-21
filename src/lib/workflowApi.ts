@@ -30,16 +30,15 @@ export const getWorkflows = async (
 
 // Create a new workflow
 export const createWorkflow = async (
-  workflowData: Omit<WorkflowDto, 'id' | 'createdAt' | 'updatedAt' | 'tasks' | 'roles'>
+  workflowData: Omit<WorkflowDto, 'workflowId' | 'createdOn' | 'updatedOn' | 'tasks'>
 ): Promise<WorkflowDto> => {
   if (config.app.isMock) {
     const newWorkflow: WorkflowDto = {
-      id: String(mockWorkflows.length + 1),
+      workflowId: mockWorkflows.length + 1,
       ...workflowData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdOn: new Date().toISOString(),
+      updatedOn: new Date().toISOString(),
       tasks: [],
-      roles: [],
     };
     mockWorkflows.push(newWorkflow);
     return Promise.resolve(newWorkflow);
@@ -51,7 +50,7 @@ export const createWorkflow = async (
 // Get a single workflow by ID
 export const getWorkflowById = async (workflowId: string): Promise<WorkflowDto> => {
   if (config.app.isMock) {
-    const workflow = mockWorkflows.find((w) => w.id === workflowId);
+    const workflow = mockWorkflows.find((w) => w.workflowId === parseInt(workflowId));
     if (workflow) {
       return Promise.resolve(workflow);
     } else {
@@ -65,12 +64,12 @@ export const getWorkflowById = async (workflowId: string): Promise<WorkflowDto> 
 // Update an existing workflow
 export const updateWorkflow = async (
   workflowId: string,
-  workflowData: Partial<Omit<WorkflowDto, 'id' | 'createdAt' | 'updatedAt' | 'tasks' | 'roles'>>
+  workflowData: Partial<Omit<WorkflowDto, 'workflowId' | 'createdOn' | 'updatedOn' | 'tasks'>>
 ): Promise<WorkflowDto> => {
   if (config.app.isMock) {
-    const workflowIndex = mockWorkflows.findIndex((w) => w.id === workflowId);
+    const workflowIndex = mockWorkflows.findIndex((w) => w.workflowId === parseInt(workflowId));
     if (workflowIndex > -1) {
-      const updatedWorkflow = { ...mockWorkflows[workflowIndex], ...workflowData, updatedAt: new Date().toISOString() };
+      const updatedWorkflow = { ...mockWorkflows[workflowIndex], ...workflowData, updatedOn: new Date().toISOString() };
       mockWorkflows[workflowIndex] = updatedWorkflow;
       return Promise.resolve(updatedWorkflow);
     } else {
@@ -84,7 +83,7 @@ export const updateWorkflow = async (
 // Get all tasks for a workflow
 export const getWorkflowTasks = async (workflowId: string): Promise<WorkflowTaskDto[]> => {
   if (config.app.isMock) {
-    const workflow = mockWorkflows.find((w) => w.id === workflowId);
+    const workflow = mockWorkflows.find((w) => w.workflowId === parseInt(workflowId));
     return Promise.resolve(workflow?.tasks || []);
   }
   const response = await api.get(`/api/workflows/${workflowId}/tasks`);
@@ -94,15 +93,16 @@ export const getWorkflowTasks = async (workflowId: string): Promise<WorkflowTask
 // Add a new task to a workflow
 export const addTaskToWorkflow = async (
   workflowId: string,
-  taskData: Omit<WorkflowTaskDto, 'id'>
+  taskData: Omit<WorkflowTaskDto, 'taskId'>
 ): Promise<WorkflowTaskDto> => {
   if (config.app.isMock) {
-    const workflow = mockWorkflows.find((w) => w.id === workflowId);
+    const workflow = mockWorkflows.find((w) => w.workflowId === parseInt(workflowId));
     if (workflow) {
       const newTask: WorkflowTaskDto = {
-        id: String(workflow.tasks.length + 1),
+        taskId: (workflow.tasks?.length || 0) + 1,
         ...taskData,
       };
+      if (!workflow.tasks) workflow.tasks = [];
       workflow.tasks.push(newTask);
       return Promise.resolve(newTask);
     }
@@ -113,10 +113,10 @@ export const addTaskToWorkflow = async (
 };
 
 // Get roles assigned to a workflow
-export const getWorkflowRoles = async (workflowId: string): Promise<WorkflowRoleDto[]> => {
+export const getWorkflowRoles = async (workflowId: string): Promise<any[]> => {
   if (config.app.isMock) {
-    const workflow = mockWorkflows.find((w) => w.id === workflowId);
-    return Promise.resolve(workflow?.roles || []);
+    // Return empty array for mock data since roles are not part of WorkflowDto
+    return Promise.resolve([]);
   }
   const response = await api.get(`/api/workflows/${workflowId}/roles`);
   return response.data;

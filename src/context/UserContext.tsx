@@ -29,6 +29,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUser = async () => {
+    // If in mock mode, immediately set mock user data
+    if (config.app.isMock) {
+      debugLog('Using mock user data');
+      setUser({
+        id: 1,
+        name: 'Mock User',
+        email: 'mock.user@workflow.com',
+        username: 'mockuser'
+      });
+      setLoading(false);
+      return;
+    }
+
     const userInfoUrl = config.api.userServiceUrl;
     if (!userInfoUrl) {
       const errorMsg = "USER_INFO_SERVICE_URL is not defined";
