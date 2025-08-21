@@ -21,7 +21,9 @@ export const getWorkflows = async (
     isActive?: 'Y' | 'N';
   } = {}
 ): Promise<PaginatedWorkflowsResponse> => {
+  console.log('getWorkflows - isMock:', config.app.isMock, 'env:', config.app.env);
   if (config.app.isMock) {
+    console.log('Returning mock workflows:', mockPaginatedWorkflows);
     return Promise.resolve(mockPaginatedWorkflows);
   }
   const response = await api.get('/api/workflows', { params });

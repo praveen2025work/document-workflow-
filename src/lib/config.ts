@@ -1,4 +1,5 @@
 // Environment configuration
+console.log('NEXT_PUBLIC_CO_DEV_ENV:', process.env.NEXT_PUBLIC_CO_DEV_ENV);
 export const config = {
   app: {
     env: process.env.NEXT_PUBLIC_CO_DEV_ENV || 'local',
