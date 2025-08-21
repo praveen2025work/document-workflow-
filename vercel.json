@@ -4,8 +4,5 @@
     "env": {
       "NEXT_PUBLIC_CO_DEV_ENV": "mock"
     }
-  },
-  "scripts": {
-    "build": "pnpm build:mock"
   }
 }

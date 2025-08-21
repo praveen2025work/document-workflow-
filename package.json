@@ -10,7 +10,7 @@
     "dev:local": "cp .env.local .env && next dev",
     "dev:dev": "cp .env.dev .env && next dev",
     "dev:mock": "cp .env.mock .env && next dev",
-    "build": "next build",
+    "build": "pnpm build:mock",
     "build:dev": "cp .env.dev .env && next build",
     "build:uat": "cp .env.uat .env && next build",
     "build:prod": "cp .env.prod .env && next build",
