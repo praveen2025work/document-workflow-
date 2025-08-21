@@ -19,10 +19,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { getCalendars, createCalendar } from '@/lib/calendarApi';
-import { PaginatedCalendarsResponse, WorkflowCalendarDto } from '@/types/calendar';
+import { PaginatedCalendarsResponse } from '@/types/calendar';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
 
@@ -32,53 +31,52 @@ const CalendarManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [newCalendar, setNewCalendar] = useState({
-    calendarName: '',
+    name: '',
     description: '',
-    startDate: '',
-    endDate: '',
-    recurrence: 'YEARLY' as 'YEARLY' | 'MONTHLY' | 'WEEKLY' | 'DAILY',
   });
   const { user } = useUser();
 
   const fetchCalendars = async () => {
     try {
       setLoading(true);
-      const response = await getCalendars({ page: 0, size: 10 });
+      const response = await getCalendars({ page: 1, size: 10 });
       setCalendarsResponse(response);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch calendars.');
-      toast.error('Failed to fetch calendars.');
+      const errorMessage = 'Failed to fetch calendars.';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCalendars();
-  }, []);
+    if (user) {
+      fetchCalendars();
+    }
+  }, [user]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | { target: { id: string; value: string } }) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setNewCalendar((prev) => ({ ...prev, [id]: value }));
   };
-  
-  const handleSelectChange = (value: 'YEARLY' | 'MONTHLY' | 'WEEKLY' | 'DAILY') => {
-    setNewCalendar((prev) => ({ ...prev, recurrence: value }));
-  };
 
   const handleCreate = async () => {
-    if (!newCalendar.calendarName || !newCalendar.startDate || !newCalendar.endDate || !user) {
-      toast.error('Please fill all required fields.');
+    if (!newCalendar.name || !user) {
+      toast.error('Calendar name is required.');
       return;
     }
     try {
-      await createCalendar({ ...newCalendar, createdBy: user.email, calendarDays: [] });
+      await createCalendar({ name: newCalendar.name, description: newCalendar.description, isActive: true });
       toast.success('Calendar created successfully.');
       setAddDialogOpen(false);
-      fetchCalendars();
+      setNewCalendar({ name: '', description: '' }); // Reset form
+      fetchCalendars(); // Refresh list
     } catch (error) {
       toast.error('Failed to create calendar.');
+      console.error(error);
     }
   };
 
@@ -97,26 +95,10 @@ const CalendarManager: React.FC = () => {
               <DialogTitle>Add New Calendar</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <Label htmlFor="calendarName">Calendar Name</Label>
-              <Input id="calendarName" value={newCalendar.calendarName} onChange={handleInputChange} />
+              <Label htmlFor="name">Calendar Name</Label>
+              <Input id="name" value={newCalendar.name} onChange={handleInputChange} />
               <Label htmlFor="description">Description</Label>
               <Input id="description" value={newCalendar.description} onChange={handleInputChange} />
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input id="startDate" type="date" value={newCalendar.startDate} onChange={handleInputChange} />
-              <Label htmlFor="endDate">End Date</Label>
-              <Input id="endDate" type="date" value={newCalendar.endDate} onChange={handleInputChange} />
-              <Label htmlFor="recurrence">Recurrence</Label>
-              <Select onValueChange={handleSelectChange} defaultValue={newCalendar.recurrence}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select recurrence" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="YEARLY">Yearly</SelectItem>
-                  <SelectItem value="MONTHLY">Monthly</SelectItem>
-                  <SelectItem value="WEEKLY">Weekly</SelectItem>
-                  <SelectItem value="DAILY">Daily</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <DialogFooter>
               <Button onClick={handleCreate}>Create</Button>
@@ -132,23 +114,23 @@ const CalendarManager: React.FC = () => {
         <CardContent>
           {loading && <p>Loading...</p>}
           {error && <p className="text-red-500">{error}</p>}
-          {!loading && !error && (
+          {!loading && !error && calendarsResponse && (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Recurrence</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {calendarsResponse?.content.map((calendar) => (
-                  <TableRow key={calendar.calendarId}>
-                    <TableCell>{calendar.calendarName}</TableCell>
-                    <TableCell>{calendar.recurrence}</TableCell>
-                    <TableCell>{new Date(calendar.startDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(calendar.endDate).toLocaleDateString()}</TableCell>
+                {calendarsResponse.data.map((calendar) => (
+                  <TableRow key={calendar.id}>
+                    <TableCell>{calendar.name}</TableCell>
+                    <TableCell>{calendar.description}</TableCell>
+                    <TableCell>{new Date(calendar.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{calendar.isActive ? 'Active' : 'Inactive'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
