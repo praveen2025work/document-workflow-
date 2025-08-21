@@ -11,10 +11,6 @@ export const getUsers = async (
   params: {
     page?: number;
     size?: number;
-    username?: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
     isActive?: 'Y' | 'N';
   } = {}
 ): Promise<PaginatedUsersResponse> => {
@@ -29,11 +25,6 @@ export const searchUsers = async (
     size?: number;
     username?: string;
     firstName?: string;
-    lastName?: string;
-    email?: string;
-    isActive?: 'Y' | 'N';
-    roleName?: string;
-    workflowId?: number;
   } = {}
 ): Promise<PaginatedUsersResponse> => {
   const response = await api.get('/api/users/search', { params });
@@ -57,15 +48,10 @@ export const createUser = async (
 // Update an existing user
 export const updateUser = async (
   userId: number,
-  userData: Partial<Omit<WorkflowUserDto, 'userId' | 'createdBy' | 'createdOn'>>
+  userData: Partial<Omit<WorkflowUserDto, 'userId' | 'createdBy' | 'createdOn' | 'isActive'>>
 ): Promise<WorkflowUserDto> => {
   const response = await api.put(`/api/users/${userId}`, userData);
   return response.data;
-};
-
-// Delete a user
-export const deleteUser = async (userId: number): Promise<void> => {
-  await api.delete(`/api/users/${userId}`);
 };
 
 // Toggle user status
@@ -73,19 +59,6 @@ export const toggleUserStatus = async (
   userId: number,
   isActive: 'Y' | 'N'
 ): Promise<WorkflowUserDto> => {
-  const response = await api.patch(`/api/users/${userId}/status`, null, {
-    params: { isActive },
-  });
-  return response.data;
-};
-
-// Set user escalation
-export const setUserEscalation = async (
-  userId: number,
-  escalationToUserId: number
-): Promise<WorkflowUserDto> => {
-  const response = await api.patch(`/api/users/${userId}/escalation`, null, {
-    params: { escalationToUserId },
-  });
+  const response = await api.patch(`/api/users/${userId}/status?isActive=${isActive}`);
   return response.data;
 };

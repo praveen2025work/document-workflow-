@@ -1,6 +1,6 @@
 export interface WorkflowCalendarDayDto {
   calendarDayId: number;
-  dayDate: string; // Assuming ISO 8601 format
+  dayDate: string;
   dayType: 'HOLIDAY' | 'RUNDAY' | 'WEEKEND';
   note?: string;
 }
@@ -9,41 +9,20 @@ export interface WorkflowCalendarDto {
   calendarId: number;
   calendarName: string;
   description?: string;
-  startDate: string; // Assuming ISO 8601 format
-  endDate: string; // Assuming ISO 8601 format
+  startDate: string;
+  endDate: string;
   recurrence: 'YEARLY' | 'MONTHLY' | 'WEEKLY' | 'DAILY';
   createdBy: string;
-  createdAt: string; // Assuming ISO 8601 format
+  createdAt: string;
   updatedBy?: string;
-  updatedAt?: string; // Assuming ISO 8601 format
+  updatedAt?: string;
   calendarDays: WorkflowCalendarDayDto[];
 }
 
 export interface PaginatedCalendarsResponse {
   content: WorkflowCalendarDto[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: {
-      sorted: boolean;
-      unsorted: boolean;
-      empty: boolean;
-    };
-    offset: number;
-    paged: boolean;
-    unpaged: boolean;
-  };
-  last: boolean;
-  totalPages: number;
   totalElements: number;
+  totalPages: number;
   size: number;
   number: number;
-  sort: {
-    sorted: boolean;
-    unsorted: boolean;
-    empty: boolean;
-  };
-  first: boolean;
-  numberOfElements: number;
-  empty: boolean;
 }

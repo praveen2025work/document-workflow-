@@ -3,36 +3,15 @@ export interface WorkflowRoleDto {
   roleName: string;
   isActive: 'Y' | 'N';
   createdBy: string;
-  createdOn: string; // Assuming ISO 8601 format
+  createdOn: string;
   updatedBy?: string;
-  updatedOn?: string; // Assuming ISO 8601 format
+  updatedOn?: string;
 }
 
 export interface PaginatedRolesResponse {
   content: WorkflowRoleDto[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: {
-      sorted: boolean;
-      unsorted: boolean;
-      empty: boolean;
-    };
-    offset: number;
-    paged: boolean;
-    unpaged: boolean;
-  };
-  last: boolean;
-  totalPages: number;
   totalElements: number;
+  totalPages: number;
   size: number;
   number: number;
-  sort: {
-    sorted: boolean;
-    unsorted: boolean;
-    empty: boolean;
-  };
-  first: boolean;
-  numberOfElements: number;
-  empty: boolean;
 }

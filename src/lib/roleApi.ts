@@ -11,26 +11,10 @@ export const getRoles = async (
   params: {
     page?: number;
     size?: number;
-    roleName?: string;
     isActive?: 'Y' | 'N';
   } = {}
 ): Promise<PaginatedRolesResponse> => {
   const response = await api.get('/api/roles', { params });
-  return response.data;
-};
-
-// Search roles with multiple criteria
-export const searchRoles = async (
-  params: {
-    page?: number;
-    size?: number;
-    roleName?: string;
-    isActive?: 'Y' | 'N';
-    workflowId?: number;
-    userId?: number;
-  } = {}
-): Promise<PaginatedRolesResponse> => {
-  const response = await api.get('/api/roles/search', { params });
   return response.data;
 };
 
@@ -48,43 +32,7 @@ export const createRole = async (
   return response.data;
 };
 
-// Update an existing role
-export const updateRole = async (
-  roleId: number,
-  roleData: Partial<Omit<WorkflowRoleDto, 'roleId' | 'createdBy' | 'createdOn'>>
-): Promise<WorkflowRoleDto> => {
-  const response = await api.put(`/api/roles/${roleId}`, roleData);
-  return response.data;
-};
-
-// Delete a role
-export const deleteRole = async (roleId: number): Promise<void> => {
-  await api.delete(`/api/roles/${roleId}`);
-};
-
-// Toggle role status
-export const toggleRoleStatus = async (
-  roleId: number,
-  isActive: 'Y' | 'N'
-): Promise<WorkflowRoleDto> => {
-  const response = await api.patch(`/api/roles/${roleId}/status`, null, {
-    params: { isActive },
-  });
-  return response.data;
-};
-
 // Assign a role to a user
 export const assignRoleToUser = async (roleId: number, userId: number): Promise<void> => {
   await api.post(`/api/roles/${roleId}/assign/user/${userId}`);
-};
-
-// Unassign a role from a user
-export const unassignRoleFromUser = async (roleId: number, userId: number): Promise<void> => {
-  await api.delete(`/api/roles/${roleId}/unassign/user/${userId}`);
-};
-
-// Check if a role name is available
-export const checkRoleNameAvailability = async (roleName: string): Promise<boolean> => {
-  const response = await api.get(`/api/roles/check/name/${roleName}`);
-  return response.data;
 };

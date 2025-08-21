@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import MainLayout from '@/components/MainLayout';
-import { getUsers, createUser, updateUser, deleteUser } from '@/lib/userApi';
+import { getUsers, createUser, updateUser, toggleUserStatus, searchUsers } from '@/lib/userApi';
 import { PaginatedUsersResponse, WorkflowUserDto } from '@/types/user';
 import {
   Table,
@@ -52,7 +52,10 @@ const UsersPage: NextPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAddUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [isEditUserDialogOpen, setEditUserDialogOpen] = useState(false);
-  const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+  const [editingUser, setEditingUser] = useState<Partial<WorkflowUserDto> | null>(null);
+=======
   const [selectedUser, setSelectedUser] = useState<WorkflowUserDto | null>(null);
   const [newUser, setNewUser] = useState({
     username: '',
@@ -61,7 +64,7 @@ const UsersPage: NextPage = () => {
     email: '',
     isActive: true,
   });
-  const [editingUser, setEditingUser] = useState<Partial<WorkflowUserDto> | null>(null);
+  const [editingUser, setEditingUser] = useState<Partial<WorkflowUserDto> & { isActive: boolean } | null>(null);
   const { user: currentUser } = useUser();
 
   const fetchUsers = async () => {
@@ -111,41 +114,51 @@ const UsersPage: NextPage = () => {
     setEditUserDialogOpen(true);
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const fetchUsers = async (query = '') => {
+    try {
+      setLoading(true);
+      const response = query 
+        ? await searchUsers({ username: query, firstName: query, page: 0, size: 10 })
+        : await getUsers({ page: 0, size: 10 });
+      setUsersResponse(response);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch users. Please try again later.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchUsers(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
   const handleUpdateUser = async () => {
     if (!selectedUser || !editingUser || !currentUser) {
       return;
     }
     try {
+      const { isActive, ...updateData } = editingUser;
       await updateUser(selectedUser.userId, {
-        ...editingUser,
-        isActive: editingUser.isActive ? 'Y' : 'N',
+        ...updateData,
         updatedBy: currentUser.email,
       });
+      if ((editingUser.isActive ? 'Y' : 'N') !== selectedUser.isActive) {
+        await toggleUserStatus(selectedUser.userId, editingUser.isActive ? 'Y' : 'N');
+      }
       setEditUserDialogOpen(false);
       setSelectedUser(null);
       setEditingUser(null);
-      fetchUsers();
+      fetchUsers(searchQuery);
     } catch (error) {
       console.error("Failed to update user:", error);
-    }
-  };
-
-  const handleDeleteUser = (user: WorkflowUserDto) => {
-    setSelectedUser(user);
-    setDeleteConfirmationOpen(true);
-  };
-
-  const confirmDeleteUser = async () => {
-    if (!selectedUser) {
-      return;
-    }
-    try {
-      await deleteUser(selectedUser.userId);
-      setDeleteConfirmationOpen(false);
-      setSelectedUser(null);
-      fetchUsers();
-    } catch (error) {
-      console.error("Failed to delete user:", error);
     }
   };
 
@@ -222,11 +235,11 @@ const UsersPage: NextPage = () => {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by name, email, or role..."
+                    placeholder="Search by username or first name..."
                     className="pl-10 glass border-border"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                </div>
-                <Button variant="outline">Filter</Button>
               </div>
             </CardContent>
           </Card>
@@ -292,13 +305,25 @@ const UsersPage: NextPage = () => {
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-500"
-                                onClick={() => handleDeleteUser(user)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={isDeleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user
+              "{selectedUser?.firstName} {selectedUser?.lastName}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteUser}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+=======
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
