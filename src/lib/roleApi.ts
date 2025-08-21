@@ -25,7 +25,7 @@ export const getRoles = async (
 // Get a single role by ID
 export const getRoleById = async (roleId: number): Promise<WorkflowRoleDto> => {
   if (config.app.isMock) {
-    const role = mockRoles.find((r) => r.id === String(roleId));
+    const role = mockRoles.find((r) => r.roleId === roleId);
     if (role) {
       return Promise.resolve(role);
     } else {
@@ -38,14 +38,14 @@ export const getRoleById = async (roleId: number): Promise<WorkflowRoleDto> => {
 
 // Create a new role
 export const createRole = async (
-  roleData: Omit<WorkflowRoleDto, 'id' | 'createdAt' | 'updatedAt'>
+  roleData: Omit<WorkflowRoleDto, 'roleId' | 'createdOn' | 'updatedOn'>
 ): Promise<WorkflowRoleDto> => {
   if (config.app.isMock) {
     const newRole: WorkflowRoleDto = {
-      id: String(mockRoles.length + 1),
+      roleId: mockRoles.length + 1,
       ...roleData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdOn: new Date().toISOString(),
+      updatedOn: new Date().toISOString(),
     };
     mockRoles.push(newRole);
     return Promise.resolve(newRole);

@@ -8,38 +8,45 @@ import {
 export const mockUserDashboardData: UserDashboardData = {
   activeTasks: 5,
   completedTasks: 20,
-  pendingTasks: 2,
+  overdueTasks: 2,
+  notifications: 3,
 };
 
 export const mockAdminDashboardData: AdminDashboardData = {
   totalWorkflows: 10,
   activeInstances: 8,
-  errorInstances: 1,
+  totalUsers: 50,
+  systemHealth: 'OK',
 };
 
 export const mockUserWorkload: UserWorkload = {
-  assignedTasks: 15,
-  overdueTasks: 3,
-  averageCompletionTime: '2 hours',
+  userId: 1,
+  username: 'johndoe',
+  pendingTasks: 2,
+  inProgressTasks: 5,
+  completedTasks: 20,
 };
 
 export const mockUserNotifications: UserNotification[] = [
   {
-    id: '1',
+    notificationId: 1,
+    userId: 1,
     message: 'You have a new task assigned: "Review Document"',
-    isRead: false,
+    status: 'UNREAD',
     createdAt: new Date().toISOString(),
   },
   {
-    id: '2',
+    notificationId: 2,
+    userId: 1,
     message: 'Task "Approve Invoice" is overdue.',
-    isRead: false,
+    status: 'UNREAD',
     createdAt: new Date().toISOString(),
   },
   {
-    id: '3',
+    notificationId: 3,
+    userId: 1,
     message: 'Workflow "Monthly Report" has been completed.',
-    isRead: true,
+    status: 'READ',
     createdAt: new Date().toISOString(),
   },
 ];

@@ -19,6 +19,10 @@ export interface WorkflowCalendarDto {
   calendarDays: WorkflowCalendarDayDto[];
 }
 
+export type CreateCalendarDto = Omit<WorkflowCalendarDto, 'calendarId' | 'createdAt' | 'updatedAt' | 'calendarDays'> & {
+  calendarDays: Omit<WorkflowCalendarDayDto, 'calendarDayId'>[];
+};
+
 export interface PaginatedCalendarsResponse {
   content: WorkflowCalendarDto[];
   totalElements: number;

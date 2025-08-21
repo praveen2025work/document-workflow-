@@ -1,19 +1,29 @@
 export interface UserDashboardData {
-  // Define the structure based on the actual API response
-  [key: string]: any;
+  activeTasks: number;
+  completedTasks: number;
+  overdueTasks: number;
+  notifications: number;
 }
 
 export interface AdminDashboardData {
-  // Define the structure based on the actual API response
-  [key: string]: any;
+  totalWorkflows: number;
+  activeInstances: number;
+  totalUsers: number;
+  systemHealth: 'OK' | 'DEGRADED' | 'DOWN';
 }
 
 export interface UserWorkload {
-  // Define the structure based on the actual API response
-  [key: string]: any;
+  userId: number;
+  username: string;
+  pendingTasks: number;
+  inProgressTasks: number;
+  completedTasks: number;
 }
 
 export interface UserNotification {
-  // Define the structure based on the actual API response
-  [key: string]: any;
+  notificationId: number;
+  userId: number;
+  message: string;
+  status: 'UNREAD' | 'READ';
+  createdAt: string;
 }

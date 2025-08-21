@@ -56,9 +56,7 @@ export const getUserNotifications = async (
   status: 'UNREAD' | 'READ'
 ): Promise<UserNotification[]> => {
   if (config.app.isMock) {
-    const filteredNotifications = mockUserNotifications.filter((n) =>
-      status === 'UNREAD' ? !n.isRead : n.isRead
-    );
+    const filteredNotifications = mockUserNotifications.filter((n) => n.status === status);
     return Promise.resolve(filteredNotifications);
   }
   const response = await api.get('/api/dashboard/notifications', {

@@ -1,9 +1,13 @@
 export interface ProcessOwnerDashboardData {
-  // Define the structure based on the actual API response
-  [key: string]: any;
+  totalManagedWorkflows: number;
+  activeInstances: number;
+  escalatedTasks: number;
 }
 
 export interface ProcessOwnerWorkload {
-  // Define the structure based on the actual API response
-  [key: string]: any;
+  processOwnerId: number;
+  username: string;
+  managedWorkflows: string[];
+  activeInstances: number;
+  escalatedTasks: number;
 }

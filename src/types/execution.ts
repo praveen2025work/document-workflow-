@@ -1,9 +1,17 @@
 export interface WorkflowInstanceDto {
   instanceId: number;
   workflowId: number;
-  status: 'RUNNING' | 'COMPLETED' | 'FAILED';
+  status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+  startedBy: number;
   startedOn: string;
   completedOn?: string;
+  escalatedTo?: number;
+  calendarId?: number;
+  calendarName?: string;
+  workflowName?: string;
+  startedByUsername?: string;
+  escalatedToUsername?: string;
+  instanceTasks?: InstanceTaskDto[];
 }
 
 export interface InstanceTaskDto {
@@ -11,8 +19,11 @@ export interface InstanceTaskDto {
   instanceId: number;
   taskId: number;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'ESCALATED';
-  assignedToUserId?: number;
-  startedOn?: string;
+  assignedTo: number;
+  startedOn: string;
   completedOn?: string;
-  decisionOutcome?: 'APPROVED' | 'REJECTED';
+  decisionOutcome?: string;
+  assignedToUsername?: string;
+  taskName?: string;
+  taskType?: string;
 }
