@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { config } from './config';
 import { PaginatedRolesResponse, WorkflowRoleDto } from '@/types/role';
+import { mockPaginatedRoles, mockRoles } from './mock/roles';
 
 const api = axios.create({
   baseURL: config.api.baseUrl,
@@ -14,25 +15,50 @@ export const getRoles = async (
     isActive?: 'Y' | 'N';
   } = {}
 ): Promise<PaginatedRolesResponse> => {
+  if (config.app.isMock) {
+    return Promise.resolve(mockPaginatedRoles);
+  }
   const response = await api.get('/api/roles', { params });
   return response.data;
 };
 
 // Get a single role by ID
 export const getRoleById = async (roleId: number): Promise<WorkflowRoleDto> => {
+  if (config.app.isMock) {
+    const role = mockRoles.find((r) => r.id === String(roleId));
+    if (role) {
+      return Promise.resolve(role);
+    } else {
+      return Promise.reject(new Error('Role not found'));
+    }
+  }
   const response = await api.get(`/api/roles/${roleId}`);
   return response.data;
 };
 
 // Create a new role
 export const createRole = async (
-  roleData: Omit<WorkflowRoleDto, 'roleId' | 'createdOn' | 'updatedOn'>
+  roleData: Omit<WorkflowRoleDto, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<WorkflowRoleDto> => {
+  if (config.app.isMock) {
+    const newRole: WorkflowRoleDto = {
+      id: String(mockRoles.length + 1),
+      ...roleData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    mockRoles.push(newRole);
+    return Promise.resolve(newRole);
+  }
   const response = await api.post('/api/roles', roleData);
   return response.data;
 };
 
 // Assign a role to a user
 export const assignRoleToUser = async (roleId: number, userId: number): Promise<void> => {
+  if (config.app.isMock) {
+    console.log(`Assigning role ${roleId} to user ${userId}`);
+    return Promise.resolve();
+  }
   await api.post(`/api/roles/${roleId}/assign/user/${userId}`);
 };
