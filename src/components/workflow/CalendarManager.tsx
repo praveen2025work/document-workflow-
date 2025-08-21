@@ -69,7 +69,14 @@ const CalendarManager: React.FC = () => {
       return;
     }
     try {
-      await createCalendar({ name: newCalendar.name, description: newCalendar.description, isActive: true });
+      await createCalendar({ 
+        calendarName: newCalendar.name, 
+        description: newCalendar.description,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+        recurrence: 'WEEKLY',
+        createdBy: user.email
+      });
       toast.success('Calendar created successfully.');
       setAddDialogOpen(false);
       setNewCalendar({ name: '', description: '' }); // Reset form
@@ -125,12 +132,12 @@ const CalendarManager: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {calendarsResponse.data.map((calendar) => (
-                  <TableRow key={calendar.id}>
-                    <TableCell>{calendar.name}</TableCell>
+                {calendarsResponse.content.map((calendar) => (
+                  <TableRow key={calendar.calendarId}>
+                    <TableCell>{calendar.calendarName}</TableCell>
                     <TableCell>{calendar.description}</TableCell>
                     <TableCell>{new Date(calendar.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>{calendar.isActive ? 'Active' : 'Inactive'}</TableCell>
+                    <TableCell>Active</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -15,7 +15,9 @@ export const getCalendars = async (
     recurrence?: 'YEARLY' | 'MONTHLY' | 'WEEKLY' | 'DAILY';
   } = {}
 ): Promise<PaginatedCalendarsResponse> => {
+  console.log('getCalendars - isMock:', config.app.isMock, 'env:', config.app.env);
   if (config.app.isMock) {
+    console.log('Returning mock calendars:', mockPaginatedCalendars);
     return Promise.resolve(mockPaginatedCalendars);
   }
   const response = await api.get('/api/calendars', { params });
@@ -24,11 +26,11 @@ export const getCalendars = async (
 
 // Create a new calendar
 export const createCalendar = async (
-  calendarData: Omit<WorkflowCalendarDto, 'id' | 'createdAt' | 'updatedAt' | 'calendarDays'>
+  calendarData: Omit<WorkflowCalendarDto, 'calendarId' | 'createdAt' | 'updatedAt' | 'calendarDays'>
 ): Promise<WorkflowCalendarDto> => {
   if (config.app.isMock) {
     const newCalendar: WorkflowCalendarDto = {
-      id: String(mockCalendars.length + 1),
+      calendarId: mockCalendars.length + 1,
       ...calendarData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -44,7 +46,7 @@ export const createCalendar = async (
 // Get all days for a calendar
 export const getCalendarDays = async (calendarId: string): Promise<WorkflowCalendarDayDto[]> => {
   if (config.app.isMock) {
-    const calendar = mockCalendars.find((c) => c.id === calendarId);
+    const calendar = mockCalendars.find((c) => c.calendarId === parseInt(calendarId));
     return Promise.resolve(calendar?.calendarDays || []);
   }
   const response = await api.get(`/api/calendars/${calendarId}/days`);
@@ -54,16 +56,17 @@ export const getCalendarDays = async (calendarId: string): Promise<WorkflowCalen
 // Add a single day to a calendar
 export const addCalendarDay = async (
   calendarId: string,
-  dayData: Omit<WorkflowCalendarDayDto, 'id'>
+  dayData: Omit<WorkflowCalendarDayDto, 'calendarDayId'>
 ): Promise<WorkflowCalendarDayDto> => {
   if (config.app.isMock) {
-    const calendar = mockCalendars.find((c) => c.id === calendarId);
+    const calendar = mockCalendars.find((c) => c.calendarId === parseInt(calendarId));
     if (calendar) {
       const newDay: WorkflowCalendarDayDto = {
-        id: String(calendar.calendarDays?.length + 1),
+        calendarDayId: (calendar.calendarDays?.length || 0) + 1,
         ...dayData,
       };
-      calendar.calendarDays?.push(newDay);
+      if (!calendar.calendarDays) calendar.calendarDays = [];
+      calendar.calendarDays.push(newDay);
       return Promise.resolve(newDay);
     }
     return Promise.reject('Calendar not found');
