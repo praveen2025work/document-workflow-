@@ -6,6 +6,12 @@ import {
   UserWorkload,
   UserNotification,
 } from '@/types/dashboard';
+import {
+  mockUserDashboardData,
+  mockAdminDashboardData,
+  mockUserWorkload,
+  mockUserNotifications,
+} from './mock/dashboard';
 
 const api = axios.create({
   baseURL: config.api.baseUrl,
@@ -13,6 +19,9 @@ const api = axios.create({
 
 // Get user dashboard data
 export const getUserDashboard = async (userId: number): Promise<UserDashboardData> => {
+  if (config.app.isMock) {
+    return Promise.resolve(mockUserDashboardData);
+  }
   const response = await api.get('/api/dashboard/user', {
     params: { userId },
   });
@@ -21,6 +30,9 @@ export const getUserDashboard = async (userId: number): Promise<UserDashboardDat
 
 // Get admin dashboard data
 export const getAdminDashboard = async (adminId: number): Promise<AdminDashboardData> => {
+  if (config.app.isMock) {
+    return Promise.resolve(mockAdminDashboardData);
+  }
   const response = await api.get('/api/dashboard/admin', {
     params: { adminId },
   });
@@ -29,6 +41,9 @@ export const getAdminDashboard = async (adminId: number): Promise<AdminDashboard
 
 // Get user workload summary
 export const getUserWorkload = async (userId: number): Promise<UserWorkload> => {
+  if (config.app.isMock) {
+    return Promise.resolve(mockUserWorkload);
+  }
   const response = await api.get('/api/dashboard/workload', {
     params: { userId },
   });
@@ -40,6 +55,12 @@ export const getUserNotifications = async (
   userId: number,
   status: 'UNREAD' | 'READ'
 ): Promise<UserNotification[]> => {
+  if (config.app.isMock) {
+    const filteredNotifications = mockUserNotifications.filter((n) =>
+      status === 'UNREAD' ? !n.isRead : n.isRead
+    );
+    return Promise.resolve(filteredNotifications);
+  }
   const response = await api.get('/api/dashboard/notifications', {
     params: { userId, status },
   });
