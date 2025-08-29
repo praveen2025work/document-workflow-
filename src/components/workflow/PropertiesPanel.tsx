@@ -42,14 +42,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
   const handleSave = () => {
     if (selectedNode) {
       onUpdateNode(selectedNode.id, formData);
-      // Don't close the panel immediately to allow user to see the changes
       toast.success('Properties saved successfully!');
     }
-  };
-=======
-
-  const handleClose = () => {
-    onClose();
   };
 
   const handleDecisionOutcomeChange = (index: number, field: keyof DecisionOutcome, value: any) => {
