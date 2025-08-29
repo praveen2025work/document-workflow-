@@ -81,6 +81,22 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
     setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
   };
 
+  const handleParameterChange = (index: number, field: 'paramKey' | 'paramValue', value: string) => {
+    const newParameters = [...(localSettings.parameters || [])];
+    newParameters[index] = { ...newParameters[index], [field]: value };
+    setLocalSettings({ ...localSettings, parameters: newParameters });
+  };
+
+  const addParameter = () => {
+    const newParameters = [...(localSettings.parameters || []), { paramKey: '', paramValue: '' }];
+    setLocalSettings({ ...localSettings, parameters: newParameters });
+  };
+
+  const removeParameter = (index: number) => {
+    const newParameters = (localSettings.parameters || []).filter((_, i) => i !== index);
+    setLocalSettings({ ...localSettings, parameters: newParameters });
+  };
+
   const handleSave = () => {
     onSave(localSettings);
     onClose();
@@ -92,36 +108,35 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Workflow Settings</DialogTitle>
           <DialogDescription>
-            Configure high-level parameters for your workflow.
+            Configure comprehensive parameters for your workflow including timing, escalation, and custom properties.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto p-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={localSettings.name || ''}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="e.g., Monthly Report Generation"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={localSettings.description || ''}
-              onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="A brief description of the workflow's purpose."
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-6 max-h-[70vh] overflow-y-auto p-4">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Basic Information</h3>
             <div className="space-y-2">
-              <Label>Due In (minutes)</Label>
-              <Input type="number" value={localSettings.dueInMins || 1440} onChange={e => handleChange('dueInMins', +e.target.value)} />
+              <Label htmlFor="name">Workflow Name</Label>
+              <Input
+                id="name"
+                value={localSettings.name || ''}
+                onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="e.g., Monthly Finance Review Workflow"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={localSettings.description || ''}
+                onChange={(e) => handleChange('description', e.target.value)}
+                placeholder="A comprehensive description of the workflow's purpose and process."
+                rows={3}
+              />
             </div>
             <div className="space-y-2">
               <Label>Calendar</Label>
@@ -129,50 +144,161 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
                 value={localSettings.calendarId?.toString() || ''}
                 onValueChange={(val) => handleChange('calendarId', val ? +val : null)}
               >
-                <SelectTrigger><SelectValue placeholder="Select Calendar" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select Calendar (Optional)" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">No Calendar</SelectItem>
                   {calendars.map(c => <SelectItem key={c.calendarId} value={c.calendarId.toString()}>{c.calendarName}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Timing & Escalation */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-lg font-semibold">Timing & Escalation</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Due In (minutes)</Label>
+                <Input 
+                  type="number" 
+                  value={localSettings.dueInMins || 1440} 
+                  onChange={e => handleChange('dueInMins', +e.target.value)} 
+                  placeholder="1440"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Reminder Before Due (minutes)</Label>
+                <Input 
+                  type="number" 
+                  value={localSettings.reminderBeforeDueMins || 60} 
+                  onChange={e => handleChange('reminderBeforeDueMins', +e.target.value)} 
+                  placeholder="60"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Minutes After Due</Label>
+                <Input 
+                  type="number" 
+                  value={localSettings.minutesAfterDue || 30} 
+                  onChange={e => handleChange('minutesAfterDue', +e.target.value)} 
+                  placeholder="30"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Escalation After (minutes)</Label>
+                <Input 
+                  type="number" 
+                  value={localSettings.escalationAfterMins || 120} 
+                  onChange={e => handleChange('escalationAfterMins', +e.target.value)} 
+                  placeholder="120"
+                />
+              </div>
+            </div>
+          </div>
           
-          <h3 className="text-lg font-semibold pt-4 border-t">Roles & Users</h3>
-          <div className="space-y-2">
-            <Label>Add Role to Workflow</Label>
-            <Select onValueChange={(val) => handleAddRole(+val)}>
-              <SelectTrigger><SelectValue placeholder="Select a role to add" /></SelectTrigger>
-              <SelectContent>
-                {roles
-                  .filter(r => !(localSettings.workflowRoles || []).some(wr => wr.roleId === r.roleId))
-                  .map(r => <SelectItem key={r.roleId} value={r.roleId.toString()}>{r.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          {/* Roles & Users */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-lg font-semibold">Roles & Users</h3>
+            <div className="space-y-2">
+              <Label>Add Role to Workflow</Label>
+              <Select onValueChange={(val) => handleAddRole(+val)}>
+                <SelectTrigger><SelectValue placeholder="Select a role to add" /></SelectTrigger>
+                <SelectContent>
+                  {roles
+                    .filter(r => !(localSettings.workflowRoles || []).some(wr => wr.roleId === r.roleId))
+                    .map(r => <SelectItem key={r.roleId} value={r.roleId.toString()}>{r.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              {(localSettings.workflowRoles || []).map(wr => (
+                <div key={wr.roleId} className="p-3 border rounded-md bg-muted/20">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">{roles.find(r => r.roleId === wr.roleId)?.name || `Role ID: ${wr.roleId}`}</span>
+                    <Button variant="destructive" size="icon" onClick={() => handleRemoveRole(wr.roleId)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="mt-2">
+                    <Label>Assigned User</Label>
+                    <Select
+                      value={wr.userId?.toString() || ''}
+                      onValueChange={(val) => handleAssignUserToRole(wr.roleId, +val)}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Assign a user" /></SelectTrigger>
+                      <SelectContent>
+                        {users.map(u => <SelectItem key={u.userId} value={u.userId.toString()}>{u.name} ({u.email})</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-2">
-            {(localSettings.workflowRoles || []).map(wr => (
-              <div key={wr.roleId} className="p-3 border rounded-md">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">{roles.find(r => r.roleId === wr.roleId)?.name || `Role ID: ${wr.roleId}`}</span>
-                  <Button variant="destructive" size="icon" onClick={() => handleRemoveRole(wr.roleId)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          {/* Custom Parameters */}
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Custom Parameters</h3>
+              <Button onClick={addParameter} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />Add Parameter
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {(localSettings.parameters || []).map((param, index) => (
+                <div key={index} className="p-3 border rounded-md bg-muted/20">
+                  <div className="flex justify-between items-center mb-2">
+                    <Label className="text-sm font-medium">Parameter #{index + 1}</Label>
+                    <Button size="icon" variant="destructive" onClick={() => removeParameter(index)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input 
+                      placeholder="Parameter Key (e.g., DEPARTMENT)" 
+                      value={param.paramKey} 
+                      onChange={e => handleParameterChange(index, 'paramKey', e.target.value)} 
+                    />
+                    <Input 
+                      placeholder="Parameter Value (e.g., FINANCE)" 
+                      value={param.paramValue} 
+                      onChange={e => handleParameterChange(index, 'paramValue', e.target.value)} 
+                    />
+                  </div>
                 </div>
-                <div className="mt-2">
-                  <Label>Assigned User</Label>
-                  <Select
-                    value={wr.userId?.toString() || ''}
-                    onValueChange={(val) => handleAssignUserToRole(wr.roleId, +val)}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Assign a user" /></SelectTrigger>
-                    <SelectContent>
-                      {users.map(u => <SelectItem key={u.userId} value={u.userId.toString()}>{u.name} ({u.email})</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+              ))}
+              {(localSettings.parameters || []).length === 0 && (
+                <div className="text-center py-4 text-muted-foreground">
+                  No custom parameters defined. Click "Add Parameter" to create workflow-specific settings.
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Workflow Status */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-lg font-semibold">Status</h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Workflow Active</Label>
+                <p className="text-sm text-muted-foreground">Enable or disable this workflow</p>
               </div>
-            ))}
+              <Select 
+                value={localSettings.isActive || 'Y'} 
+                onValueChange={(val) => handleChange('isActive', val)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Y">Active</SelectItem>
+                  <SelectItem value="N">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <DialogFooter>

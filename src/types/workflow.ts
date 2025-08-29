@@ -21,27 +21,59 @@ export interface WorkflowTask {
   expectedCompletion: number;
   sequenceOrder: number;
   escalationRules: string;
+  parentTaskIds?: string;
   canBeRevisited: YesNo;
   maxRevisits: number;
   fileSelectionMode: FileSelectionMode;
+  sourceTaskIds?: string;
+  fileFilterJson?: string;
+  consolidationRulesJson?: string;
+  decisionCriteriaJson?: string;
   taskDescription: string;
+  isDecisionTask?: YesNo;
+  decisionType?: DecisionType;
   taskPriority: TaskPriority;
   autoEscalationEnabled: YesNo;
   notificationRequired: YesNo;
+  taskStatus?: string;
+  taskStartedAt?: string;
+  taskCompletedAt?: string;
+  taskRejectedAt?: string;
+  taskRejectionReason?: string;
+  taskCompletedBy?: string;
+  taskRejectedBy?: string;
   allowNewFiles: YesNo;
+  fileSourceTaskIds?: string;
+  canRunInParallel?: YesNo;
+  parallelTaskIds?: string;
   fileRetentionDays: number;
   keepFileVersions?: YesNo;
   maxFileVersions?: number;
-  fileSourceTaskIds?: string;
-  consolidationRulesJson?: string;
-  isDecisionTask?: YesNo;
-  decisionType?: DecisionType;
+  keepFileHistory?: YesNo;
+  fileHistoryDetails?: YesNo;
   decisionOutcomes?: DecisionOutcome[];
   roleName?: string;
   completed?: boolean;
   pending?: boolean;
   inProgress?: boolean;
   rejected?: boolean;
+  decisionTask?: boolean;
+  // File management properties
+  taskFiles?: WorkflowTaskFile[];
+  outputFileName?: string;
+  consolidationSources?: string[];
+}
+
+export interface WorkflowTaskFile {
+  fileId?: number;
+  taskId: number;
+  fileName: string;
+  fileType?: string;
+  fileSize?: number;
+  uploadedBy?: string;
+  uploadedAt?: string;
+  isRequired?: YesNo;
+  fileDescription?: string;
 }
 
 export interface WorkflowRole {

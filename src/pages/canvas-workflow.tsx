@@ -70,7 +70,7 @@ const CanvasWorkflowPage: NextPage = () => {
     // Load a default workflow or a specific one via query param
     const loadWorkflow = async () => {
       try {
-        // For now, let's load the mock workflow by default
+        // Load the comprehensive mock workflow by default
         const wf = await getWorkflowById(1);
         setWorkflow(wf);
         if (wf.tasks) {
@@ -85,15 +85,68 @@ const CanvasWorkflowPage: NextPage = () => {
             } as NodeData,
           }));
           setNodes([...initialNodes, ...flowNodes]);
+          
+          // Create connections between tasks based on sequence order and decision outcomes
+          const newEdges: any[] = [];
+          wf.tasks.forEach((task, index) => {
+            if (index === 0) {
+              // Connect start to first task
+              newEdges.push({
+                id: `start-${task.taskId}`,
+                source: 'start',
+                target: task.taskId.toString(),
+                type: 'default',
+                style: { stroke: '#3b82f6', strokeWidth: 2 }
+              });
+            }
+            
+            if (task.decisionOutcomes && task.decisionOutcomes.length > 0) {
+              // Connect decision outcomes
+              task.decisionOutcomes.forEach((outcome, outcomeIndex) => {
+                newEdges.push({
+                  id: `${task.taskId}-${outcome.nextTaskId}-${outcomeIndex}`,
+                  source: task.taskId.toString(),
+                  target: outcome.nextTaskId.toString(),
+                  type: outcome.outcomeName === 'REJECT' ? 'goBack' : 'default',
+                  style: outcome.outcomeName === 'REJECT' 
+                    ? { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '8,4' }
+                    : { stroke: '#3b82f6', strokeWidth: 2 },
+                  label: outcome.outcomeName
+                });
+              });
+            } else if (index < wf.tasks.length - 1) {
+              // Connect to next task in sequence
+              const nextTask = wf.tasks[index + 1];
+              newEdges.push({
+                id: `${task.taskId}-${nextTask.taskId}`,
+                source: task.taskId.toString(),
+                target: nextTask.taskId.toString(),
+                type: 'default',
+                style: { stroke: '#3b82f6', strokeWidth: 2 }
+              });
+            }
+            
+            if (index === wf.tasks.length - 1) {
+              // Connect last task to end
+              newEdges.push({
+                id: `${task.taskId}-end`,
+                source: task.taskId.toString(),
+                target: 'end',
+                type: 'default',
+                style: { stroke: '#3b82f6', strokeWidth: 2 }
+              });
+            }
+          });
+          
+          setEdges(newEdges);
         }
-        // Here you would also process connections if they were part of the API response
       } catch (error) {
         console.error("Failed to load workflow", error);
         toast.error("Failed to load initial workflow.");
       }
     };
-    // loadWorkflow(); // Uncomment to load a workflow by default
-  }, []);
+    loadWorkflow(); // Load the workflow by default to show comprehensive example
+  }, [setNodes, setEdges]);
 
   const onConnect = useCallback((params: ReactFlowConnection | Edge) => {
     const newEdge = { ...params, type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } };
@@ -329,6 +382,7 @@ const CanvasWorkflowPage: NextPage = () => {
           onUpdateNode={handleUpdateNode}
           onClose={() => setSelectedNodeId(null)}
           roles={workflow?.workflowRoles || []}
+          allNodes={nodes}
         />
 
         <WorkflowSettings
