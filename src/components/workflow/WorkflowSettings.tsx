@@ -4,108 +4,81 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2 } from 'lucide-react';
-
-interface Calendar {
-  id: number;
-  name: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-}
-
-interface User {
-  id: number;
-  name: string;
-}
-
-interface UserForRole {
-  user_id: number;
-  role_id: number;
-}
+import { Workflow, WorkflowRole } from '@/types/workflow';
+import { WorkflowRoleDto as Role } from '@/types/role';
+import { WorkflowUserDto as User } from '@/types/user';
+import { CalendarDto as Calendar } from '@/types/calendar';
+import { getCalendars } from '@/lib/calendarApi';
+import { getRoles } from '@/lib/roleApi';
+import { getUsers } from '@/lib/userApi';
+import { toast } from 'sonner';
 
 interface WorkflowSettingsProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (settings: any) => void;
-  settings: {
-    name: string;
-    trigger: 'MANUAL' | 'AUTO';
-    frequency?: string;
-    startTime?: string;
-    start_working_day?: number;
-    calendar_id?: number;
-    roles?: Role[];
-    usersForRoles?: UserForRole[];
-  };
+  onSave: (settings: Partial<Workflow>) => void;
+  settings: Workflow | null;
 }
 
-import api from '@/lib/api';
-
 const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, onSave, settings }) => {
-  const [localSettings, setLocalSettings] = useState(settings);
+  const [localSettings, setLocalSettings] = useState<Partial<Workflow>>(settings || {});
   const [calendars, setCalendars] = useState<Calendar[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [newRoleName, setNewRoleName] = useState('');
-
+  
   useEffect(() => {
-    setLocalSettings(settings);
+    setLocalSettings(settings || {});
     if (isOpen) {
-      fetchCalendars();
-      fetchUsers();
+      fetchInitialData();
     }
   }, [settings, isOpen]);
 
-  const fetchCalendars = async () => {
+  const fetchInitialData = async () => {
     try {
-      const response = await api.get('/calendars');
-      setCalendars(response.data);
+      const [calendarsRes, rolesRes, usersRes] = await Promise.all([
+        getCalendars({ page: 1, size: 100 }),
+        getRoles({ page: 1, size: 100 }),
+        getUsers({ page: 1, size: 100 }),
+      ]);
+      setCalendars(calendarsRes.content);
+      setRoles(rolesRes.content);
+      setUsers(usersRes.content);
     } catch (error) {
-      // Error is handled by interceptor
+      toast.error("Failed to fetch initial data for settings.");
+      console.error(error);
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      // Assuming an endpoint to fetch all users exists
-      const response = await api.get('/users'); 
-      setUsers(response.data);
-    } catch (error) {
-      console.error("Failed to fetch users", error);
-    }
-  };
+  const handleAddRole = (roleId: number) => {
+    const role = roles.find(r => r.roleId === roleId);
+    if (!role) return;
 
-  const handleAddRole = () => {
-    if (newRoleName.trim() !== '') {
-      const newRole: Role = {
-        id: Date.now(), // Temporary ID
-        name: newRoleName.trim(),
-      };
-      const updatedRoles = [...(localSettings.roles || []), newRole];
-      setLocalSettings({ ...localSettings, roles: updatedRoles });
-      setNewRoleName('');
-    }
+    const newWorkflowRole: WorkflowRole = {
+      roleId: role.roleId,
+      userId: 0, // Placeholder, user needs to be assigned
+      isActive: 'Y',
+      roleName: role.name,
+    };
+
+    const updatedRoles = [...(localSettings.workflowRoles || []), newWorkflowRole];
+    setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
   };
 
   const handleRemoveRole = (roleId: number) => {
-    const updatedRoles = (localSettings.roles || []).filter(r => r.id !== roleId);
-    const updatedUsersForRoles = (localSettings.usersForRoles || []).filter(u => u.role_id !== roleId);
-    setLocalSettings({ ...localSettings, roles: updatedRoles, usersForRoles: updatedUsersForRoles });
+    const updatedRoles = (localSettings.workflowRoles || []).filter(r => r.roleId !== roleId);
+    setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
   };
 
-  const handleMapUserToRole = (userId: number, roleId: number) => {
-    const updatedUsersForRoles = [...(localSettings.usersForRoles || []), { user_id: userId, role_id: roleId }];
-    setLocalSettings({ ...localSettings, usersForRoles: updatedUsersForRoles });
-  };
+  const handleAssignUserToRole = (roleId: number, userId: number) => {
+    const user = users.find(u => u.userId === userId);
+    if (!user) return;
 
-  const handleUnmapUserFromRole = (userId: number, roleId: number) => {
-    const updatedUsersForRoles = (localSettings.usersForRoles || []).filter(
-      u => !(u.user_id === userId && u.role_id === roleId)
+    const updatedRoles = (localSettings.workflowRoles || []).map(r => 
+      r.roleId === roleId ? { ...r, userId: user.userId, userName: user.name } : r
     );
-    setLocalSettings({ ...localSettings, usersForRoles: updatedUsersForRoles });
+    setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
   };
 
   const handleSave = () => {
@@ -113,175 +86,101 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
     onClose();
   };
 
-  const handleTriggerChange = (value: string) => {
-    const newSettings = { ...localSettings, trigger: value };
-    if (value === 'MANUAL') {
-      delete newSettings.frequency;
-      delete newSettings.startTime;
-    }
-    setLocalSettings(newSettings);
+  const handleChange = (field: keyof Workflow, value: any) => {
+    setLocalSettings(prev => ({ ...prev, [field]: value }));
   };
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[525px] bg-gray-800 text-white border-gray-700">
-          <DialogHeader>
-            <DialogTitle>Workflow Settings</DialogTitle>
-            <DialogDescription>
-              Configure high-level parameters for your workflow.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {/* General Settings */}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Workflow Settings</DialogTitle>
+          <DialogDescription>
+            Configure high-level parameters for your workflow.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto p-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              value={localSettings.name || ''}
+              onChange={(e) => handleChange('name', e.target.value)}
+              placeholder="e.g., Monthly Report Generation"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={localSettings.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="A brief description of the workflow's purpose."
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">General</h3>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input
-                  id="name"
-                  value={localSettings.name || ''}
-                  onChange={(e) => setLocalSettings({ ...localSettings, name: e.target.value })}
-                  className="col-span-3 bg-gray-700 border-gray-600"
-                  placeholder="e.g., Monthly Report Generation"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="trigger" className="text-right">Trigger</Label>
-                <Select value={localSettings.trigger || 'MANUAL'} onValueChange={handleTriggerChange}>
-                  <SelectTrigger className="col-span-3 bg-gray-700 border-gray-600">
-                    <SelectValue placeholder="Select trigger type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MANUAL">Manual</SelectItem>
-                    <SelectItem value="AUTO">Automatic</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {localSettings.trigger === 'AUTO' && (
-                <>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="frequency" className="text-right">Frequency</Label>
-                    <Select
-                      value={localSettings.frequency || ''}
-                      onValueChange={(value) => setLocalSettings({ ...localSettings, frequency: value })}
-                    >
-                      <SelectTrigger className="col-span-3 bg-gray-700 border-gray-600">
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="DAILY">Daily</SelectItem>
-                        <SelectItem value="MONTHLY">Monthly</SelectItem>
-                        <SelectItem value="QUARTERLY">Quarterly</SelectItem>
-                        <SelectItem value="YEARLY">Yearly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="startTime" className="text-right">Start Time</Label>
-                    <Input
-                      id="startTime"
-                      type="time"
-                      value={localSettings.startTime || ''}
-                      onChange={(e) => setLocalSettings({ ...localSettings, startTime: e.target.value })}
-                      className="col-span-3 bg-gray-700 border-gray-600"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="startWorkingDay" className="text-right">Start Day</Label>
-                    <Input
-                      id="startWorkingDay"
-                      type="number"
-                      value={localSettings.start_working_day || ''}
-                      onChange={(e) => setLocalSettings({ ...localSettings, start_working_day: Number(e.target.value) })}
-                      className="col-span-3 bg-gray-700 border-gray-600"
-                      placeholder="e.g., 1"
-                    />
-                  </div>
-                </>
-              )}
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="calendar" className="text-right">Calendar</Label>
-                <div className="col-span-3 flex items-center gap-2">
-                  <Select
-                    value={localSettings.calendar_id ? String(localSettings.calendar_id) : ''}
-                    onValueChange={(value) => setLocalSettings({ ...localSettings, calendar_id: Number(value) })}
-                  >
-                    <SelectTrigger className="flex-1 bg-gray-700 border-gray-600">
-                      <SelectValue placeholder="Select a calendar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {calendars.map((cal) => (
-                        <SelectItem key={cal.id} value={String(cal.id)}>{cal.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" size="sm" onClick={fetchCalendars}>Refresh</Button>
-                </div>
-              </div>
+              <Label>Due In (minutes)</Label>
+              <Input type="number" value={localSettings.dueInMins || 1440} onChange={e => handleChange('dueInMins', +e.target.value)} />
             </div>
-
-            {/* Roles and Users */}
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Roles & Users</h3>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={newRoleName}
-                  onChange={(e) => setNewRoleName(e.target.value)}
-                  placeholder="New role name"
-                  className="bg-gray-700 border-gray-600"
-                />
-                <Button onClick={handleAddRole} size="sm"><Plus className="h-4 w-4 mr-1" /> Add Role</Button>
-              </div>
-              <div className="space-y-2">
-                {(localSettings.roles || []).map(role => (
-                  <div key={role.id} className="p-2 border rounded border-gray-600">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">{role.name}</span>
-                      <Button variant="destructive" size="sm" onClick={() => handleRemoveRole(role.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="mt-2">
-                      <Label>Assign Users:</Label>
-                      <Select onValueChange={(value) => handleMapUserToRole(Number(value), role.id)}>
-                        <SelectTrigger className="bg-gray-700 border-gray-600">
-                          <SelectValue placeholder="Select user to add" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {users.filter(user => 
-                            !(localSettings.usersForRoles || []).some(ufr => ufr.role_id === role.id && ufr.user_id === user.id)
-                          ).map(user => (
-                            <SelectItem key={user.id} value={String(user.id)}>{user.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="mt-1 space-y-1">
-                        {(localSettings.usersForRoles || []).filter(ufr => ufr.role_id === role.id).map(ufr => {
-                          const user = users.find(u => u.id === ufr.user_id);
-                          return (
-                            <div key={ufr.user_id} className="flex items-center justify-between bg-gray-600 px-2 py-1 rounded">
-                              <span>{user?.name || `User ID: ${ufr.user_id}`}</span>
-                              <Button variant="ghost" size="sm" onClick={() => handleUnmapUserFromRole(ufr.user_id, role.id)}>
-                                <Trash2 className="h-3 w-3 text-red-400" />
-                              </Button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <Label>Calendar</Label>
+              <Select
+                value={localSettings.calendarId?.toString() || ''}
+                onValueChange={(val) => handleChange('calendarId', val ? +val : null)}
+              >
+                <SelectTrigger><SelectValue placeholder="Select Calendar" /></SelectTrigger>
+                <SelectContent>
+                  {calendars.map(c => <SelectItem key={c.calendarId} value={c.calendarId.toString()}>{c.calendarName}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={handleSave}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          
+          <h3 className="text-lg font-semibold pt-4 border-t">Roles & Users</h3>
+          <div className="space-y-2">
+            <Label>Add Role to Workflow</Label>
+            <Select onValueChange={(val) => handleAddRole(+val)}>
+              <SelectTrigger><SelectValue placeholder="Select a role to add" /></SelectTrigger>
+              <SelectContent>
+                {roles
+                  .filter(r => !(localSettings.workflowRoles || []).some(wr => wr.roleId === r.roleId))
+                  .map(r => <SelectItem key={r.roleId} value={r.roleId.toString()}>{r.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            {(localSettings.workflowRoles || []).map(wr => (
+              <div key={wr.roleId} className="p-3 border rounded-md">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">{roles.find(r => r.roleId === wr.roleId)?.name || `Role ID: ${wr.roleId}`}</span>
+                  <Button variant="destructive" size="icon" onClick={() => handleRemoveRole(wr.roleId)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="mt-2">
+                  <Label>Assigned User</Label>
+                  <Select
+                    value={wr.userId?.toString() || ''}
+                    onValueChange={(val) => handleAssignUserToRole(wr.roleId, +val)}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Assign a user" /></SelectTrigger>
+                    <SelectContent>
+                      {users.map(u => <SelectItem key={u.userId} value={u.userId.toString()}>{u.name} ({u.email})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSave}>Save Changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
