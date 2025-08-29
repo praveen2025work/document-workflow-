@@ -22,9 +22,10 @@ interface PropertiesPanelProps {
   roles: WorkflowRole[];
   allNodes?: Node<NodeData>[];
   edges?: any[];
+  onUpdateEdges?: (edges: any[]) => void;
 }
 
-const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdateNode, onClose, roles, allNodes = [], edges = [] }) => {
+const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdateNode, onClose, roles, allNodes = [], edges = [], onUpdateEdges }) => {
   const [formData, setFormData] = useState<Partial<NodeData>>({});
 
   useEffect(() => {
@@ -48,6 +49,52 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     const newOutcomes = [...(formData.decisionOutcomes || [])];
     newOutcomes[index] = { ...newOutcomes[index], [field]: value };
     handleInputChange('decisionOutcomes', newOutcomes);
+    
+    // If nextTaskId is being changed and we have onUpdateEdges callback, create/update the decision edge
+    if (field === 'nextTaskId' && value && selectedNode && onUpdateEdges) {
+      const targetNodeId = findNodeIdByTaskId(+value);
+      if (targetNodeId) {
+        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, newOutcomes[index].outcomeName || `Outcome ${index + 1}`);
+      }
+    }
+  };
+
+  // Helper function to find node ID by task ID
+  const findNodeIdByTaskId = (taskId: number): string | null => {
+    const targetNode = allNodes.find(node => 
+      (node.data.taskId && node.data.taskId === taskId) || 
+      (node.id === taskId.toString())
+    );
+    return targetNode ? targetNode.id : null;
+  };
+
+  // Create or update decision outcome edge
+  const createDecisionOutcomeEdge = (sourceNodeId: string, targetNodeId: string, outcomeName: string) => {
+    if (!onUpdateEdges) return;
+    
+    const newEdgeId = `decision-${sourceNodeId}-${targetNodeId}-${Date.now()}`;
+    const newEdge = {
+      id: newEdgeId,
+      source: sourceNodeId,
+      target: targetNodeId,
+      type: 'goBack', // Use the red dotted line type
+      style: { 
+        stroke: '#ef4444', 
+        strokeWidth: 3, 
+        strokeDasharray: '8,4' 
+      },
+      label: outcomeName,
+      animated: true
+    };
+
+    // Remove any existing decision edges from this source to avoid duplicates
+    const updatedEdges = edges.filter(edge => 
+      !(edge.source === sourceNodeId && edge.type === 'goBack')
+    );
+    
+    // Add the new decision edge
+    updatedEdges.push(newEdge);
+    onUpdateEdges(updatedEdges);
   };
 
   const addDecisionOutcome = () => {
@@ -746,21 +793,25 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                         <SelectValue placeholder="Select next task" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableTasks.map(task => (
-                          <SelectItem key={task.id} value={(task.data.taskId || task.id).toString()}>
-                            <div className="flex items-center">
-                              <Badge variant="outline" className="mr-2 text-xs">
-                                ID: {task.data.taskId || task.id}
-                              </Badge>
-                              <span className="truncate">
-                                {task.data.description || 'Unnamed Task'}
-                              </span>
-                              <Badge variant="secondary" className="ml-2 text-xs">
-                                {task.data.taskType?.replace('_', ' ')}
-                              </Badge>
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {availableTasks.map(task => {
+                          // Use taskId if available, otherwise use node id
+                          const taskIdValue = task.data.taskId || parseInt(task.id) || task.id;
+                          return (
+                            <SelectItem key={task.id} value={taskIdValue.toString()}>
+                              <div className="flex items-center">
+                                <Badge variant="outline" className="mr-2 text-xs">
+                                  ID: {taskIdValue}
+                                </Badge>
+                                <span className="truncate">
+                                  {task.data.description || 'Unnamed Task'}
+                                </span>
+                                <Badge variant="secondary" className="ml-2 text-xs">
+                                  {task.data.taskType?.replace('_', ' ')}
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>

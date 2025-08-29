@@ -403,6 +403,7 @@ const CanvasWorkflowPage: NextPage = () => {
           roles={workflow?.workflowRoles || []}
           allNodes={nodes}
           edges={edges}
+          onUpdateEdges={setEdges}
         />
 
         <WorkflowSettings
