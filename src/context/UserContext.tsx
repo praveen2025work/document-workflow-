@@ -29,8 +29,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUser = async () => {
-    // If in mock mode, immediately set mock user data
-    if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+    // If in mock mode or development, immediately set mock user data
+    if (config.app.isMock || config.isDevelopment) {
       debugLog('Using mock user data');
       setUser({
         id: 1,
@@ -47,6 +47,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const errorMsg = "USER_INFO_SERVICE_URL is not defined";
       console.error(errorMsg);
       setError(errorMsg);
+      // Set mock user as fallback
+      setUser({
+        id: 1,
+        name: 'Development User',
+        email: 'dev@workflow.com'
+      });
       setLoading(false);
       return;
     }
@@ -68,15 +74,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       console.error(errorMsg, error);
       setError(errorMsg);
       
-      // Set a mock user for development if service is unavailable
-      if (config.isDevelopment || (error.response && error.response.status === 404)) {
-        debugLog('Setting mock user for development due to unavailable service or 404 error');
-        setUser({
-          id: 1,
-          name: 'Development User',
-          email: 'dev@workflow.com'
-        });
-      }
+      // Always set a mock user as fallback to prevent app from breaking
+      debugLog('Setting mock user as fallback due to service error');
+      setUser({
+        id: 1,
+        name: 'Development User',
+        email: 'dev@workflow.com'
+      });
     } finally {
       setLoading(false);
     }

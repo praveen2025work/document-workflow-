@@ -141,12 +141,12 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
             <div className="space-y-2">
               <Label>Calendar</Label>
               <Select
-                value={localSettings.calendarId?.toString() || ''}
-                onValueChange={(val) => handleChange('calendarId', val ? +val : null)}
+                value={localSettings.calendarId?.toString() || undefined}
+                onValueChange={(val) => handleChange('calendarId', val === 'none' ? null : +val)}
               >
                 <SelectTrigger><SelectValue placeholder="Select Calendar (Optional)" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Calendar</SelectItem>
+                  <SelectItem value="none">No Calendar</SelectItem>
                   {calendars.map(c => <SelectItem key={c.calendarId} value={c.calendarId.toString()}>{c.calendarName}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -225,7 +225,7 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
                   <div className="mt-2">
                     <Label>Assigned User</Label>
                     <Select
-                      value={wr.userId?.toString() || ''}
+                      value={wr.userId?.toString() || undefined}
                       onValueChange={(val) => handleAssignUserToRole(wr.roleId, +val)}
                     >
                       <SelectTrigger><SelectValue placeholder="Assign a user" /></SelectTrigger>

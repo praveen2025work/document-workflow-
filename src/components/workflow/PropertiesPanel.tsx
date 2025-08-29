@@ -146,7 +146,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       
       <div>
         <Label htmlFor="roleId">Assigned Role</Label>
-        <Select value={formData.roleId?.toString() || ''} onValueChange={(v) => handleInputChange('roleId', +v)}>
+        <Select value={formData.roleId?.toString() || undefined} onValueChange={(v) => handleInputChange('roleId', +v)}>
           <SelectTrigger>
             <SelectValue placeholder="Select a role" />
           </SelectTrigger>
