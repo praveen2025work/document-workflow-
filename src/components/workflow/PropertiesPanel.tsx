@@ -47,24 +47,52 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
   const handleDecisionOutcomeChange = (index: number, field: keyof DecisionOutcome, value: any) => {
     const newOutcomes = [...(formData.decisionOutcomes || [])];
+    if (!newOutcomes[index]) {
+      newOutcomes[index] = { outcomeName: '', nextTaskId: 0 };
+    }
+    
+    // Update the specific field
     newOutcomes[index] = { ...newOutcomes[index], [field]: value };
+    
+    // Update the form data
     handleInputChange('decisionOutcomes', newOutcomes);
     
     // If nextTaskId is being changed and we have onUpdateEdges callback, create/update the decision edge
-    if (field === 'nextTaskId' && value && selectedNode && onUpdateEdges) {
-      const targetNodeId = findNodeIdByTaskId(+value);
+    if (field === 'nextTaskId' && value && value > 0 && selectedNode && onUpdateEdges) {
+      const targetNodeId = findNodeIdByTaskId(value);
       if (targetNodeId) {
-        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, newOutcomes[index].outcomeName || `Outcome ${index + 1}`);
+        const outcomeName = newOutcomes[index].outcomeName || `Outcome ${index + 1}`;
+        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcomeName);
+      }
+    }
+    
+    // If outcome name is being changed and nextTaskId exists, update the edge label
+    if (field === 'outcomeName' && newOutcomes[index].nextTaskId && newOutcomes[index].nextTaskId > 0 && selectedNode && onUpdateEdges) {
+      const targetNodeId = findNodeIdByTaskId(newOutcomes[index].nextTaskId);
+      if (targetNodeId) {
+        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, value || `Outcome ${index + 1}`);
       }
     }
   };
 
   // Helper function to find node ID by task ID
   const findNodeIdByTaskId = (taskId: number): string | null => {
-    const targetNode = allNodes.find(node => 
-      (node.data.taskId && node.data.taskId === taskId) || 
-      (node.id === taskId.toString())
-    );
+    const targetNode = allNodes.find(node => {
+      // Check if node has a taskId in data
+      if (node.data.taskId && node.data.taskId === taskId) {
+        return true;
+      }
+      // Check if node id can be parsed as the taskId
+      const nodeIdAsNumber = parseInt(node.id);
+      if (!isNaN(nodeIdAsNumber) && nodeIdAsNumber === taskId) {
+        return true;
+      }
+      // Check if node id matches taskId as string
+      if (node.id === taskId.toString()) {
+        return true;
+      }
+      return false;
+    });
     return targetNode ? targetNode.id : null;
   };
 
@@ -72,7 +100,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
   const createDecisionOutcomeEdge = (sourceNodeId: string, targetNodeId: string, outcomeName: string) => {
     if (!onUpdateEdges) return;
     
-    const newEdgeId = `decision-${sourceNodeId}-${targetNodeId}-${Date.now()}`;
+    const newEdgeId = `decision-${sourceNodeId}-${targetNodeId}-${outcomeName}`;
     const newEdge = {
       id: newEdgeId,
       source: sourceNodeId,
@@ -87,9 +115,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       animated: true
     };
 
-    // Remove any existing decision edges from this source to avoid duplicates
+    // Remove any existing decision edges from this source with the same outcome name to avoid duplicates
     const updatedEdges = edges.filter(edge => 
-      !(edge.source === sourceNodeId && edge.type === 'goBack')
+      !(edge.source === sourceNodeId && edge.type === 'goBack' && edge.label === outcomeName)
     );
     
     // Add the new decision edge
@@ -786,8 +814,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                   <div>
                     <Label className="text-xs text-muted-foreground">Next Task</Label>
                     <Select 
-                      value={outcome.nextTaskId?.toString() || undefined} 
-                      onValueChange={(v) => handleDecisionOutcomeChange(index, 'nextTaskId', +v)}
+                      value={outcome.nextTaskId && outcome.nextTaskId > 0 ? outcome.nextTaskId.toString() : undefined} 
+                      onValueChange={(v) => {
+                        const numericValue = parseInt(v);
+                        handleDecisionOutcomeChange(index, 'nextTaskId', numericValue);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select next task" />
@@ -798,14 +829,14 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                           const taskIdValue = task.data.taskId || parseInt(task.id) || task.id;
                           return (
                             <SelectItem key={task.id} value={taskIdValue.toString()}>
-                              <div className="flex items-center">
-                                <Badge variant="outline" className="mr-2 text-xs">
+                              <div className="flex items-center space-x-2">
+                                <Badge variant="outline" className="text-xs">
                                   ID: {taskIdValue}
                                 </Badge>
-                                <span className="truncate">
+                                <span className="truncate max-w-32">
                                   {task.data.description || 'Unnamed Task'}
                                 </span>
-                                <Badge variant="secondary" className="ml-2 text-xs">
+                                <Badge variant="secondary" className="text-xs">
                                   {task.data.taskType?.replace('_', ' ')}
                                 </Badge>
                               </div>
