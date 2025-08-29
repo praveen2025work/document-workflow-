@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import { WorkflowRole, TaskPriority, FileSelectionMode, YesNo, DecisionOutcome, WorkflowTaskFile } from '@/types/workflow';
 
 interface PropertiesPanelProps {
@@ -41,8 +42,14 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
   const handleSave = () => {
     if (selectedNode) {
       onUpdateNode(selectedNode.id, formData);
-      onClose();
+      // Don't close the panel immediately to allow user to see the changes
+      toast.success('Properties saved successfully!');
     }
+  };
+=======
+
+  const handleClose = () => {
+    onClose();
   };
 
   const handleDecisionOutcomeChange = (index: number, field: keyof DecisionOutcome, value: any) => {
@@ -54,15 +61,21 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     // Update the specific field
     newOutcomes[index] = { ...newOutcomes[index], [field]: value };
     
-    // Update the form data
-    handleInputChange('decisionOutcomes', newOutcomes);
+    // Update the form data immediately
+    const updatedFormData = { ...formData, decisionOutcomes: newOutcomes };
+    setFormData(updatedFormData);
+    
+    // Also update the node data immediately to persist the change
+    if (selectedNode) {
+      onUpdateNode(selectedNode.id, updatedFormData);
+    }
     
     // If nextTaskId is being changed and we have onUpdateEdges callback, create/update the decision edge
     if (field === 'nextTaskId' && value && value > 0 && selectedNode && onUpdateEdges) {
       const targetNodeId = findNodeIdByTaskId(value);
       if (targetNodeId) {
         const outcomeName = newOutcomes[index].outcomeName || `Outcome ${index + 1}`;
-        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcomeName);
+        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcomeName, index);
       }
     }
     
@@ -70,7 +83,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     if (field === 'outcomeName' && newOutcomes[index].nextTaskId && newOutcomes[index].nextTaskId > 0 && selectedNode && onUpdateEdges) {
       const targetNodeId = findNodeIdByTaskId(newOutcomes[index].nextTaskId);
       if (targetNodeId) {
-        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, value || `Outcome ${index + 1}`);
+        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, value || `Outcome ${index + 1}`, index);
       }
     }
   };
@@ -97,10 +110,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
   };
 
   // Create or update decision outcome edge
-  const createDecisionOutcomeEdge = (sourceNodeId: string, targetNodeId: string, outcomeName: string) => {
+  const createDecisionOutcomeEdge = (sourceNodeId: string, targetNodeId: string, outcomeName: string, outcomeIndex?: number) => {
     if (!onUpdateEdges) return;
     
-    const newEdgeId = `decision-${sourceNodeId}-${targetNodeId}-${outcomeName}`;
+    // Create a unique edge ID that includes the outcome index to avoid conflicts
+    const newEdgeId = `decision-${sourceNodeId}-${targetNodeId}-${outcomeIndex !== undefined ? outcomeIndex : outcomeName.replace(/\s+/g, '-')}`;
     const newEdge = {
       id: newEdgeId,
       source: sourceNodeId,
@@ -115,10 +129,18 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       animated: true
     };
 
-    // Remove any existing decision edges from this source with the same outcome name to avoid duplicates
-    const updatedEdges = edges.filter(edge => 
-      !(edge.source === sourceNodeId && edge.type === 'goBack' && edge.label === outcomeName)
-    );
+    // Remove any existing decision edges from this source to the same target for the same outcome index
+    const updatedEdges = edges.filter(edge => {
+      if (edge.source === sourceNodeId && edge.type === 'goBack') {
+        // If we have an outcome index, remove edges with the same index pattern
+        if (outcomeIndex !== undefined) {
+          return !edge.id.includes(`decision-${sourceNodeId}-${targetNodeId}-${outcomeIndex}`);
+        }
+        // Otherwise, remove edges with the same label
+        return edge.label !== outcomeName;
+      }
+      return true;
+    });
     
     // Add the new decision edge
     updatedEdges.push(newEdge);
