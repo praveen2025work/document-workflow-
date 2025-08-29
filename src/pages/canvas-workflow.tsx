@@ -402,6 +402,7 @@ const CanvasWorkflowPage: NextPage = () => {
           onClose={() => setSelectedNodeId(null)}
           roles={workflow?.workflowRoles || []}
           allNodes={nodes}
+          edges={edges}
         />
 
         <WorkflowSettings

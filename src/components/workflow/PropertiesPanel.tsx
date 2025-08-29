@@ -20,9 +20,10 @@ interface PropertiesPanelProps {
   onClose: () => void;
   roles: WorkflowRole[];
   allNodes?: Node<NodeData>[];
+  edges?: any[];
 }
 
-const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdateNode, onClose, roles, allNodes = [] }) => {
+const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdateNode, onClose, roles, allNodes = [], edges = [] }) => {
   const [formData, setFormData] = useState<Partial<NodeData>>({});
 
   useEffect(() => {
@@ -103,17 +104,72 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     );
   };
 
-  // Get files from previous tasks for file update
-  const getAvailableFilesFromPreviousTasks = () => {
-    const sourceTaskIds = formData.fileSourceTaskIds?.split(',').map(id => id.trim()) || [];
-    const availableFiles: { taskName: string; files: WorkflowTaskFile[] }[] = [];
+  // Get parent nodes based on canvas connections
+  const getParentNodes = (nodeId: string, edges: any[]): Node<NodeData>[] => {
+    const parentEdges = edges.filter(edge => edge.target === nodeId);
+    const parentNodes: Node<NodeData>[] = [];
     
-    sourceTaskIds.forEach(taskId => {
-      const sourceNode = allNodes.find(node => node.id === taskId || node.data.taskId?.toString() === taskId);
-      if (sourceNode && sourceNode.data.taskFiles) {
+    parentEdges.forEach(edge => {
+      const parentNode = allNodes.find(node => node.id === edge.source);
+      if (parentNode && !['start', 'end'].includes(parentNode.id)) {
+        parentNodes.push(parentNode);
+      }
+    });
+    
+    return parentNodes;
+  };
+
+  // Get all ancestor nodes (recursive traversal)
+  const getAllAncestorNodes = (nodeId: string, edges: any[], visited: Set<string> = new Set()): Node<NodeData>[] => {
+    if (visited.has(nodeId)) return [];
+    visited.add(nodeId);
+    
+    const directParents = getParentNodes(nodeId, edges);
+    const allAncestors: Node<NodeData>[] = [...directParents];
+    
+    directParents.forEach(parent => {
+      const parentAncestors = getAllAncestorNodes(parent.id, edges, visited);
+      allAncestors.push(...parentAncestors);
+    });
+    
+    return allAncestors.filter((node, index, self) => 
+      self.findIndex(n => n.id === node.id) === index
+    );
+  };
+
+  // Get files from parent tasks for file update
+  const getAvailableFilesFromParentTasks = (edges: any[]) => {
+    if (!selectedNode) return [];
+    
+    const parentNodes = getParentNodes(selectedNode.id, edges);
+    const availableFiles: { taskName: string; taskId: string; files: WorkflowTaskFile[] }[] = [];
+    
+    parentNodes.forEach(parentNode => {
+      if (parentNode.data.taskFiles && parentNode.data.taskFiles.length > 0) {
         availableFiles.push({
-          taskName: sourceNode.data.description || 'Unknown Task',
-          files: sourceNode.data.taskFiles
+          taskName: parentNode.data.description || 'Unknown Task',
+          taskId: parentNode.id,
+          files: parentNode.data.taskFiles
+        });
+      }
+    });
+    
+    return availableFiles;
+  };
+
+  // Get files from all ancestor tasks for consolidation
+  const getAvailableFilesFromAllAncestors = (edges: any[]) => {
+    if (!selectedNode) return [];
+    
+    const ancestorNodes = getAllAncestorNodes(selectedNode.id, edges);
+    const availableFiles: { taskName: string; taskId: string; files: WorkflowTaskFile[] }[] = [];
+    
+    ancestorNodes.forEach(ancestorNode => {
+      if (ancestorNode.data.taskFiles && ancestorNode.data.taskFiles.length > 0) {
+        availableFiles.push({
+          taskName: ancestorNode.data.description || 'Unknown Task',
+          taskId: ancestorNode.id,
+          files: ancestorNode.data.taskFiles
         });
       }
     });
@@ -343,19 +399,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
   );
 
   const renderFileUpdateProperties = () => {
-    const availableFiles = getAvailableFilesFromPreviousTasks();
+    const availableFiles = getAvailableFilesFromParentTasks(edges);
     
     return (
       <div className="space-y-4">
-        <div>
-          <Label>Source Task IDs (comma-separated)</Label>
-          <Input 
-            value={formData.fileSourceTaskIds || ''} 
-            onChange={(e) => handleInputChange('fileSourceTaskIds', e.target.value)} 
-            placeholder="e.g., 1,2,3"
-          />
-        </div>
-
         <div>
           <Label>Output File Name</Label>
           <Input 
@@ -365,9 +412,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
           />
         </div>
 
-        {availableFiles.length > 0 && (
+        {availableFiles.length > 0 ? (
           <div className="space-y-2">
-            <Label>Available Files from Previous Tasks</Label>
+            <Label>Files from Parent Steps</Label>
+            <div className="text-sm text-muted-foreground mb-2">
+              Select files from connected parent steps to update:
+            </div>
             {availableFiles.map((taskFiles, taskIndex) => (
               <Card key={taskIndex} className="p-3">
                 <CardHeader className="p-0 pb-2">
@@ -377,16 +427,25 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {taskFiles.files.map((file, fileIndex) => (
-                      <div key={fileIndex} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                        <div className="flex items-center">
-                          <File className="h-4 w-4 mr-2" />
-                          <span className="text-sm">{file.fileName}</span>
+                      <div key={fileIndex} className="space-y-2 p-2 bg-muted/30 rounded">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <File className="h-4 w-4 mr-2" />
+                            <span className="text-sm font-medium">{file.fileName}</span>
+                          </div>
+                          <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
+                            {file.isRequired === 'Y' ? 'Required' : 'Optional'}
+                          </Badge>
                         </div>
-                        <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
-                          {file.isRequired === 'Y' ? 'Required' : 'Optional'}
-                        </Badge>
+                        <div className="ml-6">
+                          <Input 
+                            placeholder="New file name (leave empty to keep original)" 
+                            className="text-xs"
+                            // You can add state management here for individual file renaming
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -394,25 +453,22 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
               </Card>
             ))}
           </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <File className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No parent steps with files found</p>
+            <p className="text-xs">Connect this step to parent steps that contain files</p>
+          </div>
         )}
       </div>
     );
   };
 
   const renderConsolidateProperties = () => {
-    const previousFileTasks = getPreviousFileTasks();
+    const availableFiles = getAvailableFilesFromAllAncestors(edges);
     
     return (
       <div className="space-y-4">
-        <div>
-          <Label>Source Task IDs (comma-separated)</Label>
-          <Input 
-            value={formData.fileSourceTaskIds || ''} 
-            onChange={(e) => handleInputChange('fileSourceTaskIds', e.target.value)} 
-            placeholder="e.g., 1,2,3"
-          />
-        </div>
-
         <div>
           <Label>Output File Name</Label>
           <Input 
@@ -432,53 +488,56 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
           />
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Consolidation Sources</Label>
-            <Button onClick={addConsolidationSource} variant="outline" size="sm">
-              <Plus className="h-4 w-4 mr-2" />Add Source
-            </Button>
-          </div>
-          
-          {(formData.consolidationSources || []).map((source, index) => (
-            <div key={index} className="flex gap-2">
-              <Input 
-                placeholder="File name to consolidate" 
-                value={source} 
-                onChange={e => handleConsolidationSourceChange(index, e.target.value)} 
-              />
-              <Button size="icon" variant="destructive" onClick={() => removeConsolidationSource(index)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        {previousFileTasks.length > 0 && (
+        {availableFiles.length > 0 ? (
           <div className="space-y-2">
-            <Label>Available File Tasks</Label>
-            <div className="grid gap-2">
-              {previousFileTasks.map((task, index) => (
-                <Card key={index} className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="h-4 w-4 mr-2" />
-                      <span className="text-sm font-medium">{task.data.description}</span>
-                    </div>
-                    <Badge variant="outline">{task.data.taskType}</Badge>
-                  </div>
-                  {task.data.taskFiles && task.data.taskFiles.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {task.data.taskFiles.map((file, fileIndex) => (
-                        <div key={fileIndex} className="text-xs text-muted-foreground ml-6">
-                          • {file.fileName}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              ))}
+            <Label>Files from All Parent Steps</Label>
+            <div className="text-sm text-muted-foreground mb-2">
+              Select files from all connected ancestor steps to consolidate:
             </div>
+            {availableFiles.map((taskFiles, taskIndex) => (
+              <Card key={taskIndex} className="p-3">
+                <CardHeader className="p-0 pb-2">
+                  <CardTitle className="text-sm flex items-center">
+                    <FolderOpen className="h-4 w-4 mr-2" />
+                    {taskFiles.taskName}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="space-y-2">
+                    {taskFiles.files.map((file, fileIndex) => (
+                      <div key={fileIndex} className="space-y-2 p-2 bg-muted/30 rounded">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <File className="h-4 w-4 mr-2" />
+                            <span className="text-sm font-medium">{file.fileName}</span>
+                          </div>
+                          <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
+                            {file.isRequired === 'Y' ? 'Required' : 'Optional'}
+                          </Badge>
+                        </div>
+                        <div className="ml-6 flex items-center space-x-2">
+                          <Input 
+                            placeholder="Custom name for consolidated file" 
+                            className="text-xs flex-1"
+                            // You can add state management here for individual file naming
+                          />
+                          <Switch 
+                            // You can add state management here for file selection
+                            defaultChecked={file.isRequired === 'Y'}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <FolderOpen className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No ancestor steps with files found</p>
+            <p className="text-xs">Connect this step to a workflow path that contains file steps</p>
           </div>
         )}
       </div>
