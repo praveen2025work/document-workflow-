@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -403,20 +404,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     
     return (
       <div className="space-y-4">
-        <div>
-          <Label>Output File Name</Label>
-          <Input 
-            value={formData.outputFileName || ''} 
-            onChange={(e) => handleInputChange('outputFileName', e.target.value)} 
-            placeholder="e.g., updated_report.xlsx"
-          />
-        </div>
-
         {availableFiles.length > 0 ? (
           <div className="space-y-2">
-            <Label>Files from Parent Steps</Label>
+            <Label>Select Files to Update</Label>
             <div className="text-sm text-muted-foreground mb-2">
-              Select files from connected parent steps to update:
+              Choose which files from connected parent steps to update:
             </div>
             {availableFiles.map((taskFiles, taskIndex) => (
               <Card key={taskIndex} className="p-3">
@@ -430,20 +422,25 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                   <div className="space-y-2">
                     {taskFiles.files.map((file, fileIndex) => (
                       <div key={fileIndex} className="space-y-2 p-2 bg-muted/30 rounded">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <File className="h-4 w-4 mr-2" />
-                            <span className="text-sm font-medium">{file.fileName}</span>
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`file-update-${taskIndex}-${fileIndex}`}
+                            defaultChecked={file.isRequired === 'Y'}
+                          />
+                          <div className="flex-1 flex items-center justify-between">
+                            <div className="flex items-center">
+                              <File className="h-4 w-4 mr-2" />
+                              <span className="text-sm font-medium">{file.fileName}</span>
+                            </div>
+                            <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
+                              {file.isRequired === 'Y' ? 'Required' : 'Optional'}
+                            </Badge>
                           </div>
-                          <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
-                            {file.isRequired === 'Y' ? 'Required' : 'Optional'}
-                          </Badge>
                         </div>
-                        <div className="ml-6">
+                        <div className="ml-8">
                           <Input 
                             placeholder="New file name (leave empty to keep original)" 
                             className="text-xs"
-                            // You can add state management here for individual file renaming
                           />
                         </div>
                       </div>
@@ -490,9 +487,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
         {availableFiles.length > 0 ? (
           <div className="space-y-2">
-            <Label>Files from All Parent Steps</Label>
+            <Label>Select Files to Consolidate</Label>
             <div className="text-sm text-muted-foreground mb-2">
-              Select files from all connected ancestor steps to consolidate:
+              Choose files from all connected ancestor steps to consolidate:
             </div>
             {availableFiles.map((taskFiles, taskIndex) => (
               <Card key={taskIndex} className="p-3">
@@ -506,24 +503,25 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                   <div className="space-y-2">
                     {taskFiles.files.map((file, fileIndex) => (
                       <div key={fileIndex} className="space-y-2 p-2 bg-muted/30 rounded">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <File className="h-4 w-4 mr-2" />
-                            <span className="text-sm font-medium">{file.fileName}</span>
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`file-consolidate-${taskIndex}-${fileIndex}`}
+                            defaultChecked={file.isRequired === 'Y'}
+                          />
+                          <div className="flex-1 flex items-center justify-between">
+                            <div className="flex items-center">
+                              <File className="h-4 w-4 mr-2" />
+                              <span className="text-sm font-medium">{file.fileName}</span>
+                            </div>
+                            <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
+                              {file.isRequired === 'Y' ? 'Required' : 'Optional'}
+                            </Badge>
                           </div>
-                          <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
-                            {file.isRequired === 'Y' ? 'Required' : 'Optional'}
-                          </Badge>
                         </div>
-                        <div className="ml-6 flex items-center space-x-2">
+                        <div className="ml-8">
                           <Input 
                             placeholder="Custom name for consolidated file" 
-                            className="text-xs flex-1"
-                            // You can add state management here for individual file naming
-                          />
-                          <Switch 
-                            // You can add state management here for file selection
-                            defaultChecked={file.isRequired === 'Y'}
+                            className="text-xs"
                           />
                         </div>
                       </div>
