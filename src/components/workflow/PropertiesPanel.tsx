@@ -360,41 +360,52 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Task Files</Label>
+          <Label>Files to Upload</Label>
           <Button onClick={addFile} variant="outline" size="sm">
             <Plus className="h-4 w-4 mr-2" />Add File
           </Button>
         </div>
         
-        {(formData.taskFiles || []).map((file, index) => (
-          <Card key={index} className="p-3">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label className="text-sm font-medium">File #{index + 1}</Label>
-                <Button size="icon" variant="destructive" onClick={() => removeFile(index)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-              <Input 
-                placeholder="File name" 
-                value={file.fileName} 
-                onChange={e => handleFileChange(index, 'fileName', e.target.value)} 
-              />
-              <Input 
-                placeholder="File description" 
-                value={file.fileDescription || ''} 
-                onChange={e => handleFileChange(index, 'fileDescription', e.target.value)} 
-              />
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">Required?</Label>
-                <Switch 
-                  checked={file.isRequired === 'Y'} 
-                  onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
+        {(formData.taskFiles || []).length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No files added yet</p>
+            <p className="text-xs">Click "Add File" to specify files for upload</p>
+          </div>
+        ) : (
+          (formData.taskFiles || []).map((file, index) => (
+            <Card key={index} className="p-3">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-medium flex items-center">
+                    <File className="h-4 w-4 mr-2" />
+                    File #{index + 1}
+                  </Label>
+                  <Button size="sm" variant="outline" onClick={() => removeFile(index)} className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Input 
+                  placeholder="File name (e.g., document.pdf)" 
+                  value={file.fileName || ''} 
+                  onChange={e => handleFileChange(index, 'fileName', e.target.value)} 
                 />
+                <Input 
+                  placeholder="File description (optional)" 
+                  value={file.fileDescription || ''} 
+                  onChange={e => handleFileChange(index, 'fileDescription', e.target.value)} 
+                />
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Required File?</Label>
+                  <Switch 
+                    checked={file.isRequired === 'Y'} 
+                    onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
+                  />
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );
