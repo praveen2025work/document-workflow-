@@ -74,6 +74,10 @@ export interface WorkflowTaskFile {
   uploadedAt?: string;
   isRequired?: YesNo;
   fileDescription?: string;
+  // Additional fields for file update/consolidation tracking
+  sourceFileKey?: string;
+  originalFileName?: string;
+  sourceTaskId?: string;
 }
 
 export interface WorkflowRole {

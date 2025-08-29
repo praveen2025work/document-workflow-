@@ -413,6 +413,42 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
   const renderFileUpdateProperties = () => {
     const availableFiles = getAvailableFilesFromParentTasks(edges);
     
+    // Get currently selected files for this task
+    const selectedFiles = formData.taskFiles || [];
+    
+    const handleFileSelection = (parentFile: WorkflowTaskFile, taskId: string, isSelected: boolean, newFileName?: string) => {
+      const currentFiles = formData.taskFiles || [];
+      const fileKey = `${taskId}-${parentFile.fileName}`;
+      
+      if (isSelected) {
+        // Add file if not already present
+        if (!currentFiles.some(tf => tf.sourceFileKey === fileKey)) {
+          const newFile: WorkflowTaskFile = {
+            taskId: selectedNode?.data.taskId || 0,
+            fileName: newFileName || parentFile.fileName,
+            fileDescription: parentFile.fileDescription,
+            isRequired: parentFile.isRequired,
+            sourceFileKey: fileKey,
+            originalFileName: parentFile.fileName,
+            sourceTaskId: taskId
+          };
+          handleInputChange('taskFiles', [...currentFiles, newFile]);
+        } else if (newFileName) {
+          // Update filename if provided
+          const updatedFiles = currentFiles.map(tf => 
+            tf.sourceFileKey === fileKey 
+              ? { ...tf, fileName: newFileName }
+              : tf
+          );
+          handleInputChange('taskFiles', updatedFiles);
+        }
+      } else {
+        // Remove file
+        const updatedFiles = currentFiles.filter(tf => tf.sourceFileKey !== fileKey);
+        handleInputChange('taskFiles', updatedFiles);
+      }
+    };
+    
     return (
       <div className="space-y-4">
         {availableFiles.length > 0 ? (
@@ -431,31 +467,45 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="space-y-2">
-                    {taskFiles.files.map((file, fileIndex) => (
-                      <div key={fileIndex} className="space-y-2 p-2 bg-muted/30 rounded">
-                        <div className="flex items-center space-x-3">
-                          <Checkbox
-                            id={`file-update-${taskIndex}-${fileIndex}`}
-                            defaultChecked={file.isRequired === 'Y'}
-                          />
-                          <div className="flex-1 flex items-center justify-between">
-                            <div className="flex items-center">
-                              <File className="h-4 w-4 mr-2" />
-                              <span className="text-sm font-medium">{file.fileName}</span>
+                    {taskFiles.files.map((file, fileIndex) => {
+                      const fileKey = `${taskFiles.taskId}-${file.fileName}`;
+                      const isSelected = selectedFiles.some(tf => tf.sourceFileKey === fileKey);
+                      const selectedFile = selectedFiles.find(tf => tf.sourceFileKey === fileKey);
+                      
+                      return (
+                        <div key={fileIndex} className="space-y-2 p-2 bg-muted/30 rounded">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox
+                              id={`file-update-${taskIndex}-${fileIndex}`}
+                              checked={isSelected}
+                              onCheckedChange={(checked) => 
+                                handleFileSelection(file, taskFiles.taskId, checked as boolean)
+                              }
+                            />
+                            <div className="flex-1 flex items-center justify-between">
+                              <div className="flex items-center">
+                                <File className="h-4 w-4 mr-2" />
+                                <span className="text-sm font-medium">{file.fileName}</span>
+                              </div>
+                              <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
+                                {file.isRequired === 'Y' ? 'Required' : 'Optional'}
+                              </Badge>
                             </div>
-                            <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
-                              {file.isRequired === 'Y' ? 'Required' : 'Optional'}
-                            </Badge>
+                          </div>
+                          <div className="ml-8">
+                            <Input 
+                              placeholder="New file name (leave empty to keep original)" 
+                              className="text-xs"
+                              value={selectedFile?.fileName !== file.fileName ? selectedFile?.fileName || '' : ''}
+                              onChange={(e) => 
+                                handleFileSelection(file, taskFiles.taskId, true, e.target.value || file.fileName)
+                              }
+                              disabled={!isSelected}
+                            />
                           </div>
                         </div>
-                        <div className="ml-8">
-                          <Input 
-                            placeholder="New file name (leave empty to keep original)" 
-                            className="text-xs"
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -474,6 +524,42 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
   const renderConsolidateProperties = () => {
     const availableFiles = getAvailableFilesFromAllAncestors(edges);
+    
+    // Get currently selected files for this task
+    const selectedFiles = formData.taskFiles || [];
+    
+    const handleConsolidateFileSelection = (parentFile: WorkflowTaskFile, taskId: string, isSelected: boolean, customName?: string) => {
+      const currentFiles = formData.taskFiles || [];
+      const fileKey = `${taskId}-${parentFile.fileName}`;
+      
+      if (isSelected) {
+        // Add file if not already present
+        if (!currentFiles.some(tf => tf.sourceFileKey === fileKey)) {
+          const newFile: WorkflowTaskFile = {
+            taskId: selectedNode?.data.taskId || 0,
+            fileName: customName || parentFile.fileName,
+            fileDescription: parentFile.fileDescription,
+            isRequired: parentFile.isRequired,
+            sourceFileKey: fileKey,
+            originalFileName: parentFile.fileName,
+            sourceTaskId: taskId
+          };
+          handleInputChange('taskFiles', [...currentFiles, newFile]);
+        } else if (customName) {
+          // Update custom name if provided
+          const updatedFiles = currentFiles.map(tf => 
+            tf.sourceFileKey === fileKey 
+              ? { ...tf, fileName: customName }
+              : tf
+          );
+          handleInputChange('taskFiles', updatedFiles);
+        }
+      } else {
+        // Remove file
+        const updatedFiles = currentFiles.filter(tf => tf.sourceFileKey !== fileKey);
+        handleInputChange('taskFiles', updatedFiles);
+      }
+    };
     
     return (
       <div className="space-y-4">
@@ -512,31 +598,45 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="space-y-2">
-                    {taskFiles.files.map((file, fileIndex) => (
-                      <div key={fileIndex} className="space-y-2 p-2 bg-muted/30 rounded">
-                        <div className="flex items-center space-x-3">
-                          <Checkbox
-                            id={`file-consolidate-${taskIndex}-${fileIndex}`}
-                            defaultChecked={file.isRequired === 'Y'}
-                          />
-                          <div className="flex-1 flex items-center justify-between">
-                            <div className="flex items-center">
-                              <File className="h-4 w-4 mr-2" />
-                              <span className="text-sm font-medium">{file.fileName}</span>
+                    {taskFiles.files.map((file, fileIndex) => {
+                      const fileKey = `${taskFiles.taskId}-${file.fileName}`;
+                      const isSelected = selectedFiles.some(tf => tf.sourceFileKey === fileKey);
+                      const selectedFile = selectedFiles.find(tf => tf.sourceFileKey === fileKey);
+                      
+                      return (
+                        <div key={fileIndex} className="space-y-2 p-2 bg-muted/30 rounded">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox
+                              id={`file-consolidate-${taskIndex}-${fileIndex}`}
+                              checked={isSelected}
+                              onCheckedChange={(checked) => 
+                                handleConsolidateFileSelection(file, taskFiles.taskId, checked as boolean)
+                              }
+                            />
+                            <div className="flex-1 flex items-center justify-between">
+                              <div className="flex items-center">
+                                <File className="h-4 w-4 mr-2" />
+                                <span className="text-sm font-medium">{file.fileName}</span>
+                              </div>
+                              <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
+                                {file.isRequired === 'Y' ? 'Required' : 'Optional'}
+                              </Badge>
                             </div>
-                            <Badge variant={file.isRequired === 'Y' ? 'default' : 'secondary'}>
-                              {file.isRequired === 'Y' ? 'Required' : 'Optional'}
-                            </Badge>
+                          </div>
+                          <div className="ml-8">
+                            <Input 
+                              placeholder="Custom name for consolidated file" 
+                              className="text-xs"
+                              value={selectedFile?.fileName !== file.fileName ? selectedFile?.fileName || '' : ''}
+                              onChange={(e) => 
+                                handleConsolidateFileSelection(file, taskFiles.taskId, true, e.target.value || file.fileName)
+                              }
+                              disabled={!isSelected}
+                            />
                           </div>
                         </div>
-                        <div className="ml-8">
-                          <Input 
-                            placeholder="Custom name for consolidated file" 
-                            className="text-xs"
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

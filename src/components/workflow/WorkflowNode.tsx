@@ -76,8 +76,8 @@ const DecisionIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-// Function to get the appropriate icon based on node type and description
-const getNodeIcon = (type: string, description?: string): React.ReactNode => {
+// Function to get the appropriate icon based on taskType or node type
+const getNodeIcon = (type: string, taskType?: string, description?: string): React.ReactNode => {
   // Base icons for node types
   const baseIcons: { [key: string]: React.ReactNode } = {
     start: <Play className="h-5 w-5" />,
@@ -87,7 +87,23 @@ const getNodeIcon = (type: string, description?: string): React.ReactNode => {
     database: <Database className="h-5 w-5" />,
   };
 
-  // For action nodes, determine icon based on description
+  // Use taskType first, then fallback to description-based logic
+  if (taskType) {
+    switch (taskType) {
+      case 'FILE_UPLOAD':
+        return <Upload className="h-5 w-5" />;
+      case 'FILE_UPDATE':
+        return <UpdateIcon className="h-5 w-5" />;
+      case 'CONSOLIDATE_FILE':
+        return <ConsolidateIcon className="h-5 w-5" />;
+      case 'DECISION':
+        return <DecisionIcon className="h-5 w-5" />;
+      default:
+        break;
+    }
+  }
+
+  // For action nodes, determine icon based on description (fallback)
   if (type === 'action' && description) {
     const desc = description.toLowerCase();
     if (desc.includes('upload')) {
@@ -105,8 +121,8 @@ const getNodeIcon = (type: string, description?: string): React.ReactNode => {
   return baseIcons[type] || <FileUp className="h-5 w-5" />;
 };
 
-// Function to get colors based on node type and description
-const getNodeColors = (type: string, description?: string) => {
+// Function to get colors based on taskType or node type
+const getNodeColors = (type: string, taskType?: string, description?: string) => {
   // Start node - Light green with blue mix
   if (type === 'start') {
     return {
@@ -133,7 +149,53 @@ const getNodeColors = (type: string, description?: string) => {
     };
   }
   
-  // Decision node - Dark blue background
+  // Use taskType first for consistent coloring
+  if (taskType) {
+    switch (taskType) {
+      case 'FILE_UPLOAD':
+        return {
+          bg: 'bg-cyan-600',
+          border: 'border-cyan-500',
+          selectedBg: 'bg-cyan-500',
+          selectedBorder: 'border-cyan-400',
+          icon: 'text-white',
+          text: 'text-white',
+          selectedRing: 'ring-cyan-400'
+        };
+      case 'FILE_UPDATE':
+        return {
+          bg: 'bg-purple-700',
+          border: 'border-purple-600',
+          selectedBg: 'bg-purple-600',
+          selectedBorder: 'border-purple-400',
+          icon: 'text-white',
+          text: 'text-white',
+          selectedRing: 'ring-purple-400'
+        };
+      case 'CONSOLIDATE_FILE':
+        return {
+          bg: 'bg-green-700',
+          border: 'border-green-600',
+          selectedBg: 'bg-green-600',
+          selectedBorder: 'border-green-400',
+          icon: 'text-white',
+          text: 'text-white',
+          selectedRing: 'ring-green-400'
+        };
+      case 'DECISION':
+        return {
+          bg: 'bg-blue-700',
+          border: 'border-blue-600',
+          selectedBg: 'bg-blue-600',
+          selectedBorder: 'border-blue-400',
+          icon: 'text-white',
+          text: 'text-white',
+          selectedRing: 'ring-blue-400'
+        };
+    }
+  }
+  
+  // Decision node - Dark blue background (fallback)
   if (type === 'decision') {
     return {
       bg: 'bg-blue-700',
@@ -146,7 +208,7 @@ const getNodeColors = (type: string, description?: string) => {
     };
   }
   
-  // Action nodes - specific colors based on description
+  // Action nodes - specific colors based on description (fallback)
   if (type === 'action' && description) {
     const desc = description.toLowerCase();
     
@@ -216,7 +278,7 @@ const getNodeColors = (type: string, description?: string) => {
 };
 
 const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) => {
-  const colors = getNodeColors(type, data.description);
+  const colors = getNodeColors(type, data.taskType, data.description);
 
   const nodeClasses = cn(
     'relative w-40 min-h-[90px] p-4 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer group shadow-lg hover:shadow-xl',
@@ -283,7 +345,7 @@ const WorkflowNode: React.FC<NodeProps<NodeData>> = ({ data, selected, type }) =
 
       {/* Node Content */}
       <div className={cn("flex items-center gap-2 mb-2", colors.icon)}>
-        {getNodeIcon(type, data.description)}
+        {getNodeIcon(type, data.taskType, data.description)}
         <span className={cn("font-semibold text-sm capitalize", colors.text)}>
           {type}
         </span>
