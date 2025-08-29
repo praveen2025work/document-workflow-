@@ -653,63 +653,125 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     );
   };
 
-  const renderDecisionProperties = () => (
-    <div className="space-y-4">
-      <div>
-        <Label>Decision Type</Label>
-        <Select value={formData.decisionType || 'APPROVAL'} onValueChange={(v) => handleInputChange('decisionType', v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="APPROVAL">Approval</SelectItem>
-            <SelectItem value="CHOICE">Choice</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+  const renderDecisionProperties = () => {
+    // Get all parent nodes for this decision task
+    const parentNodes = selectedNode ? getParentNodes(selectedNode.id, edges) : [];
+    
+    // Get all available tasks (excluding start/end) for selection
+    const availableTasks = allNodes.filter(node => 
+      !['start', 'end'].includes(node.id) && node.id !== selectedNode?.id
+    );
 
-      <div>
-        <Label>Decision Criteria (JSON)</Label>
-        <Textarea 
-          value={formData.decisionCriteriaJson || ''} 
-          onChange={(e) => handleInputChange('decisionCriteriaJson', e.target.value)} 
-          placeholder='{"criteria": "approval_required", "threshold": 80}'
-          rows={3}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Decision Outcomes</Label>
-          <Button onClick={addDecisionOutcome} variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />Add Outcome
-          </Button>
+    return (
+      <div className="space-y-4">
+        <div>
+          <Label>Decision Type</Label>
+          <Select value={formData.decisionType || 'APPROVAL'} onValueChange={(v) => handleInputChange('decisionType', v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="APPROVAL">Approval</SelectItem>
+              <SelectItem value="CHOICE">Choice</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        
-        {(formData.decisionOutcomes || []).map((outcome, index) => (
-          <Card key={index} className="p-3">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label className="text-sm font-medium">Outcome #{index + 1}</Label>
-                <Button size="icon" variant="destructive" onClick={() => removeDecisionOutcome(index)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-              <Input 
-                placeholder="Outcome Name (e.g., Approve)" 
-                value={outcome.outcomeName} 
-                onChange={e => handleDecisionOutcomeChange(index, 'outcomeName', e.target.value)} 
-              />
-              <Input 
-                type="number" 
-                placeholder="Next Task ID" 
-                value={outcome.nextTaskId || ''} 
-                onChange={e => handleDecisionOutcomeChange(index, 'nextTaskId', +e.target.value)} 
-              />
+
+        <div>
+          <Label>Decision Criteria (JSON)</Label>
+          <Textarea 
+            value={formData.decisionCriteriaJson || ''} 
+            onChange={(e) => handleInputChange('decisionCriteriaJson', e.target.value)} 
+            placeholder='{"criteria": "approval_required", "threshold": 80}'
+            rows={3}
+          />
+        </div>
+
+        {parentNodes.length > 0 && (
+          <div className="space-y-2">
+            <Label>Connected Parent Tasks</Label>
+            <div className="text-sm text-muted-foreground mb-2">
+              These are the tasks connected to this decision node:
             </div>
-          </Card>
-        ))}
+            <div className="space-y-1">
+              {parentNodes.map((parentNode, index) => (
+                <div key={index} className="flex items-center p-2 bg-muted/30 rounded text-sm">
+                  <Badge variant="outline" className="mr-2">
+                    ID: {parentNode.data.taskId || parentNode.id}
+                  </Badge>
+                  <span className="font-medium">{parentNode.data.description || 'Unnamed Task'}</span>
+                  <Badge variant="secondary" className="ml-auto">
+                    {parentNode.data.taskType?.replace('_', ' ')}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Decision Outcomes</Label>
+            <Button onClick={addDecisionOutcome} variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-2" />Add Outcome
+            </Button>
+          </div>
+          
+          {(formData.decisionOutcomes || []).length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Settings2 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No decision outcomes defined</p>
+              <p className="text-xs">Add outcomes to specify where the workflow should go based on decisions</p>
+            </div>
+          ) : (
+            (formData.decisionOutcomes || []).map((outcome, index) => (
+              <Card key={index} className="p-3">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-medium">Outcome #{index + 1}</Label>
+                    <Button size="sm" variant="outline" onClick={() => removeDecisionOutcome(index)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Input 
+                    placeholder="Outcome Name (e.g., Approve, Reject, Revise)" 
+                    value={outcome.outcomeName} 
+                    onChange={e => handleDecisionOutcomeChange(index, 'outcomeName', e.target.value)} 
+                  />
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Next Task</Label>
+                    <Select 
+                      value={outcome.nextTaskId?.toString() || undefined} 
+                      onValueChange={(v) => handleDecisionOutcomeChange(index, 'nextTaskId', +v)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select next task" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTasks.map(task => (
+                          <SelectItem key={task.id} value={(task.data.taskId || task.id).toString()}>
+                            <div className="flex items-center">
+                              <Badge variant="outline" className="mr-2 text-xs">
+                                ID: {task.data.taskId || task.id}
+                              </Badge>
+                              <span className="truncate">
+                                {task.data.description || 'Unnamed Task'}
+                              </span>
+                              <Badge variant="secondary" className="ml-2 text-xs">
+                                {task.data.taskType?.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderTaskSpecificContent = () => {
     switch (selectedNode?.data.taskType) {
