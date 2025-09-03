@@ -31,19 +31,32 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
   useEffect(() => {
     if (selectedNode) {
-      // Ensure decisionOutcomes is properly loaded and has default structure if empty
+      console.log('PropertiesPanel: Loading node data for:', selectedNode.id, selectedNode.data);
+      
+      // Load the node data directly
       const nodeData = { ...selectedNode.data };
+      
+      // Debug: Log decision outcomes if this is a decision node
+      if (nodeData.taskType === 'DECISION') {
+        console.log('Decision node outcomes:', nodeData.decisionOutcomes);
+      }
+      
+      // Only add default decision outcomes if this is a DECISION node AND it has no outcomes at all
       if (nodeData.taskType === 'DECISION' && (!nodeData.decisionOutcomes || nodeData.decisionOutcomes.length === 0)) {
+        console.log('Adding default decision outcome');
         nodeData.decisionOutcomes = [{ outcomeName: '', nextTaskId: 0 }];
       }
+      
       setFormData(nodeData);
       
       // If this is a decision node with existing outcomes, recreate the red dotted lines
       if (nodeData.taskType === 'DECISION' && nodeData.decisionOutcomes && onUpdateEdges) {
+        console.log('Recreating decision edges for existing outcomes:', nodeData.decisionOutcomes);
         nodeData.decisionOutcomes.forEach((outcome, index) => {
           if (outcome.nextTaskId && outcome.nextTaskId > 0) {
             const targetNodeId = findNodeIdByTaskId(outcome.nextTaskId);
             if (targetNodeId) {
+              console.log(`Creating edge for outcome ${index}:`, outcome.outcomeName, 'to task:', outcome.nextTaskId);
               // Small delay to ensure the component is fully rendered
               setTimeout(() => {
                 createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcome.outcomeName || `Outcome ${index + 1}`, index);
