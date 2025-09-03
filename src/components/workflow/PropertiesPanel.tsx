@@ -31,39 +31,30 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
   useEffect(() => {
     if (selectedNode) {
-      console.log('PropertiesPanel: Loading node data for:', selectedNode.id, selectedNode.data);
+      // Deep copy of node data to avoid unintended mutations
+      const nodeData = JSON.parse(JSON.stringify(selectedNode.data));
       
-      // Load the node data directly
-      const nodeData = { ...selectedNode.data };
-      
-      // Debug: Log decision outcomes if this is a decision node
+      // Ensure decisionOutcomes is an array for DECISION nodes
       if (nodeData.taskType === 'DECISION') {
-        console.log('Decision node outcomes:', nodeData.decisionOutcomes);
-      }
-      
-      // Only add default decision outcomes if this is a DECISION node AND it has no outcomes at all
-      if (nodeData.taskType === 'DECISION' && (!nodeData.decisionOutcomes || nodeData.decisionOutcomes.length === 0)) {
-        console.log('Adding default decision outcome');
-        nodeData.decisionOutcomes = [{ outcomeName: '', nextTaskId: 0 }];
+        if (!Array.isArray(nodeData.decisionOutcomes) || nodeData.decisionOutcomes.length === 0) {
+          nodeData.decisionOutcomes = [{ outcomeName: '', nextTaskId: 0 }];
+        }
       }
       
       setFormData(nodeData);
       
-      // If this is a decision node with existing outcomes, recreate the red dotted lines
+      // Recreate red dotted lines for existing decision outcomes
       if (nodeData.taskType === 'DECISION' && nodeData.decisionOutcomes && onUpdateEdges) {
-        console.log('Recreating decision edges for existing outcomes:', nodeData.decisionOutcomes);
-        nodeData.decisionOutcomes.forEach((outcome, index) => {
-          if (outcome.nextTaskId && outcome.nextTaskId > 0) {
-            const targetNodeId = findNodeIdByTaskId(outcome.nextTaskId);
-            if (targetNodeId) {
-              console.log(`Creating edge for outcome ${index}:`, outcome.outcomeName, 'to task:', outcome.nextTaskId);
-              // Small delay to ensure the component is fully rendered
-              setTimeout(() => {
+        setTimeout(() => {
+          nodeData.decisionOutcomes.forEach((outcome, index) => {
+            if (outcome.nextTaskId && outcome.nextTaskId > 0) {
+              const targetNodeId = findNodeIdByTaskId(outcome.nextTaskId);
+              if (targetNodeId) {
                 createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcome.outcomeName || `Outcome ${index + 1}`, index);
-              }, 50);
+              }
             }
-          }
-        });
+          });
+        }, 100); // A slightly longer delay to ensure all state updates are processed
       }
     }
   }, [selectedNode]);
