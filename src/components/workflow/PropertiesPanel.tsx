@@ -69,7 +69,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       const targetNodeId = findNodeIdByTaskId(value);
       if (targetNodeId) {
         const outcomeName = newOutcomes[index].outcomeName || `Outcome ${index + 1}`;
-        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcomeName, index);
+        // Use setTimeout to ensure the edge is created after the state update
+        setTimeout(() => {
+          createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcomeName, index);
+        }, 100);
       }
     }
     
@@ -77,7 +80,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     if (field === 'outcomeName' && newOutcomes[index].nextTaskId && newOutcomes[index].nextTaskId > 0 && selectedNode && onUpdateEdges) {
       const targetNodeId = findNodeIdByTaskId(newOutcomes[index].nextTaskId);
       if (targetNodeId) {
-        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, value || `Outcome ${index + 1}`, index);
+        // Use setTimeout to ensure the edge is created after the state update
+        setTimeout(() => {
+          createDecisionOutcomeEdge(selectedNode.id, targetNodeId, value || `Outcome ${index + 1}`, index);
+        }, 100);
       }
     }
   };
@@ -120,10 +126,14 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
         strokeDasharray: '8,4' 
       },
       label: outcomeName,
-      animated: true
+      animated: true,
+      markerEnd: {
+        type: 'arrowclosed',
+        color: '#ef4444',
+      }
     };
 
-    // Remove any existing decision edges from this source to the same target for the same outcome index
+    // Remove any existing decision edges from this source for the same outcome index
     const updatedEdges = edges.filter(edge => {
       if (edge.source === sourceNodeId && edge.type === 'goBack') {
         // If we have an outcome index, remove edges with the same index pattern
@@ -138,7 +148,13 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     
     // Add the new decision edge
     updatedEdges.push(newEdge);
+    
+    // Force update the edges immediately
     onUpdateEdges(updatedEdges);
+    
+    // Also log for debugging
+    console.log('Created decision edge:', newEdge);
+    console.log('Updated edges:', updatedEdges);
   };
 
   const addDecisionOutcome = () => {
