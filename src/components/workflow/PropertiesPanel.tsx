@@ -31,7 +31,27 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
   useEffect(() => {
     if (selectedNode) {
-      setFormData(selectedNode.data);
+      // Ensure decisionOutcomes is properly loaded and has default structure if empty
+      const nodeData = { ...selectedNode.data };
+      if (nodeData.taskType === 'DECISION' && (!nodeData.decisionOutcomes || nodeData.decisionOutcomes.length === 0)) {
+        nodeData.decisionOutcomes = [{ outcomeName: '', nextTaskId: 0 }];
+      }
+      setFormData(nodeData);
+      
+      // If this is a decision node with existing outcomes, recreate the red dotted lines
+      if (nodeData.taskType === 'DECISION' && nodeData.decisionOutcomes && onUpdateEdges) {
+        nodeData.decisionOutcomes.forEach((outcome, index) => {
+          if (outcome.nextTaskId && outcome.nextTaskId > 0) {
+            const targetNodeId = findNodeIdByTaskId(outcome.nextTaskId);
+            if (targetNodeId) {
+              // Small delay to ensure the component is fully rendered
+              setTimeout(() => {
+                createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcome.outcomeName || `Outcome ${index + 1}`, index);
+              }, 50);
+            }
+          }
+        });
+      }
     }
   }, [selectedNode]);
 
@@ -64,15 +84,18 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       onUpdateNode(selectedNode.id, updatedFormData);
     }
     
-    // If nextTaskId is being changed and we have onUpdateEdges callback, create/update the decision edge
-    if (field === 'nextTaskId' && value && value > 0 && selectedNode && onUpdateEdges) {
-      const targetNodeId = findNodeIdByTaskId(value);
-      if (targetNodeId) {
-        const outcomeName = newOutcomes[index].outcomeName || `Outcome ${index + 1}`;
-        // Use setTimeout to ensure the edge is created after the state update
-        setTimeout(() => {
+    // If nextTaskId is being changed and we have onUpdateEdges callback, create/update the decision edge immediately
+    if (field === 'nextTaskId' && selectedNode && onUpdateEdges) {
+      if (value && value > 0) {
+        const targetNodeId = findNodeIdByTaskId(value);
+        if (targetNodeId) {
+          const outcomeName = newOutcomes[index].outcomeName || `Outcome ${index + 1}`;
+          // Create the red dotted line immediately
           createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcomeName, index);
-        }, 100);
+        }
+      } else {
+        // Remove existing decision edge for this outcome if nextTaskId is cleared
+        removeDecisionOutcomeEdge(selectedNode.id, index);
       }
     }
     
@@ -80,10 +103,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     if (field === 'outcomeName' && newOutcomes[index].nextTaskId && newOutcomes[index].nextTaskId > 0 && selectedNode && onUpdateEdges) {
       const targetNodeId = findNodeIdByTaskId(newOutcomes[index].nextTaskId);
       if (targetNodeId) {
-        // Use setTimeout to ensure the edge is created after the state update
-        setTimeout(() => {
-          createDecisionOutcomeEdge(selectedNode.id, targetNodeId, value || `Outcome ${index + 1}`, index);
-        }, 100);
+        // Update the edge label immediately
+        createDecisionOutcomeEdge(selectedNode.id, targetNodeId, value || `Outcome ${index + 1}`, index);
       }
     }
   };
@@ -107,6 +128,25 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       return false;
     });
     return targetNode ? targetNode.id : null;
+  };
+
+  // Remove decision outcome edge for a specific outcome index
+  const removeDecisionOutcomeEdge = (sourceNodeId: string, outcomeIndex: number) => {
+    if (!onUpdateEdges) return;
+    
+    // Remove any existing decision edges from this source for the specific outcome index
+    const updatedEdges = edges.filter(edge => {
+      if (edge.source === sourceNodeId && edge.type === 'goBack') {
+        // Remove edges that match the outcome index pattern
+        return !edge.id.includes(`decision-${sourceNodeId}-`) || !edge.id.endsWith(`-${outcomeIndex}`);
+      }
+      return true;
+    });
+    
+    // Update the edges
+    onUpdateEdges(updatedEdges);
+    
+    console.log('Removed decision edge for outcome index:', outcomeIndex);
   };
 
   // Create or update decision outcome edge
@@ -138,7 +178,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       if (edge.source === sourceNodeId && edge.type === 'goBack') {
         // If we have an outcome index, remove edges with the same index pattern
         if (outcomeIndex !== undefined) {
-          return !edge.id.includes(`decision-${sourceNodeId}-${targetNodeId}-${outcomeIndex}`);
+          return !edge.id.endsWith(`-${outcomeIndex}`);
         }
         // Otherwise, remove edges with the same label
         return edge.label !== outcomeName;
