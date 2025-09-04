@@ -25,7 +25,8 @@ import {
   Eye,
   Target,
   Plus,
-  RefreshCw
+  RefreshCw,
+  Archive
 } from 'lucide-react';
 import { TaskFile, TaskDetails } from '@/lib/executionApi';
 
@@ -568,7 +569,21 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                   </Button>
                 )}
                 
-                {/* Versions button */}
+                {/* Download latest version button - always show if files exist */}
+                {taskFile.uploadedFiles.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDownload(latestFile)}
+                    className="h-8 px-3"
+                    title="Download latest version"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Latest
+                  </Button>
+                )}
+                
+                {/* Versions button - show if multiple versions exist */}
                 {hasMultipleVersions && (
                   <Dialog>
                     <DialogTrigger asChild>
@@ -577,16 +592,17 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                         size="sm"
                         onClick={() => setSelectedTaskFile(taskFile)}
                         className="h-8 px-3"
+                        title="View all versions"
                       >
-                        <History className="h-3 w-3 mr-1" />
+                        <Archive className="h-3 w-3 mr-1" />
                         {taskFile.uploadedFiles.length}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh]">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                          <FileText className="h-5 w-5" />
-                          {taskFile.fileName} - File Versions
+                          <Archive className="h-5 w-5" />
+                          {taskFile.fileName} - All Versions
                         </DialogTitle>
                       </DialogHeader>
                       <ScrollArea className="max-h-[60vh]">
@@ -628,6 +644,7 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                                     variant="outline"
                                     size="sm"
                                     onClick={() => onDownload(file)}
+                                    title={`Download version ${file.version}`}
                                   >
                                     <Download className="h-4 w-4" />
                                   </Button>
@@ -639,19 +656,6 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                       </ScrollArea>
                     </DialogContent>
                   </Dialog>
-                )}
-                
-                {/* Single version download */}
-                {taskFile.uploadedFiles.length === 1 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDownload(latestFile)}
-                    className="h-8 px-3"
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    v{latestFile.version}
-                  </Button>
                 )}
               </div>
             </div>
