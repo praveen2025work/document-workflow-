@@ -57,7 +57,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
         }, 100); // A slightly longer delay to ensure all state updates are processed
       }
     }
-  }, [selectedNode?.id, selectedNode?.data]);
+  }, [selectedNode?.id]);
 
   const handleInputChange = (field: keyof NodeData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -83,10 +83,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     const updatedFormData = { ...formData, decisionOutcomes: newOutcomes };
     setFormData(updatedFormData);
     
-    // Also update the node data immediately to persist the change
-    if (selectedNode) {
-      onUpdateNode(selectedNode.id, updatedFormData);
-    }
+    // The user will persist the changes by clicking "Save Changes"
     
     // If nextTaskId is being changed and we have onUpdateEdges callback, create/update the decision edge immediately
     if (field === 'nextTaskId' && selectedNode && onUpdateEdges) {
