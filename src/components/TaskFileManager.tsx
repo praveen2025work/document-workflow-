@@ -709,7 +709,10 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                   Mark Task as Complete
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Toggle to complete this step and move to the next task
+                  {taskDetails.taskType === 'DECISION' 
+                    ? 'Alternative way to complete this decision task without selecting a specific outcome'
+                    : 'Toggle to complete this step and move to the next task'
+                  }
                 </p>
               </div>
               <Switch
