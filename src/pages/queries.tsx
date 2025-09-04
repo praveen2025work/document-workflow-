@@ -405,58 +405,58 @@ const QueriesPage: NextPage = () => {
     if (!statistics) return null;
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="glass">
-          <CardContent className="p-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Open Queries</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{statistics.openQueries}</p>
+                <p className="text-xs font-medium text-muted-foreground">Open</p>
+                <p className="text-lg font-bold text-red-600 dark:text-red-400">{statistics.openQueries}</p>
               </div>
-              <div className="h-8 w-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+              <div className="h-6 w-6 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                <AlertCircle className="h-3 w-3 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="glass">
-          <CardContent className="p-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Resolved</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{statistics.resolvedQueries}</p>
+                <p className="text-xs font-medium text-muted-foreground">Resolved</p>
+                <p className="text-lg font-bold text-green-600 dark:text-green-400">{statistics.resolvedQueries}</p>
               </div>
-              <div className="h-8 w-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <div className="h-6 w-6 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="glass">
-          <CardContent className="p-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Queries</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{statistics.totalQueries}</p>
+                <p className="text-xs font-medium text-muted-foreground">Total</p>
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{statistics.totalQueries}</p>
               </div>
-              <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <div className="h-6 w-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                <MessageSquare className="h-3 w-3 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="glass">
-          <CardContent className="p-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Resolution</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{statistics.averageResolutionTime}</p>
+                <p className="text-xs font-medium text-muted-foreground">Avg Time</p>
+                <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{statistics.averageResolutionTime}</p>
               </div>
-              <div className="h-8 w-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <div className="h-6 w-6 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                <TrendingUp className="h-3 w-3 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </CardContent>
@@ -638,22 +638,42 @@ const QueriesPage: NextPage = () => {
               {/* Left Panel - Query List */}
               <div className={`${selectedQuery ? 'w-1/5' : 'w-full'} transition-all duration-300`}>
                 <Tabs defaultValue="assigned" className="w-full">
-                  <TabsList className={`grid w-full grid-cols-4 glass ${selectedQuery ? 'text-xs' : ''}`}>
-                    <TabsTrigger value="assigned" className={`flex items-center gap-1 ${selectedQuery ? 'text-xs px-1' : 'gap-2'}`}>
-                      <Target className="h-4 w-4" />
-                      {selectedQuery ? `Assigned (${dashboardData?.assignedToMe.length || 0})` : `Assigned (${dashboardData?.assignedToMe.length || 0})`}
+                  <TabsList className={`grid w-full grid-cols-4 glass ${selectedQuery ? 'h-8' : 'h-10'}`}>
+                    <TabsTrigger 
+                      value="assigned" 
+                      className={`flex items-center justify-center ${selectedQuery ? 'text-xs px-1 py-1 min-w-0' : 'gap-2 px-3'}`}
+                    >
+                      <Target className={`${selectedQuery ? 'h-3 w-3' : 'h-4 w-4'} flex-shrink-0`} />
+                      <span className={`${selectedQuery ? 'hidden sm:inline truncate' : ''}`}>
+                        {selectedQuery ? `(${dashboardData?.assignedToMe.length || 0})` : `Assigned (${dashboardData?.assignedToMe.length || 0})`}
+                      </span>
                     </TabsTrigger>
-                    <TabsTrigger value="raised" className={`flex items-center gap-1 ${selectedQuery ? 'text-xs px-1' : 'gap-2'}`}>
-                      <User className="h-4 w-4" />
-                      {selectedQuery ? `Raised (${dashboardData?.raisedByMe.length || 0})` : `Raised (${dashboardData?.raisedByMe.length || 0})`}
+                    <TabsTrigger 
+                      value="raised" 
+                      className={`flex items-center justify-center ${selectedQuery ? 'text-xs px-1 py-1 min-w-0' : 'gap-2 px-3'}`}
+                    >
+                      <User className={`${selectedQuery ? 'h-3 w-3' : 'h-4 w-4'} flex-shrink-0`} />
+                      <span className={`${selectedQuery ? 'hidden sm:inline truncate' : ''}`}>
+                        {selectedQuery ? `(${dashboardData?.raisedByMe.length || 0})` : `Raised (${dashboardData?.raisedByMe.length || 0})`}
+                      </span>
                     </TabsTrigger>
-                    <TabsTrigger value="open" className={`flex items-center gap-1 ${selectedQuery ? 'text-xs px-1' : 'gap-2'}`}>
-                      <AlertCircle className="h-4 w-4" />
-                      {selectedQuery ? `Open (${dashboardData?.openQueries.length || 0})` : `Open (${dashboardData?.openQueries.length || 0})`}
+                    <TabsTrigger 
+                      value="open" 
+                      className={`flex items-center justify-center ${selectedQuery ? 'text-xs px-1 py-1 min-w-0' : 'gap-2 px-3'}`}
+                    >
+                      <AlertCircle className={`${selectedQuery ? 'h-3 w-3' : 'h-4 w-4'} flex-shrink-0`} />
+                      <span className={`${selectedQuery ? 'hidden sm:inline truncate' : ''}`}>
+                        {selectedQuery ? `(${dashboardData?.openQueries.length || 0})` : `Open (${dashboardData?.openQueries.length || 0})`}
+                      </span>
                     </TabsTrigger>
-                    <TabsTrigger value="resolved" className={`flex items-center gap-1 ${selectedQuery ? 'text-xs px-1' : 'gap-2'}`}>
-                      <CheckCircle className="h-4 w-4" />
-                      {selectedQuery ? `Resolved (${dashboardData?.resolvedQueries.length || 0})` : `Resolved (${dashboardData?.resolvedQueries.length || 0})`}
+                    <TabsTrigger 
+                      value="resolved" 
+                      className={`flex items-center justify-center ${selectedQuery ? 'text-xs px-1 py-1 min-w-0' : 'gap-2 px-3'}`}
+                    >
+                      <CheckCircle className={`${selectedQuery ? 'h-3 w-3' : 'h-4 w-4'} flex-shrink-0`} />
+                      <span className={`${selectedQuery ? 'hidden sm:inline truncate' : ''}`}>
+                        {selectedQuery ? `(${dashboardData?.resolvedQueries.length || 0})` : `Resolved (${dashboardData?.resolvedQueries.length || 0})`}
+                      </span>
                     </TabsTrigger>
                   </TabsList>
                   
