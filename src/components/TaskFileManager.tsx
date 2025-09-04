@@ -102,6 +102,7 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [currentUploadFile, setCurrentUploadFile] = useState<WorkflowTaskFile | null>(null);
   const [isTaskCompleted, setIsTaskCompleted] = useState(false);
+  const [taskCommentary, setTaskCommentary] = useState('');
 
   const toggleFileExpansion = (taskFileId: number) => {
     const newExpanded = new Set(expandedFiles);
@@ -717,6 +718,31 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
       {/* Task-specific Actions */}
       {renderTaskSpecificActions()}
 
+      {/* Commentary Section for Tasks in Progress */}
+      {taskDetails.status === 'IN_PROGRESS' && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Task Commentary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label htmlFor="task-commentary" className="text-xs">Add Commentary (Optional)</Label>
+              <Textarea
+                id="task-commentary"
+                value={taskCommentary}
+                onChange={(e) => setTaskCommentary(e.target.value)}
+                placeholder="Add notes about your progress, issues encountered, or any relevant information..."
+                className="mt-1 text-sm"
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This commentary will be saved with the task for future reference
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Mark as Complete Toggle for all task types */}
       {taskDetails.status === 'IN_PROGRESS' && (
         <Card>
@@ -737,6 +763,12 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                 disabled={isLoading}
               />
             </div>
+            {taskCommentary.trim() && (
+              <div className="mt-3 p-3 bg-muted/30 rounded-lg">
+                <Label className="text-xs font-medium">Task Commentary:</Label>
+                <p className="text-xs text-muted-foreground mt-1">{taskCommentary}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
