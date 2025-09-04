@@ -10,9 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getUserDashboard, getAssignableTasks, assignTask } from '@/lib/dashboardApi';
 import { UserDashboard, DashboardTask, AssignableTask } from '@/types/dashboard';
 import { useUser } from '@/context/UserContext';
-import { LayoutDashboard, RefreshCw, Clock, CheckCircle, AlertCircle, X, Check, Play, Pause, UserCheck, Timer, Target, FileText, User, Settings } from 'lucide-react';
+import { LayoutDashboard, RefreshCw, Clock, CheckCircle, AlertCircle, X, Check, Play, Pause, UserCheck, Timer, Target, FileText, User, Settings, Eye } from 'lucide-react';
 import MainLayout from '@/components/MainLayout';
-import { TaskActionModal } from '@/components/TaskActionModal';
+import { TaskDetailsPanel } from '@/components/TaskDetailsPanel';
 
 const DashboardPage: NextPage = () => {
   const [dashboardData, setDashboardData] = useState<UserDashboard | null>(null);
@@ -22,9 +22,9 @@ const DashboardPage: NextPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAssignableTasksLoading, setIsAssignableTasksLoading] = useState(false);
   
-  // Task action modal states
+  // Task details panel states
   const [selectedTask, setSelectedTask] = useState<DashboardTask | AssignableTask | null>(null);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isTaskPanelOpen, setIsTaskPanelOpen] = useState(false);
   
   const { user } = useUser();
 
@@ -91,14 +91,14 @@ const DashboardPage: NextPage = () => {
     toast.success('Task rejected and removed from your queue.');
   };
 
-  const handleOpenTaskActions = (task: DashboardTask | AssignableTask) => {
+  const handleOpenTaskDetails = (task: DashboardTask | AssignableTask) => {
     setSelectedTask(task);
-    setIsTaskModalOpen(true);
+    setIsTaskPanelOpen(true);
   };
 
-  const handleCloseTaskModal = () => {
+  const handleCloseTaskPanel = () => {
     setSelectedTask(null);
-    setIsTaskModalOpen(false);
+    setIsTaskPanelOpen(false);
   };
 
   const handleTaskUpdate = () => {
@@ -236,6 +236,38 @@ const DashboardPage: NextPage = () => {
       return <p className="text-muted-foreground p-4">No active tasks available.</p>;
     }
 
+    // Compact view when panel is open
+    if (isTaskPanelOpen) {
+      return (
+        <div className="space-y-2">
+          {allActiveTasks.map((task) => (
+            <Card 
+              key={`active-compact-${task.instanceTaskId}`}
+              className={`p-2 cursor-pointer hover:bg-muted/50 transition-colors ${
+                task.isAssigned ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
+              } ${selectedTask?.instanceTaskId === task.instanceTaskId ? 'ring-2 ring-primary' : ''}`}
+              onClick={() => task.isAssigned && handleOpenTaskDetails(task)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className={`w-1 h-6 rounded-full ${task.isAssigned ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-xs truncate">{task.taskName}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {task.workflowName || 'Unknown Workflow'}
+                    </div>
+                  </div>
+                </div>
+                {task.isAssigned && (
+                  <Eye className="h-3 w-3 text-muted-foreground" />
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4">
         <Table>
@@ -334,11 +366,11 @@ const DashboardPage: NextPage = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleOpenTaskActions(task)}
+                            onClick={() => handleOpenTaskDetails(task)}
                             className="h-7 px-2 text-xs"
                           >
-                            <Settings className="h-3 w-3 mr-1" />
-                            Actions
+                            <Eye className="h-3 w-3 mr-1" />
+                            Details
                           </Button>
                         </>
                       )}
@@ -364,6 +396,36 @@ const DashboardPage: NextPage = () => {
       return <p className="text-muted-foreground p-4">No completed tasks.</p>;
     }
 
+    // Compact view when panel is open
+    if (isTaskPanelOpen) {
+      return (
+        <div className="space-y-2">
+          {completedTasks.map((task) => (
+            <Card 
+              key={`completed-compact-${task.instanceTaskId}`}
+              className={`p-2 cursor-pointer hover:bg-muted/50 transition-colors bg-green-50/30 dark:bg-green-950/10 ${
+                selectedTask?.instanceTaskId === task.instanceTaskId ? 'ring-2 ring-primary' : ''
+              }`}
+              onClick={() => handleOpenTaskDetails(task)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="w-1 h-6 rounded-full bg-green-500" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-xs truncate">{task.taskName}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {task.workflowName || 'Unknown Workflow'}
+                    </div>
+                  </div>
+                </div>
+                <Eye className="h-3 w-3 text-muted-foreground" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4">
         <Table>
@@ -373,7 +435,7 @@ const DashboardPage: NextPage = () => {
               <TableHead className="w-[250px]">Task Details</TableHead>
               <TableHead className="w-[150px]">Status</TableHead>
               <TableHead className="w-[200px]">Due Date & Priority</TableHead>
-              <TableHead className="w-[150px]">Result</TableHead>
+              <TableHead className="w-[150px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -398,11 +460,11 @@ const DashboardPage: NextPage = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getTaskTypeIcon('General')}
+                      {getTaskTypeIcon((task as any).taskType)}
                       <div>
                         <div className="font-medium text-sm">{task.taskName}</div>
                         <div className="text-xs text-muted-foreground">
-                          General Task
+                          {(task as any).taskType || 'General Task'}
                         </div>
                       </div>
                     </div>
@@ -432,10 +494,15 @@ const DashboardPage: NextPage = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Done
-                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleOpenTaskDetails(task)}
+                      className="h-7 px-2 text-xs"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Details
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -457,6 +524,36 @@ const DashboardPage: NextPage = () => {
       return <p className="text-muted-foreground p-4">No upcoming tasks.</p>;
     }
 
+    // Compact view when panel is open
+    if (isTaskPanelOpen) {
+      return (
+        <div className="space-y-2">
+          {upcomingTasks.map((task) => (
+            <Card 
+              key={`upcoming-compact-${task.instanceTaskId}`}
+              className={`p-2 cursor-pointer hover:bg-muted/50 transition-colors bg-gray-50/30 dark:bg-gray-950/10 ${
+                selectedTask?.instanceTaskId === task.instanceTaskId ? 'ring-2 ring-primary' : ''
+              }`}
+              onClick={() => handleOpenTaskDetails(task)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="w-1 h-6 rounded-full bg-gray-400" />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-xs truncate">{task.taskName}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {task.workflowName || 'Unknown Workflow'}
+                    </div>
+                  </div>
+                </div>
+                <Eye className="h-3 w-3 text-muted-foreground" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4">
         <Table>
@@ -466,7 +563,7 @@ const DashboardPage: NextPage = () => {
               <TableHead className="w-[250px]">Task Details</TableHead>
               <TableHead className="w-[150px]">Status</TableHead>
               <TableHead className="w-[200px]">Due Date & Priority</TableHead>
-              <TableHead className="w-[150px]">Availability</TableHead>
+              <TableHead className="w-[150px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -491,11 +588,11 @@ const DashboardPage: NextPage = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getTaskTypeIcon('General')}
+                      {getTaskTypeIcon((task as any).taskType)}
                       <div>
                         <div className="font-medium text-sm">{task.taskName}</div>
                         <div className="text-xs text-muted-foreground">
-                          General Task
+                          {(task as any).taskType || 'General Task'}
                         </div>
                       </div>
                     </div>
@@ -525,10 +622,15 @@ const DashboardPage: NextPage = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-                      <Clock className="h-3 w-3 mr-1" />
-                      Upcoming
-                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleOpenTaskDetails(task)}
+                      className="h-7 px-2 text-xs"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Details
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -590,139 +692,172 @@ const DashboardPage: NextPage = () => {
       icon={LayoutDashboard}
       headerActions={headerActions}
     >
-      <div className="p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card className="glass">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Active Tasks</p>
-                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.active}</p>
-                  </div>
-                  <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                    <Play className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </div>
+      <div className="flex h-full">
+        {/* Main Content */}
+        <div className={`transition-all duration-300 ${isTaskPanelOpen ? 'w-[10%]' : 'w-full'}`}>
+          <div className="p-6 h-full overflow-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="h-full"
+            >
+              {/* Summary Cards - Show only when panel is closed or in compact mode when open */}
+              {!isTaskPanelOpen && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <Card className="glass">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Active Tasks</p>
+                          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.active}</p>
+                        </div>
+                        <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                          <Play className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="glass">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</p>
+                        </div>
+                        <div className="h-8 w-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="glass">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Upcoming</p>
+                          <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.upcoming}</p>
+                        </div>
+                        <div className="h-8 w-8 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center">
+                          <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="glass">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Available to Assign</p>
+                          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.assignable}</p>
+                        </div>
+                        <div className="h-8 w-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+                          <UserCheck className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</p>
-                  </div>
-                  <div className="h-8 w-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  </div>
+              )}
+
+              {/* Compact view when panel is open */}
+              {isTaskPanelOpen && selectedTask && (
+                <div className="mb-4">
+                  <Card className="glass">
+                    <CardContent className="p-3">
+                      <div className="text-center">
+                        <h3 className="font-semibold text-sm truncate">{selectedTask.taskName}</h3>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {selectedTask.workflowName || 'Unknown Workflow'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Upcoming</p>
-                    <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.upcoming}</p>
-                  </div>
-                  <div className="h-8 w-8 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="glass">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Available to Assign</p>
-                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.assignable}</p>
-                  </div>
-                  <div className="h-8 w-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
-                    <UserCheck className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              )}
+
+              <Tabs defaultValue="active" className="w-full h-full">
+                <TabsList className={`grid w-full grid-cols-3 glass ${isTaskPanelOpen ? 'mb-2' : ''}`}>
+                  <TabsTrigger value="active" className="flex items-center gap-2">
+                    {!isTaskPanelOpen && <Play className="h-4 w-4" />}
+                    {isTaskPanelOpen ? `${stats.active}` : `Active (${stats.active})`}
+                  </TabsTrigger>
+                  <TabsTrigger value="completed" className="flex items-center gap-2">
+                    {!isTaskPanelOpen && <CheckCircle className="h-4 w-4" />}
+                    {isTaskPanelOpen ? `${stats.completed}` : `Completed (${stats.completed})`}
+                  </TabsTrigger>
+                  <TabsTrigger value="upcoming" className="flex items-center gap-2">
+                    {!isTaskPanelOpen && <Clock className="h-4 w-4" />}
+                    {isTaskPanelOpen ? `${stats.upcoming}` : `Upcoming (${stats.upcoming})`}
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="active" className="h-full">
+                  <Card className="glass h-full">
+                    {!isTaskPanelOpen && (
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <AlertCircle className="h-5 w-5" />
+                          Active Tasks
+                        </CardTitle>
+                      </CardHeader>
+                    )}
+                    <CardContent className={isTaskPanelOpen ? 'p-2' : ''}>
+                      {renderActiveTasksTable()}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="completed" className="h-full">
+                  <Card className="glass h-full">
+                    {!isTaskPanelOpen && (
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5" />
+                          Completed Tasks
+                        </CardTitle>
+                      </CardHeader>
+                    )}
+                    <CardContent className={isTaskPanelOpen ? 'p-2' : ''}>
+                      {renderCompletedTasksTable()}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="upcoming" className="h-full">
+                  <Card className="glass h-full">
+                    {!isTaskPanelOpen && (
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <Clock className="h-5 w-5" />
+                          Upcoming Tasks
+                        </CardTitle>
+                      </CardHeader>
+                    )}
+                    <CardContent className={isTaskPanelOpen ? 'p-2' : ''}>
+                      {renderUpcomingTasksTable()}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </motion.div>
           </div>
+        </div>
 
-          <Tabs defaultValue="active" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 glass">
-              <TabsTrigger value="active" className="flex items-center gap-2">
-                <Play className="h-4 w-4" />
-                Active ({stats.active})
-              </TabsTrigger>
-              <TabsTrigger value="completed" className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Completed ({stats.completed})
-              </TabsTrigger>
-              <TabsTrigger value="upcoming" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Upcoming ({stats.upcoming})
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="active">
-              <Card className="glass">
-                <CardHeader>
-                  <CardTitle className="text-foreground flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5" />
-                    Active Tasks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {renderActiveTasksTable()}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="completed">
-              <Card className="glass">
-                <CardHeader>
-                  <CardTitle className="text-foreground flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5" />
-                    Completed Tasks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {renderCompletedTasksTable()}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="upcoming">
-              <Card className="glass">
-                <CardHeader>
-                  <CardTitle className="text-foreground flex items-center gap-2">
-                    <Clock className="h-5 w-5" />
-                    Upcoming Tasks
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {renderUpcomingTasksTable()}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
+        {/* Task Details Panel */}
+        {isTaskPanelOpen && (
+          <div className="w-[90%] h-full">
+            <TaskDetailsPanel
+              task={selectedTask}
+              onClose={handleCloseTaskPanel}
+              onTaskUpdate={handleTaskUpdate}
+            />
+          </div>
+        )}
       </div>
-
-      {/* Task Action Modal */}
-      <TaskActionModal
-        isOpen={isTaskModalOpen}
-        onClose={handleCloseTaskModal}
-        task={selectedTask}
-        onTaskUpdate={handleTaskUpdate}
-      />
     </MainLayout>
   );
 };
