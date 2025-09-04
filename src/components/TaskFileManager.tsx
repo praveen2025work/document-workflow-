@@ -519,198 +519,142 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
         </Badge>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {workflowTaskFiles.map((taskFile) => {
-          const isExpanded = expandedFiles.has(taskFile.taskFileId);
           const latestFile = taskFile.uploadedFiles[0]; // Assuming sorted by latest first
           const hasMultipleVersions = taskFile.uploadedFiles.length > 1;
 
           return (
-            <Card key={taskFile.taskFileId} className="border border-border">
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  {/* File Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        {getStatusIcon(taskFile.status)}
-                        <button
-                          onClick={() => handleFileNameClick(taskFile)}
-                          className={`font-medium truncate text-left hover:underline ${
-                            !canReuploadFile(taskFile) ? 'cursor-default' : 'cursor-pointer text-blue-600 hover:text-blue-800'
-                          }`}
-                          disabled={!canReuploadFile(taskFile)}
-                        >
-                          {taskFile.fileName}
-                        </button>
-                        {canReuploadFile(taskFile) && taskFile.uploadedFiles.length > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 w-5 p-0 ml-1"
-                            onClick={() => handleFileNameClick(taskFile)}
-                            title="Reupload file"
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                          </Button>
-                        )}
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs h-5 ${getStatusColor(taskFile.status)}`}
-                        >
-                          {taskFile.status}
-                        </Badge>
-                        {taskFile.isRequired && (
-                          <Badge variant="destructive" className="text-xs h-5">
-                            Required
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {taskFile.fileDescription}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                        <span>Types: {taskFile.allowedFileTypes.join(', ')}</span>
-                        <span>Max: {taskFile.maxFileSize}</span>
-                        {taskFile.uploadedFiles.length > 0 && (
-                          <span>
-                            {taskFile.uploadedFiles.length} version{taskFile.uploadedFiles.length > 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 ml-4">
-                      {taskFile.uploadedFiles.length > 0 && (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedTaskFile(taskFile)}
-                            >
-                              <History className="h-4 w-4 mr-1" />
-                              Versions
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl max-h-[80vh]">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
-                                <FileText className="h-5 w-5" />
-                                {taskFile.fileName} - File Versions
-                              </DialogTitle>
-                            </DialogHeader>
-                            <ScrollArea className="max-h-[60vh]">
-                              <div className="space-y-3 pr-4">
-                                {taskFile.uploadedFiles.map((file, index) => (
-                                  <Card key={`${file.instanceFileId}-${file.version}`}>
-                                    <CardContent className="p-3">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <p className="font-medium">
-                                              Version {file.version}
-                                              {index === 0 && (
-                                                <Badge variant="default" className="ml-2 text-xs">
-                                                  Latest
-                                                </Badge>
-                                              )}
-                                            </p>
-                                            <Badge 
-                                              variant="outline" 
-                                              className={`text-xs ${getStatusColor(file.fileStatus)}`}
-                                            >
-                                              {file.fileStatus}
-                                            </Badge>
-                                          </div>
-                                          <p className="text-sm text-muted-foreground">
-                                            {formatFileSize(file.fileSize)} • {file.actionType}
-                                          </p>
-                                          <p className="text-xs text-muted-foreground">
-                                            By {file.createdBy} • {formatDate(file.createdAt)}
-                                          </p>
-                                          {file.fileCommentary && (
-                                            <p className="text-xs text-muted-foreground mt-1 italic">
-                                              "{file.fileCommentary}"
-                                            </p>
-                                          )}
-                                        </div>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => onDownload(file)}
-                                        >
-                                          <Download className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                ))}
-                              </div>
-                            </ScrollArea>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </div>
+            <div key={taskFile.taskFileId} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                {getStatusIcon(taskFile.status)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleFileNameClick(taskFile)}
+                      className={`font-medium truncate text-left hover:underline ${
+                        !canReuploadFile(taskFile) ? 'cursor-default' : 'cursor-pointer text-blue-600 hover:text-blue-800'
+                      }`}
+                      disabled={!canReuploadFile(taskFile)}
+                    >
+                      {taskFile.fileName}
+                    </button>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs h-5 ${getStatusColor(taskFile.status)}`}
+                    >
+                      {taskFile.status}
+                    </Badge>
+                    {taskFile.isRequired && (
+                      <Badge variant="destructive" className="text-xs h-5">
+                        Required
+                      </Badge>
+                    )}
                   </div>
-
-                  {/* Latest File Info */}
-                  {latestFile && (
-                    <div className="bg-muted/30 rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-medium">Latest: {latestFile.fileName}</p>
-                            <Badge variant="outline" className="text-xs">
-                              v{latestFile.version}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>{formatFileSize(latestFile.fileSize)}</span>
-                            <span>By {latestFile.createdBy}</span>
-                            <span>{formatDate(latestFile.createdAt)}</span>
-                          </div>
-                          {latestFile.fileCommentary && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              "{latestFile.fileCommentary}"
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onDownload(latestFile)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* No Files Uploaded */}
-                  {taskFile.uploadedFiles.length === 0 && (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No files uploaded yet</p>
-                      {taskFile.isRequired && (
-                        <p className="text-xs text-red-500 mt-1">This file is required</p>
-                      )}
-                      {canReuploadFile(taskFile) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                          onClick={() => handleFileNameClick(taskFile)}
-                        >
-                          <Upload className="h-3 w-3 mr-1" />
-                          Upload File
-                        </Button>
-                      )}
-                    </div>
-                  )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Upload button for files without uploads or reupload */}
+                {(taskFile.uploadedFiles.length === 0 || canReuploadFile(taskFile)) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleFileNameClick(taskFile)}
+                    className="h-8 px-3"
+                  >
+                    <Upload className="h-3 w-3 mr-1" />
+                    {taskFile.uploadedFiles.length === 0 ? 'Upload' : 'Reupload'}
+                  </Button>
+                )}
+                
+                {/* Versions button */}
+                {hasMultipleVersions && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedTaskFile(taskFile)}
+                        className="h-8 px-3"
+                      >
+                        <History className="h-3 w-3 mr-1" />
+                        {taskFile.uploadedFiles.length}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[80vh]">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          {taskFile.fileName} - File Versions
+                        </DialogTitle>
+                      </DialogHeader>
+                      <ScrollArea className="max-h-[60vh]">
+                        <div className="space-y-3 pr-4">
+                          {taskFile.uploadedFiles.map((file, index) => (
+                            <Card key={`${file.instanceFileId}-${file.version}`}>
+                              <CardContent className="p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <p className="font-medium">
+                                        Version {file.version}
+                                        {index === 0 && (
+                                          <Badge variant="default" className="ml-2 text-xs">
+                                            Latest
+                                          </Badge>
+                                        )}
+                                      </p>
+                                      <Badge 
+                                        variant="outline" 
+                                        className={`text-xs ${getStatusColor(file.fileStatus)}`}
+                                      >
+                                        {file.fileStatus}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {formatFileSize(file.fileSize)} • {file.actionType}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      By {file.createdBy} • {formatDate(file.createdAt)}
+                                    </p>
+                                    {file.fileCommentary && (
+                                      <p className="text-xs text-muted-foreground mt-1 italic">
+                                        "{file.fileCommentary}"
+                                      </p>
+                                    )}
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onDownload(file)}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </DialogContent>
+                  </Dialog>
+                )}
+                
+                {/* Single version download */}
+                {taskFile.uploadedFiles.length === 1 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDownload(latestFile)}
+                    className="h-8 px-3"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    v{latestFile.version}
+                  </Button>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>
