@@ -26,7 +26,8 @@ import {
   Target,
   Plus,
   RefreshCw,
-  Archive
+  Archive,
+  ChevronLeft
 } from 'lucide-react';
 import { TaskFile, TaskDetails } from '@/lib/executionApi';
 
@@ -314,10 +315,11 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
 
     switch (taskDetails.taskType) {
       case 'FILE_UPDATE':
+      case 'FILE_CONSOLIDATE':
         return (
           <Card className="mt-4">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">File Update Actions</CardTitle>
+              <CardTitle className="text-sm">File Upload</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {taskDetails.sourceFile && (
@@ -336,6 +338,7 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => onDownload(taskDetails.sourceFile!)}
+                          title="Download source file"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
@@ -345,52 +348,9 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                 </div>
               )}
 
-              <div>
-                <Label htmlFor="update-files" className="text-xs">Select Updated Files</Label>
-                <Input
-                  id="update-files"
-                  type="file"
-                  multiple
-                  onChange={(e) => setUpdateFiles(Array.from(e.target.files || []))}
-                  className="mt-1 h-8"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="update-commentary" className="text-xs">Commentary (Optional)</Label>
-                <Textarea
-                  id="update-commentary"
-                  value={fileCommentary}
-                  onChange={(e) => setFileCommentary(e.target.value)}
-                  placeholder="Describe the changes made..."
-                  className="mt-1 text-sm"
-                  rows={2}
-                />
-              </div>
-
-              <Button 
-                onClick={onFileUpdate} 
-                disabled={isLoading || updateFiles.length === 0}
-                size="sm"
-                className="w-full h-8"
-              >
-                <FileText className="h-3 w-3 mr-2" />
-                Update Files
-              </Button>
-            </CardContent>
-          </Card>
-        );
-
-      case 'FILE_CONSOLIDATE':
-        return (
-          <Card className="mt-4">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">File Consolidation Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
               {taskDetails.sourceFiles && taskDetails.sourceFiles.length > 0 && (
                 <div>
-                  <Label className="text-xs">Available Files for Consolidation</Label>
+                  <Label className="text-xs">Available Files</Label>
                   <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
                     {taskDetails.sourceFiles.map((file) => (
                       <div key={file.instanceFileId} className="flex items-center space-x-2 p-2 border rounded">
@@ -414,6 +374,7 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => onDownload(file)}
+                          title="Download file"
                         >
                           <Download className="h-3 w-3" />
                         </Button>
@@ -424,24 +385,53 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
               )}
 
               <div>
-                <Label htmlFor="output-filename" className="text-xs">Output Filename</Label>
+                <Label htmlFor="update-files" className="text-xs">Select Files</Label>
                 <Input
-                  id="output-filename"
-                  value={outputFileName}
-                  onChange={(e) => setOutputFileName(e.target.value)}
-                  placeholder="consolidated_report.pdf"
-                  className="mt-1 h-8 text-sm"
+                  id="update-files"
+                  type="file"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    setUpdateFiles(files);
+                    setSelectedFiles(files);
+                  }}
+                  className="mt-1 h-8"
+                />
+              </div>
+
+              {taskDetails.taskType === 'FILE_CONSOLIDATE' && (
+                <div>
+                  <Label htmlFor="output-filename" className="text-xs">Output Filename</Label>
+                  <Input
+                    id="output-filename"
+                    value={outputFileName}
+                    onChange={(e) => setOutputFileName(e.target.value)}
+                    placeholder="consolidated_report.pdf"
+                    className="mt-1 h-8 text-sm"
+                  />
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="update-commentary" className="text-xs">Commentary (Optional)</Label>
+                <Textarea
+                  id="update-commentary"
+                  value={fileCommentary}
+                  onChange={(e) => setFileCommentary(e.target.value)}
+                  placeholder="Add a comment about the files..."
+                  className="mt-1 text-sm"
+                  rows={2}
                 />
               </div>
 
               <Button 
-                onClick={onConsolidation} 
-                disabled={isLoading || consolidationFiles.length === 0 || !outputFileName}
+                onClick={taskDetails.taskType === 'FILE_CONSOLIDATE' ? onConsolidation : onFileUpdate} 
+                disabled={isLoading || (taskDetails.taskType === 'FILE_UPDATE' ? updateFiles.length === 0 : (consolidationFiles.length === 0 || !outputFileName))}
                 size="sm"
                 className="w-full h-8"
+                title="Upload files"
               >
-                <Target className="h-3 w-3 mr-2" />
-                Consolidate Files
+                <Upload className="h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
@@ -493,15 +483,31 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                 />
               </div>
 
-              <Button 
-                onClick={onCompleteTask} 
-                disabled={isLoading || !decisionOutcome}
-                size="sm"
-                className="w-full h-8"
-              >
-                <CheckCircle className="h-3 w-3 mr-2" />
-                Submit Decision
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => {
+                    // Handle go back action
+                    setDecisionOutcome('');
+                    setDecisionComments('');
+                  }}
+                  disabled={isLoading}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-8"
+                  title="Go back"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button 
+                  onClick={onCompleteTask} 
+                  disabled={isLoading || !decisionOutcome}
+                  size="sm"
+                  className="flex-1 h-8"
+                  title="Submit decision"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         );
@@ -556,16 +562,16 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
               </div>
               
               <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Upload button for files without uploads or reupload */}
+                {/* Upload button - unified for all file operations */}
                 {(taskFile.uploadedFiles.length === 0 || canReuploadFile(taskFile)) && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleFileNameClick(taskFile)}
-                    className="h-8 px-3"
+                    className="h-8 w-8 p-0"
+                    title="Upload file"
                   >
-                    <Upload className="h-3 w-3 mr-1" />
-                    {taskFile.uploadedFiles.length === 0 ? 'Upload' : 'Reupload'}
+                    <Upload className="h-4 w-4" />
                   </Button>
                 )}
                 
@@ -575,33 +581,31 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => onDownload(latestFile)}
-                    className="h-8 px-3"
+                    className="h-8 w-8 p-0"
                     title="Download latest version"
                   >
-                    <Download className="h-3 w-3 mr-1" />
-                    Latest
+                    <Download className="h-4 w-4" />
                   </Button>
                 )}
                 
-                {/* Versions button - show if multiple versions exist */}
-                {hasMultipleVersions && (
+                {/* Versions button - always show for files (even single version) */}
+                {taskFile.uploadedFiles.length > 0 && (
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setSelectedTaskFile(taskFile)}
-                        className="h-8 px-3"
+                        className="h-8 w-8 p-0"
                         title="View all versions"
                       >
-                        <Archive className="h-3 w-3 mr-1" />
-                        {taskFile.uploadedFiles.length}
+                        <History className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh]">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                          <Archive className="h-5 w-5" />
+                          <History className="h-5 w-5" />
                           {taskFile.fileName} - All Versions
                         </DialogTitle>
                       </DialogHeader>
