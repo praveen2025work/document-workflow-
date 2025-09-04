@@ -77,6 +77,9 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   const [queryTitle, setQueryTitle] = useState('');
   const [queryDescription, setQueryDescription] = useState('');
   const [queryPriority, setQueryPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM');
+  const [queryAssignedTo, setQueryAssignedTo] = useState<number | null>(null);
+  const [queryResponse, setQueryResponse] = useState('');
+  const [reassignTo, setReassignTo] = useState<number | null>(null);
 
   useEffect(() => {
     if (task) {
@@ -210,17 +213,18 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   };
 
   const handleCreateQuery = async () => {
-    if (!task || !queryTitle || !queryDescription) {
-      toast.error('Please fill in query title and description');
+    if (!task || !queryTitle || !queryDescription || !queryAssignedTo) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     setIsLoading(true);
     try {
-      await createQuery(task.instanceTaskId, queryTitle, queryDescription, 2, queryPriority);
+      await createQuery(task.instanceTaskId, queryTitle, queryDescription, queryAssignedTo, queryPriority);
       toast.success('Query created successfully');
       setQueryTitle('');
       setQueryDescription('');
+      setQueryAssignedTo(null);
       fetchTaskDetails();
     } catch (error) {
       console.error('Error creating query:', error);
@@ -229,6 +233,15 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
       setIsLoading(false);
     }
   };
+
+  // Mock workflow users - in real app, this would come from API
+  const workflowUsers = [
+    { userId: 1, username: 'alice', role: 'Process Owner' },
+    { userId: 2, username: 'bob', role: 'Reviewer' },
+    { userId: 3, username: 'charlie', role: 'Approver' },
+    { userId: 4, username: 'sarahwilson', role: 'Manager' },
+    { userId: 5, username: 'diana', role: 'Analyst' },
+  ];
 
   const getTaskTypeIcon = (taskType: string) => {
     switch (taskType) {
@@ -633,81 +646,152 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
 
   const renderQuerySection = () => (
     <div className="space-y-4">
-      <div>
-        <Label htmlFor="query-title">Query Title</Label>
-        <Input
-          id="query-title"
-          value={queryTitle}
-          onChange={(e) => setQueryTitle(e.target.value)}
-          placeholder="Enter query title..."
-          className="mt-1"
-        />
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Create New Query</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <Label htmlFor="query-title" className="text-xs">Query Title</Label>
+            <Input
+              id="query-title"
+              value={queryTitle}
+              onChange={(e) => setQueryTitle(e.target.value)}
+              placeholder="Enter query title..."
+              className="mt-1 h-8 text-sm"
+            />
+          </div>
 
-      <div>
-        <Label htmlFor="query-description">Query Description</Label>
-        <Textarea
-          id="query-description"
-          value={queryDescription}
-          onChange={(e) => setQueryDescription(e.target.value)}
-          placeholder="Describe your query in detail..."
-          className="mt-1"
-        />
-      </div>
+          <div>
+            <Label htmlFor="query-description" className="text-xs">Query Description</Label>
+            <Textarea
+              id="query-description"
+              value={queryDescription}
+              onChange={(e) => setQueryDescription(e.target.value)}
+              placeholder="Describe your query in detail..."
+              className="mt-1 text-sm"
+              rows={3}
+            />
+          </div>
 
-      <div>
-        <Label htmlFor="query-priority">Priority</Label>
-        <Select value={queryPriority} onValueChange={(value: 'LOW' | 'MEDIUM' | 'HIGH') => setQueryPriority(value)}>
-          <SelectTrigger className="mt-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="LOW">Low</SelectItem>
-            <SelectItem value="MEDIUM">Medium</SelectItem>
-            <SelectItem value="HIGH">High</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="query-priority" className="text-xs">Priority</Label>
+              <Select value={queryPriority} onValueChange={(value: 'LOW' | 'MEDIUM' | 'HIGH') => setQueryPriority(value)}>
+                <SelectTrigger className="mt-1 h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LOW">Low</SelectItem>
+                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="HIGH">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-      <Button onClick={handleCreateQuery} disabled={isLoading || !queryTitle || !queryDescription}>
-        <MessageSquare className="h-4 w-4 mr-2" />
-        Create Query
-      </Button>
+            <div>
+              <Label htmlFor="query-assigned-to" className="text-xs">Assign To</Label>
+              <Select value={queryAssignedTo?.toString() || ''} onValueChange={(value) => setQueryAssignedTo(value ? parseInt(value) : null)}>
+                <SelectTrigger className="mt-1 h-8 text-sm">
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workflowUsers.map((user) => (
+                    <SelectItem key={user.userId} value={user.userId.toString()}>
+                      {user.username} ({user.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button 
+            onClick={handleCreateQuery} 
+            disabled={isLoading || !queryTitle || !queryDescription || !queryAssignedTo}
+            size="sm"
+            className="w-full h-8"
+          >
+            <MessageSquare className="h-3 w-3 mr-2" />
+            Create Query
+          </Button>
+        </CardContent>
+      </Card>
 
       {taskDetails?.queries && taskDetails.queries.length > 0 && (
-        <div className="mt-6">
-          <Label>Existing Queries</Label>
+        <div>
+          <Label className="text-sm">Existing Queries</Label>
           <div className="mt-2 space-y-2">
             {taskDetails.queries.map((query) => (
               <Card key={query.queryId}>
                 <CardContent className="p-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium">{query.queryTitle}</p>
-                        <Badge variant={query.queryStatus === 'OPEN' ? 'destructive' : 'default'}>
-                          {query.queryStatus}
-                        </Badge>
-                        <Badge variant="outline">{query.priority}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">{query.queryDescription}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {query.raisedByUsername}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(query.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {query.resolutionNotes && (
-                        <div className="mt-2 p-2 bg-muted rounded">
-                          <p className="text-sm font-medium">Resolution:</p>
-                          <p className="text-sm">{query.resolutionNotes}</p>
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-sm truncate">{query.queryTitle}</p>
+                          <Badge variant={query.queryStatus === 'OPEN' ? 'destructive' : 'default'} className="text-xs h-5">
+                            {query.queryStatus}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs h-5">{query.priority}</Badge>
                         </div>
-                      )}
+                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{query.queryDescription}</p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {query.raisedByUsername}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {new Date(query.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
                     </div>
+                    
+                    {query.resolutionNotes && (
+                      <div className="p-2 bg-muted rounded text-xs">
+                        <p className="font-medium">Resolution:</p>
+                        <p>{query.resolutionNotes}</p>
+                      </div>
+                    )}
+
+                    {query.queryStatus === 'OPEN' && (
+                      <div className="space-y-2 pt-2 border-t border-border">
+                        <div>
+                          <Label className="text-xs">Response</Label>
+                          <Textarea
+                            value={queryResponse}
+                            onChange={(e) => setQueryResponse(e.target.value)}
+                            placeholder="Type your response..."
+                            className="mt-1 text-sm"
+                            rows={2}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Select value={reassignTo?.toString() || ''} onValueChange={(value) => setReassignTo(value ? parseInt(value) : null)}>
+                            <SelectTrigger className="h-7 text-xs flex-1">
+                              <SelectValue placeholder="Reassign to..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {workflowUsers.map((user) => (
+                                <SelectItem key={user.userId} value={user.userId.toString()}>
+                                  {user.username} ({user.role})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button size="sm" className="h-7 text-xs px-2">
+                            Respond
+                          </Button>
+                          {reassignTo && (
+                            <Button size="sm" variant="outline" className="h-7 text-xs px-2">
+                              Reassign
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -725,12 +809,12 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   return (
     <div className="h-full flex flex-col bg-background border-l border-border">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           {taskDetails && getTaskTypeIcon(taskDetails.taskType)}
-          <div>
-            <h3 className="font-semibold text-lg">{task.taskName}</h3>
-            <p className="text-sm text-muted-foreground">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-base truncate">{task.taskName}</h3>
+            <p className="text-xs text-muted-foreground truncate">
               {taskDetails?.workflowName || 'Loading...'}
             </p>
           </div>
@@ -740,38 +824,38 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
         </Button>
       </div>
 
-      {/* Task Info */}
-      <div className="p-4 border-b border-border bg-muted/10">
-        <div className="grid grid-cols-1 gap-3 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Status:</span>
-            <Badge variant="outline">{taskDetails?.status || task.status}</Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Assigned To:</span>
-            <span className="font-medium">{taskDetails?.assignedToUsername || 'Loading...'}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Task Type:</span>
-            <span className="font-medium">{taskDetails?.taskType.replace('_', ' ') || 'Loading...'}</span>
-          </div>
-          <Separator />
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${dueDateInfo.priorityDot}`} />
-              <span className="text-muted-foreground">Due Date:</span>
+      {/* Task Info - Compact */}
+      <div className="p-3 border-b border-border bg-muted/10">
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Status:</span>
+              <Badge variant="outline" className="text-xs h-5">{taskDetails?.status || task.status}</Badge>
             </div>
-            <div className="pl-4">
-              <div className={`font-medium ${dueDateInfo.colorClass}`}>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Type:</span>
+              <span className="font-medium text-xs">{taskDetails?.taskType.replace('_', ' ') || 'Loading...'}</span>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Assigned:</span>
+              <span className="font-medium text-xs truncate">{taskDetails?.assignedToUsername || 'Loading...'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className={`w-1.5 h-1.5 rounded-full ${dueDateInfo.priorityDot}`} />
+              <div className={`font-medium text-xs ${dueDateInfo.colorClass} truncate`}>
                 {dueDateInfo.formattedDate}
               </div>
-              <div className="text-xs text-muted-foreground">
-                {dueDateInfo.priorityLabel}
-                {dueDateInfo.daysLeft !== null && dueDateInfo.daysLeft > 0 && (
-                  <span> • {dueDateInfo.daysLeft} days left</span>
-                )}
-              </div>
             </div>
+          </div>
+        </div>
+        <div className="mt-2 text-center">
+          <div className={`text-xs font-medium ${dueDateInfo.colorClass}`}>
+            {dueDateInfo.priorityLabel}
+            {dueDateInfo.daysLeft !== null && dueDateInfo.daysLeft > 0 && (
+              <span> • {dueDateInfo.daysLeft} days left</span>
+            )}
           </div>
         </div>
       </div>

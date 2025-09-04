@@ -694,7 +694,7 @@ const DashboardPage: NextPage = () => {
     >
       <div className="flex h-full">
         {/* Main Content */}
-        <div className={`transition-all duration-300 ${isTaskPanelOpen ? 'w-[10%]' : 'w-full'}`}>
+        <div className={`transition-all duration-300 ${isTaskPanelOpen ? 'w-[25%]' : 'w-full'}`}>
           <div className="p-6 h-full overflow-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -849,7 +849,7 @@ const DashboardPage: NextPage = () => {
 
         {/* Task Details Panel */}
         {isTaskPanelOpen && (
-          <div className="w-[90%] h-full">
+          <div className="w-[75%] h-full">
             <TaskDetailsPanel
               task={selectedTask}
               onClose={handleCloseTaskPanel}
