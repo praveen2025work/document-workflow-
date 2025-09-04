@@ -699,38 +699,7 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
         </Card>
       )}
 
-      {/* Mark as Complete Toggle for all task types */}
-      {taskDetails.status === 'IN_PROGRESS' && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label htmlFor="task-complete-toggle" className="text-sm font-medium">
-                  Mark Task as Complete
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {taskDetails.taskType === 'DECISION' 
-                    ? 'Alternative way to complete this decision task without selecting a specific outcome'
-                    : 'Toggle to complete this step and move to the next task'
-                  }
-                </p>
-              </div>
-              <Switch
-                id="task-complete-toggle"
-                checked={isTaskCompleted}
-                onCheckedChange={handleMarkAsComplete}
-                disabled={isLoading}
-              />
-            </div>
-            {taskCommentary.trim() && (
-              <div className="mt-3 p-3 bg-muted/30 rounded-lg">
-                <Label className="text-xs font-medium">Task Commentary:</Label>
-                <p className="text-xs text-muted-foreground mt-1">{taskCommentary}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* File Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>

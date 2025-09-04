@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { 
@@ -1188,57 +1189,89 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
       <div className={`flex flex-col transition-all duration-300 ${
         showQueryChat && selectedQuery ? 'w-2/5' : 'w-full'
       }`}>
-        {/* Header */}
-        <div className="p-3 border-b border-border bg-muted/30">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3 flex-1 min-w-0">
-              {taskDetails && getTaskTypeIcon(taskDetails.taskType)}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className={`font-semibold truncate ${showQueryChat ? 'text-sm' : 'text-base'}`}>
-                    {task.taskName}
-                  </h3>
-                  <Badge variant="outline" className="text-xs h-5 shrink-0">
-                    {taskDetails?.status || task.status}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground truncate mb-2">
-                  {taskDetails?.workflowName || 'Loading...'}
-                </p>
-                
-                {/* Inline Task Information - Hide some details when chat is open */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <span>Type:</span>
-                    <span className="font-medium text-foreground">
-                      {taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}
-                    </span>
+        {/* Modern Header */}
+        <div className="border-b border-border bg-gradient-to-r from-background to-muted/20">
+          <div className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                {taskDetails && (
+                  <div className="p-2 rounded-lg bg-background border shadow-sm">
+                    {getTaskTypeIcon(taskDetails.taskType)}
                   </div>
-                  {!showQueryChat && (
-                    <>
-                      <div className="flex items-center gap-1">
-                        <span>Assigned:</span>
-                        <span className="font-medium text-foreground">
-                          {taskDetails?.assignedToUsername || 'alice'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className={`w-1.5 h-1.5 rounded-full ${dueDateInfo.priorityDot} mr-1`} />
-                        <span className={`font-medium ${dueDateInfo.colorClass}`}>
-                          {dueDateInfo.formattedDate}
-                        </span>
-                        {dueDateInfo.priorityLabel === 'Overdue' && (
-                          <span className="text-red-500 font-medium ml-1">Overdue</span>
-                        )}
-                      </div>
-                    </>
-                  )}
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className={`font-semibold truncate ${showQueryChat ? 'text-sm' : 'text-lg'}`}>
+                      {task.taskName}
+                    </h3>
+                    <Badge variant="outline" className="text-xs h-6 px-2 shrink-0">
+                      {taskDetails?.status || task.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate mb-2">
+                    {taskDetails?.workflowName || 'Loading...'}
+                  </p>
                 </div>
               </div>
+              <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 ml-2 h-8 w-8 p-0">
+                <X className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 ml-2">
-              <X className="h-4 w-4" />
-            </Button>
+
+            {/* Task Information Grid */}
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Type:</span>
+                  <span className="font-medium">
+                    {taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Assigned:</span>
+                  <span className="font-medium">
+                    {taskDetails?.assignedToUsername || 'alice'}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className={`w-2 h-2 rounded-full ${dueDateInfo.priorityDot}`} />
+                  <span className={`font-medium ${dueDateInfo.colorClass}`}>
+                    {dueDateInfo.formattedDate}
+                  </span>
+                </div>
+                {dueDateInfo.priorityLabel === 'Overdue' && (
+                  <div className="text-xs text-red-500 font-medium">
+                    {dueDateInfo.priorityLabel}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mark as Complete Toggle - Only show for IN_PROGRESS tasks */}
+            {taskDetails?.status === 'IN_PROGRESS' && (
+              <div className="flex items-center justify-between p-3 bg-background border rounded-lg shadow-sm">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-sm">Mark as Complete</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {taskDetails.taskType === 'DECISION' 
+                      ? 'Complete this decision task without selecting a specific outcome'
+                      : 'Complete this task and move to the next step'
+                    }
+                  </p>
+                </div>
+                <Switch
+                  checked={false}
+                  onCheckedChange={handleCompleteTask}
+                  disabled={isLoading}
+                  className="ml-3"
+                />
+              </div>
+            )}
           </div>
         </div>
 
