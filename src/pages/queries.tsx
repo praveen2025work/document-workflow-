@@ -271,102 +271,111 @@ const QueriesPage: NextPage = () => {
     });
   };
 
-  const renderQueryCard = (query: Query, showActions: boolean = true) => (
-    <Card key={query.id} className="mb-4 hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-sm truncate">{query.queryTitle}</h3>
-              <Badge className={`text-xs ${getPriorityColor(query.priority)}`}>
-                {query.priority}
-              </Badge>
-              <Badge className={`text-xs ${getStatusColor(query.queryStatus)}`}>
-                {query.queryStatus}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-              {query.queryDescription}
-            </p>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                Raised by: {query.raisedBy}
-              </span>
-              <span className="flex items-center gap-1">
-                <UserPlus className="h-3 w-3" />
-                Assigned to: {query.assignedTo}
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {new Date(query.createdAt).toLocaleDateString()}
-              </span>
+  const renderQueryCard = (query: Query, showActions: boolean = true) => {
+    // Check if the current user is relevant to this query (either raised by them or assigned to them)
+    const isRelevantToUser = user && (query.raisedByUserId === user.userId || query.assignedToUserId === user.userId);
+    
+    return (
+      <Card key={query.id} className="mb-4 hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-semibold text-sm truncate">{query.queryTitle}</h3>
+                <Badge className={`text-xs ${getPriorityColor(query.priority)}`}>
+                  {query.priority}
+                </Badge>
+                <Badge className={`text-xs ${getStatusColor(query.queryStatus)}`}>
+                  {query.queryStatus}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                {query.queryDescription}
+              </p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  Raised by: {query.raisedBy}
+                </span>
+                <span className="flex items-center gap-1">
+                  <UserPlus className="h-3 w-3" />
+                  Assigned to: {query.assignedTo}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {new Date(query.createdAt).toLocaleDateString()}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {query.resolutionNotes && (
-          <div className="p-2 bg-muted rounded text-xs mb-3">
-            <p className="font-medium">Resolution:</p>
-            <p>{query.resolutionNotes}</p>
-          </div>
-        )}
+          {query.resolutionNotes && (
+            <div className="p-2 bg-muted rounded text-xs mb-3">
+              <p className="font-medium">Resolution:</p>
+              <p>{query.resolutionNotes}</p>
+            </div>
+          )}
 
-        {showActions && (
-          <div className="flex items-center gap-2 pt-2 border-t border-border">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSelectedQuery(query);
-                setIsConversationOpen(true);
-              }}
-              className="h-7 text-xs"
-            >
-              <MessageSquare className="h-3 w-3 mr-1" />
-              Chat
-            </Button>
-            
-            {query.queryStatus === 'OPEN' && query.assignedToUserId === user?.userId && (
-              <>
+          {(showActions || isRelevantToUser) && (
+            <div className="flex items-center gap-2 pt-2 border-t border-border">
+              {/* Show Chat button for queries relevant to the user */}
+              {isRelevantToUser && (
                 <Button
                   size="sm"
-                  onClick={() => handleResolveQuery(query.id)}
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedQuery(query);
+                    setIsConversationOpen(true);
+                  }}
                   className="h-7 text-xs"
                 >
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Resolve
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  Chat
                 </Button>
-                <Select value={reassignTo?.toString() || ''} onValueChange={(value) => setReassignTo(value ? parseInt(value) : null)}>
-                  <SelectTrigger className="h-7 text-xs w-32">
-                    <SelectValue placeholder="Reassign..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workflowUsers.filter(u => u.userId !== query.assignedToUserId).map((user) => (
-                      <SelectItem key={user.userId} value={user.userId.toString()}>
-                        {user.username}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {reassignTo && (
+              )}
+              
+              {/* Show action buttons only for queries assigned to the current user and are open */}
+              {showActions && query.queryStatus === 'OPEN' && query.assignedToUserId === user?.userId && (
+                <>
                   <Button
                     size="sm"
-                    variant="outline"
-                    onClick={() => handleReassignQuery(query.id)}
+                    onClick={() => handleResolveQuery(query.id)}
                     className="h-7 text-xs"
                   >
-                    <UserPlus className="h-3 w-3 mr-1" />
-                    Reassign
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Resolve
                   </Button>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+                  <Select value={reassignTo?.toString() || ''} onValueChange={(value) => setReassignTo(value ? parseInt(value) : null)}>
+                    <SelectTrigger className="h-7 text-xs w-32">
+                      <SelectValue placeholder="Reassign..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workflowUsers.filter(u => u.userId !== query.assignedToUserId).map((user) => (
+                        <SelectItem key={user.userId} value={user.userId.toString()}>
+                          {user.username}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {reassignTo && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleReassignQuery(query.id)}
+                      className="h-7 text-xs"
+                    >
+                      <UserPlus className="h-3 w-3 mr-1" />
+                      Reassign
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   const renderStatisticsCards = () => {
     if (!statistics) return null;
