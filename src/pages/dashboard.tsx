@@ -314,7 +314,7 @@ const DashboardPage: NextPage = () => {
         icon={LayoutDashboard}
         headerActions={headerActions}
       >
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

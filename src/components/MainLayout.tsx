@@ -43,7 +43,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         </MainHeader>
         
         {/* Page Content */}
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>
