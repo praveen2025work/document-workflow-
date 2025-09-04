@@ -5,7 +5,11 @@ import { config } from './config';
 
 export const getRoles = async (params?: { page?: number; size?: number; isActive?: 'Y' | 'N' }): Promise<RoleApiResponse> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log('Using mock roles data for environment:', config.app.env);
     // Filter by isActive if provided
     let filteredRoles = mockRoles;
@@ -13,7 +17,7 @@ export const getRoles = async (params?: { page?: number; size?: number; isActive
       filteredRoles = mockRoles.filter(role => role.isActive === params.isActive);
     }
     return Promise.resolve({
-      roles: filteredRoles,
+      content: filteredRoles,
       totalElements: filteredRoles.length,
       totalPages: 1,
       size: params?.size || 10,

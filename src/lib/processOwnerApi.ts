@@ -9,9 +9,16 @@ const api = axios.create({
 
 // Get process owner dashboard
 export const getProcessOwnerDashboard = async (processOwnerId: number): Promise<ProcessOwnerDashboardData> => {
-  if (config.app.isMock) {
+  // Use mock data for preview/mock environments or when not in dev/prod
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
+    console.log('Using mock process owner dashboard data for environment:', config.app.env);
     return Promise.resolve(mockProcessOwnerDashboardData);
   }
+  
   const response = await api.get('/api/process-owners/dashboard', {
     params: { processOwnerId },
   });
@@ -20,9 +27,16 @@ export const getProcessOwnerDashboard = async (processOwnerId: number): Promise<
 
 // Get process owner workload
 export const getProcessOwnerWorkload = async (processOwnerId: number): Promise<ProcessOwnerWorkload> => {
-  if (config.app.isMock) {
+  // Use mock data for preview/mock environments or when not in dev/prod
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
+    console.log('Using mock process owner workload data for environment:', config.app.env);
     return Promise.resolve(mockProcessOwnerWorkload);
   }
+  
   const response = await api.get('/api/process-owners/workload', {
     params: { processOwnerId },
   });
@@ -35,10 +49,16 @@ export const reassignTask = async (
   newUserId: number,
   reason: string
 ): Promise<void> => {
-  if (config.app.isMock) {
-    console.log(`Reassigning task ${taskId} to user ${newUserId} for reason: ${reason}`);
+  // Use mock data for preview/mock environments or when not in dev/prod
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
+    console.log(`Mock: Reassigning task ${taskId} to user ${newUserId} for reason: ${reason} in environment:`, config.app.env);
     return Promise.resolve();
   }
+  
   await api.post(`/api/process-owners/tasks/${taskId}/reassign`, null, {
     params: { newUserId, reason },
   });
@@ -50,10 +70,16 @@ export const escalateWorkflow = async (
   escalatedToUserId: number,
   reason: string
 ): Promise<void> => {
-  if (config.app.isMock) {
-    console.log(`Escalating workflow ${workflowId} to user ${escalatedToUserId} for reason: ${reason}`);
+  // Use mock data for preview/mock environments or when not in dev/prod
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
+    console.log(`Mock: Escalating workflow ${workflowId} to user ${escalatedToUserId} for reason: ${reason} in environment:`, config.app.env);
     return Promise.resolve();
   }
+  
   await api.post(`/api/process-owners/escalate/${workflowId}`, null, {
     params: { escalatedToUserId, reason },
   });

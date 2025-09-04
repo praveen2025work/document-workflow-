@@ -5,7 +5,11 @@ import { config } from './config';
 
 export const getCalendars = async (params?: { page?: number; size?: number; recurrence?: string }): Promise<CalendarApiResponse> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log('Using mock calendars data for environment:', config.app.env);
     // Filter by recurrence if provided
     let filteredCalendars = mockCalendars;
@@ -13,7 +17,7 @@ export const getCalendars = async (params?: { page?: number; size?: number; recu
       filteredCalendars = mockCalendars.filter(calendar => calendar.recurrence === params.recurrence);
     }
     return Promise.resolve({
-      calendars: filteredCalendars,
+      content: filteredCalendars,
       totalElements: filteredCalendars.length,
       totalPages: 1,
       size: params?.size || 10,

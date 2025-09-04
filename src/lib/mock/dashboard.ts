@@ -8,25 +8,25 @@ import {
 } from '@/types/dashboard';
 
 export const mockUserDashboardData: UserDashboardData = {
-  activeTasks: 5,
-  completedTasks: 20,
-  overdueTasks: 2,
-  notifications: 3,
+  activeTasks: 12,
+  completedTasks: 35,
+  overdueTasks: 3,
+  notifications: 8,
 };
 
 export const mockAdminDashboardData: AdminDashboardData = {
-  totalWorkflows: 10,
-  activeInstances: 8,
-  totalUsers: 50,
+  totalWorkflows: 25,
+  activeInstances: 18,
+  totalUsers: 125,
   systemHealth: 'OK',
 };
 
 export const mockUserWorkload: UserWorkload = {
   userId: 1,
   username: 'johndoe',
-  pendingTasks: 2,
-  inProgressTasks: 5,
-  completedTasks: 20,
+  pendingTasks: 8,
+  inProgressTasks: 4,
+  completedTasks: 35,
 };
 
 export const mockUserNotifications: UserNotification[] = [
@@ -50,6 +50,41 @@ export const mockUserNotifications: UserNotification[] = [
     message: 'Workflow "Monthly Report" has been completed.',
     status: 'READ',
     createdAt: new Date().toISOString(),
+  },
+  {
+    notificationId: 4,
+    userId: 1,
+    message: 'New workflow "Customer Onboarding" has been assigned to you.',
+    status: 'UNREAD',
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    notificationId: 5,
+    userId: 1,
+    message: 'Task "Financial Audit" requires your attention.',
+    status: 'UNREAD',
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+  },
+  {
+    notificationId: 6,
+    userId: 1,
+    message: 'Workflow "Security Review" has been escalated.',
+    status: 'READ',
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    notificationId: 7,
+    userId: 1,
+    message: 'Task "Code Review" has been completed successfully.',
+    status: 'READ',
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+  },
+  {
+    notificationId: 8,
+    userId: 1,
+    message: 'Reminder: Task "Training Materials" is due tomorrow.',
+    status: 'UNREAD',
+    createdAt: new Date(Date.now() - 1800000).toISOString(),
   },
 ];
 
