@@ -6,7 +6,6 @@ import {
   Calendar, 
   Users, 
   Shield,
-  UserCheck, 
   BarChart3, 
   LayoutDashboard,
   ChevronRight,
@@ -67,13 +66,7 @@ const navigationItems: NavigationItem[] = [
     path: '/roles',
     description: 'Manage user roles'
   },
-  {
-    id: 'user-groups',
-    label: 'User Groups',
-    icon: UserCheck,
-    path: '/user-groups',
-    description: 'Manage user groups and roles'
-  },
+
   {
     id: 'process-owner-dashboard',
     label: 'Process Owner Dashboard',
