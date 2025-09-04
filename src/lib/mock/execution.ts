@@ -322,8 +322,57 @@ export const mockInstanceTasks: InstanceTask[] = [
 ];
 
 export const mockTaskDetails: TaskDetails[] = [
+  // Upload Raw Data task - matches dashboard instanceTaskId: 1
   {
     instanceTaskId: 1,
+    instanceId: 1,
+    taskId: 1,
+    taskName: 'Upload Raw Data',
+    taskType: 'FILE_UPLOAD',
+    status: 'IN_PROGRESS',
+    assignedTo: 1,
+    assignedToUsername: 'alice',
+    startedOn: new Date(Date.now() - 3600000).toISOString(),
+    completedOn: null,
+    decisionOutcome: null,
+    workflowName: 'Document Processing',
+    workflowId: 1,
+    taskConfiguration: {
+      fileSelectionMode: 'USER_SELECT',
+      allowedFileTypes: ['*.xlsx', '*.xls', '*.csv', '*.pdf', '*.docx'],
+      maxFileSize: '25MB',
+      isRequired: true,
+      fileDescription: 'Upload raw data files for processing. Accepted formats include Excel spreadsheets, CSV files, PDF documents, and Word documents.'
+    },
+    instanceTaskFiles: [
+      {
+        instanceFileId: 101,
+        version: 1,
+        fileName: 'raw_data_sample.xlsx',
+        filePath: '/uploads/raw_data_sample.xlsx',
+        fileSize: 1536000,
+        actionType: 'UPLOAD',
+        fileStatus: 'COMPLETED',
+        fileCommentary: 'Initial raw data upload - sample file',
+        createdBy: 'alice',
+        createdAt: new Date(Date.now() - 1800000).toISOString()
+      }
+    ],
+    queries: [
+      {
+        queryId: 101,
+        queryTitle: 'Data format requirements',
+        queryDescription: 'What specific columns should be included in the raw data file?',
+        queryStatus: 'OPEN',
+        priority: 'MEDIUM',
+        raisedByUsername: 'alice',
+        assignedToUsername: 'bob',
+        createdAt: new Date(Date.now() - 2700000).toISOString()
+      }
+    ]
+  },
+  {
+    instanceTaskId: 21,
     instanceId: 1,
     taskId: 21,
     taskName: 'Upload Financial Data',
