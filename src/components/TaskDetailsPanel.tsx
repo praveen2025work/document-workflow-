@@ -89,6 +89,11 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   const [queryAssignedTo, setQueryAssignedTo] = useState<number | null>(null);
   const [queryResponse, setQueryResponse] = useState('');
   const [reassignTo, setReassignTo] = useState<number | null>(null);
+  
+  // Query conversation states
+  const [selectedQuery, setSelectedQuery] = useState<any>(null);
+  const [conversationOpen, setConversationOpen] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
     if (task) {
@@ -721,51 +726,48 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
     </div>
   );
 
+  const handleViewConversation = async (query: any) => {
+    setSelectedQuery(query);
+    setConversationOpen(true);
+    // In real implementation, fetch conversation here
+    // const conversation = await getQueryConversation(query.id);
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedQuery) return;
+    
+    try {
+      await addQueryMessage(selectedQuery.id, {
+        messageText: newMessage,
+        messageType: 'TEXT',
+        sentByUserId: 1, // Current user
+        sentBy: 'alice' // Current user
+      });
+      setNewMessage('');
+      // Refresh conversation
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
+    }
+  };
+
+  const handleResolveQuery = async (queryId: number) => {
+    try {
+      await updateQueryStatus(queryId, {
+        queryStatus: 'RESOLVED',
+        resolutionNotes: queryResponse,
+        updatedByUserId: 1,
+        updatedBy: 'alice'
+      });
+      toast.success('Query resolved successfully');
+      fetchTaskDetails();
+    } catch (error) {
+      console.error('Error resolving query:', error);
+      toast.error('Failed to resolve query');
+    }
+  };
+
   const renderQuerySection = () => {
-    const [selectedQuery, setSelectedQuery] = useState<any>(null);
-    const [conversationOpen, setConversationOpen] = useState(false);
-    const [newMessage, setNewMessage] = useState('');
-
-    const handleViewConversation = async (query: any) => {
-      setSelectedQuery(query);
-      setConversationOpen(true);
-      // In real implementation, fetch conversation here
-      // const conversation = await getQueryConversation(query.id);
-    };
-
-    const handleSendMessage = async () => {
-      if (!newMessage.trim() || !selectedQuery) return;
-      
-      try {
-        await addQueryMessage(selectedQuery.id, {
-          messageText: newMessage,
-          messageType: 'TEXT',
-          sentByUserId: 1, // Current user
-          sentBy: 'alice' // Current user
-        });
-        setNewMessage('');
-        // Refresh conversation
-      } catch (error) {
-        console.error('Error sending message:', error);
-        toast.error('Failed to send message');
-      }
-    };
-
-    const handleResolveQuery = async (queryId: number) => {
-      try {
-        await updateQueryStatus(queryId, {
-          queryStatus: 'RESOLVED',
-          resolutionNotes: queryResponse,
-          updatedByUserId: 1,
-          updatedBy: 'alice'
-        });
-        toast.success('Query resolved successfully');
-        fetchTaskDetails();
-      } catch (error) {
-        console.error('Error resolving query:', error);
-        toast.error('Failed to resolve query');
-      }
-    };
 
     return (
       <div className="space-y-4">
