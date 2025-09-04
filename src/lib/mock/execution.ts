@@ -671,5 +671,66 @@ export const mockTaskDetails: TaskDetails[] = [
     },
     instanceTaskFiles: [],
     queries: []
+  },
+  // New IN_PROGRESS decision task
+  {
+    instanceTaskId: 10,
+    instanceId: 1,
+    taskId: 24,
+    taskName: 'Review Document',
+    taskType: 'DECISION',
+    status: 'IN_PROGRESS',
+    assignedTo: 1,
+    assignedToUsername: 'alice',
+    startedOn: new Date(Date.now() - 900000).toISOString(),
+    completedOn: null,
+    decisionOutcome: null,
+    workflowName: 'Document Processing',
+    workflowId: 1,
+    taskConfiguration: {
+      decisionType: 'APPROVAL',
+      decisionOptions: ['APPROVE', 'REJECT', 'REQUEST_CHANGES'],
+      requiresComments: true,
+      isRequired: true,
+      fileDescription: 'Review the processed document and make a decision'
+    },
+    reviewFiles: [
+      {
+        instanceFileId: 101,
+        version: 1,
+        fileName: 'raw_data_sample.xlsx',
+        filePath: '/uploads/raw_data_sample.xlsx',
+        fileSize: 1536000,
+        actionType: 'UPLOAD',
+        fileStatus: 'COMPLETED',
+        fileCommentary: 'Initial raw data upload - sample file',
+        createdBy: 'alice',
+        createdAt: new Date(Date.now() - 1800000).toISOString()
+      },
+      {
+        instanceFileId: 102,
+        version: 1,
+        fileName: 'processed_report.pdf',
+        filePath: '/uploads/processed_report.pdf',
+        fileSize: 2048000,
+        actionType: 'GENERATE',
+        fileStatus: 'COMPLETED',
+        fileCommentary: 'Auto-generated report from raw data',
+        createdBy: 'system',
+        createdAt: new Date(Date.now() - 1200000).toISOString()
+      }
+    ],
+    queries: [
+      {
+        queryId: 102,
+        queryTitle: 'Data accuracy verification',
+        queryDescription: 'Please verify the accuracy of the processed data before approval',
+        queryStatus: 'OPEN',
+        priority: 'HIGH',
+        raisedByUsername: 'bob',
+        assignedToUsername: 'alice',
+        createdAt: new Date(Date.now() - 1800000).toISOString()
+      }
+    ]
   }
 ];

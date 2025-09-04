@@ -115,14 +115,14 @@ export const mockUserDashboard: UserDashboard = {
       taskType: 'FILE_UPLOAD'
     },
     {
-      instanceTaskId: 2,
+      instanceTaskId: 10,
       taskName: 'Review Document',
       status: 'IN_PROGRESS',
       assignedTo: 1,
       assignedToUsername: 'alice',
-      workflowName: 'Quality Review',
+      workflowName: 'Document Processing',
       dueDate: '2025-01-08T15:30:00.000Z',
-      instanceId: 2,
+      instanceId: 1,
       taskType: 'DECISION'
     },
     {
