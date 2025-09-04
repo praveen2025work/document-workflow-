@@ -107,43 +107,82 @@ export const mockUserDashboard: UserDashboard = {
       instanceTaskId: 1,
       taskName: 'Upload Raw Data',
       status: 'PENDING',
-      assignedToUsername: 'alice'
+      assignedToUsername: 'alice',
+      workflowName: 'Document Processing',
+      dueDate: '2025-01-10T10:00:00.000Z',
+      instanceId: 1
     },
     {
       instanceTaskId: 2,
       taskName: 'Review Document',
       status: 'PENDING',
-      assignedToUsername: 'alice'
+      assignedToUsername: 'alice',
+      workflowName: 'Quality Review',
+      dueDate: '2025-01-08T15:30:00.000Z',
+      instanceId: 2
     },
     {
       instanceTaskId: 3,
       taskName: 'Process Invoice',
       status: 'IN_PROGRESS',
-      assignedToUsername: 'alice'
+      assignedToUsername: 'alice',
+      workflowName: 'Financial Processing',
+      dueDate: '2025-01-06T12:00:00.000Z',
+      instanceId: 3
     },
     {
       instanceTaskId: 4,
       taskName: 'Update Customer Records',
       status: 'IN_PROGRESS',
-      assignedToUsername: 'alice'
+      assignedToUsername: 'alice',
+      workflowName: 'Customer Management',
+      dueDate: '2025-01-12T09:00:00.000Z',
+      instanceId: 4
     },
     {
       instanceTaskId: 5,
       taskName: 'Final Approval',
       status: 'COMPLETED',
-      assignedToUsername: 'alice'
+      assignedToUsername: 'alice',
+      workflowName: 'Document Processing',
+      dueDate: '2025-01-03T16:00:00.000Z',
+      instanceId: 1
     },
     {
       instanceTaskId: 6,
       taskName: 'Generate Report',
       status: 'COMPLETED',
-      assignedToUsername: 'alice'
+      assignedToUsername: 'alice',
+      workflowName: 'Monthly Report Generation',
+      dueDate: '2025-01-02T14:00:00.000Z',
+      instanceId: 5
     },
     {
       instanceTaskId: 7,
       taskName: 'Quality Check',
       status: 'COMPLETED',
-      assignedToUsername: 'alice'
+      assignedToUsername: 'alice',
+      workflowName: 'Quality Review',
+      dueDate: '2025-01-01T11:00:00.000Z',
+      instanceId: 2
+    },
+    {
+      instanceTaskId: 8,
+      taskName: 'Data Validation',
+      status: 'NOT_STARTED',
+      assignedToUsername: 'alice',
+      workflowName: 'Data Processing',
+      dueDate: '2025-01-15T10:00:00.000Z',
+      instanceId: 6
+    },
+    {
+      instanceTaskId: 9,
+      taskName: 'Security Review',
+      status: 'NOT_STARTED',
+      assignedToUsername: 'alice',
+      workflowName: 'Security Audit',
+      dueDate: '2025-01-20T14:00:00.000Z',
+      instanceId: 7
     }
   ],
   myWorkflows: [
@@ -185,7 +224,9 @@ export const mockAssignableTasks: AssignableTask[] = [
     taskType: "FILE_UPLOAD",
     assignedToUsername: "alice",
     instanceTaskFiles: null,
-    decisionOutcomes: null
+    decisionOutcomes: null,
+    workflowName: "Customer Onboarding",
+    dueDate: "2025-01-07T14:00:00.000Z"
   },
   {
     instanceTaskId: 5,
@@ -200,7 +241,9 @@ export const mockAssignableTasks: AssignableTask[] = [
     taskType: "FILE_UPDATE",
     assignedToUsername: "bob",
     instanceTaskFiles: null,
-    decisionOutcomes: null
+    decisionOutcomes: null,
+    workflowName: "Contract Management",
+    dueDate: "2025-01-09T16:30:00.000Z"
   },
   {
     instanceTaskId: 9,
@@ -215,7 +258,9 @@ export const mockAssignableTasks: AssignableTask[] = [
     taskType: "CONSOLIDATE_FILES",
     assignedToUsername: "charlie",
     instanceTaskFiles: null,
-    decisionOutcomes: null
+    decisionOutcomes: null,
+    workflowName: "Financial Reporting",
+    dueDate: "2025-01-05T17:00:00.000Z"
   },
   {
     instanceTaskId: 13,
@@ -230,7 +275,9 @@ export const mockAssignableTasks: AssignableTask[] = [
     taskType: "FILE_UPLOAD",
     assignedToUsername: "alice",
     instanceTaskFiles: null,
-    decisionOutcomes: null
+    decisionOutcomes: null,
+    workflowName: "Invoice Processing",
+    dueDate: "2025-01-03T18:00:00.000Z"
   },
   {
     instanceTaskId: 20,
@@ -245,7 +292,9 @@ export const mockAssignableTasks: AssignableTask[] = [
     taskType: "DECISION",
     assignedToUsername: "diana",
     instanceTaskFiles: null,
-    decisionOutcomes: null
+    decisionOutcomes: null,
+    workflowName: "Budget Approval",
+    dueDate: "2025-01-11T12:00:00.000Z"
   },
   {
     instanceTaskId: 25,
@@ -260,7 +309,9 @@ export const mockAssignableTasks: AssignableTask[] = [
     taskType: "FILE_UPDATE",
     assignedToUsername: "bob",
     instanceTaskFiles: null,
-    decisionOutcomes: null
+    decisionOutcomes: null,
+    workflowName: "HR Management",
+    dueDate: "2025-01-08T10:00:00.000Z"
   },
   {
     instanceTaskId: 30,
@@ -275,6 +326,8 @@ export const mockAssignableTasks: AssignableTask[] = [
     taskType: "DECISION",
     assignedToUsername: "eve",
     instanceTaskFiles: null,
-    decisionOutcomes: null
+    decisionOutcomes: null,
+    workflowName: "Quality Control",
+    dueDate: "2025-01-13T15:00:00.000Z"
   }
 ];
