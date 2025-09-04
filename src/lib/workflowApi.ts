@@ -22,7 +22,8 @@ import {
 
 // 1. Create Workflow
 export const createWorkflow = async (workflowData: CreateWorkflowDto): Promise<Workflow> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Creating workflow in environment:', config.app.env);
     const newWorkflow: Workflow = {
       ...workflowData,
       workflowId: Math.floor(Math.random() * 1000) + 10,
@@ -66,7 +67,8 @@ export const createWorkflow = async (workflowData: CreateWorkflowDto): Promise<W
 
 // 2. Get Workflow by ID
 export const getWorkflowById = async (workflowId: number): Promise<Workflow> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Using mock workflow by ID data for environment:', config.app.env);
     const workflow = mockWorkflows.find((w) => w.workflowId === workflowId);
     if (workflow) {
       return Promise.resolve(workflow);
@@ -79,7 +81,8 @@ export const getWorkflowById = async (workflowId: number): Promise<Workflow> => 
 
 // 3. Get All Workflows
 export const getAllWorkflows = async (page = 0, size = 20): Promise<PaginatedWorkflowsResponse> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Using mock all workflows data for environment:', config.app.env);
     return Promise.resolve(mockPaginatedWorkflows);
   }
   const response = await api.get<PaginatedWorkflowsResponse>('/workflows', {
@@ -89,19 +92,66 @@ export const getAllWorkflows = async (page = 0, size = 20): Promise<PaginatedWor
 };
 
 // New API functions
-export const getApiWorkflows = async (params: { page: number; size: number; isActive: 'Y' | 'N' }): Promise<ApiWorkflowApiResponse> => {
+export const getApiWorkflows = async (params?: { page?: number; size?: number; isActive?: 'Y' | 'N' }): Promise<ApiWorkflowApiResponse> => {
+  // Use mock data for preview/mock environments or when not in dev/prod
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Using mock API workflows data for environment:', config.app.env);
+    // Convert mock workflows to API format
+    const apiWorkflows: ApiWorkflow[] = mockWorkflows.map(w => ({
+      workflowId: w.workflowId,
+      name: w.name,
+      description: w.description,
+      isActive: w.isActive,
+      createdBy: w.createdBy,
+      createdOn: w.createdOn,
+      updatedBy: w.updatedBy,
+      updatedOn: w.updatedOn,
+    }));
+    
+    // Filter by isActive if provided
+    let filteredWorkflows = apiWorkflows;
+    if (params?.isActive) {
+      filteredWorkflows = apiWorkflows.filter(workflow => workflow.isActive === params.isActive);
+    }
+    
+    return Promise.resolve({
+      workflows: filteredWorkflows,
+      totalElements: filteredWorkflows.length,
+      totalPages: 1,
+      size: params?.size || 10,
+      number: params?.page || 0,
+    });
+  }
+  
   const response = await api.get('/workflows', { params });
   return response.data;
 };
 
 export const createApiWorkflow = async (workflow: NewApiWorkflow): Promise<ApiWorkflow> => {
+  // Use mock data for preview/mock environments or when not in dev/prod
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Creating API workflow in environment:', config.app.env);
+    const newWorkflow: ApiWorkflow = {
+      workflowId: Math.max(...mockWorkflows.map(w => w.workflowId)) + 1,
+      name: workflow.name,
+      description: workflow.description,
+      isActive: 'Y',
+      createdBy: 'mock@company.com',
+      createdOn: new Date().toISOString(),
+      updatedBy: null,
+      updatedOn: null,
+    };
+    return Promise.resolve(newWorkflow);
+  }
+  
   const response = await api.post('/workflows', workflow);
   return response.data;
 };
 
 // 4. Update Workflow
 export const updateWorkflow = async (workflowId: number, workflowData: UpdateWorkflowDto): Promise<Workflow> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Updating workflow in environment:', config.app.env);
     const index = mockWorkflows.findIndex((w) => w.workflowId === workflowId);
     if (index !== -1) {
       mockWorkflows[index] = {
@@ -119,7 +169,8 @@ export const updateWorkflow = async (workflowId: number, workflowData: UpdateWor
 
 // 5. Toggle Workflow Status
 export const toggleWorkflowStatus = async (workflowId: number, isActive: 'Y' | 'N'): Promise<Workflow> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Toggling workflow status in environment:', config.app.env);
     const index = mockWorkflows.findIndex((w) => w.workflowId === workflowId);
     if (index !== -1) {
       mockWorkflows[index].isActive = isActive;
@@ -136,7 +187,8 @@ export const toggleWorkflowStatus = async (workflowId: number, isActive: 'Y' | '
 
 // 6. Add Task to Workflow
 export const addTaskToWorkflow = async (workflowId: number, taskData: CreateTaskDto): Promise<WorkflowTask> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Adding task to workflow in environment:', config.app.env);
     const workflow = mockWorkflows.find((w) => w.workflowId === workflowId);
     if (workflow) {
       const newTask: WorkflowTask = {
@@ -160,7 +212,8 @@ export const addTaskToWorkflow = async (workflowId: number, taskData: CreateTask
 
 // 7. Update Task
 export const updateTask = async (workflowId: number, taskId: number, taskData: UpdateTaskDto): Promise<WorkflowTask> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Updating task in environment:', config.app.env);
     const workflow = mockWorkflows.find((w) => w.workflowId === workflowId);
     const taskIndex = workflow?.tasks?.findIndex((t) => t.taskId === taskId) ?? -1;
     if (workflow && taskIndex !== -1) {
@@ -177,7 +230,8 @@ export const updateTask = async (workflowId: number, taskId: number, taskData: U
 
 // 8. Add Role to Workflow
 export const addRoleToWorkflow = async (workflowId: number, roleData: AddRoleDto): Promise<WorkflowRole> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Adding role to workflow in environment:', config.app.env);
     const workflow = mockWorkflows.find((w) => w.workflowId === workflowId);
     if (workflow) {
       const newRole: WorkflowRole = {
@@ -198,7 +252,8 @@ export const addRoleToWorkflow = async (workflowId: number, roleData: AddRoleDto
 
 // 9. Search Workflows
 export const searchWorkflows = async (name: string, isActive: 'Y' | 'N', page = 0, size = 10): Promise<PaginatedWorkflowsResponse> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Searching workflows in environment:', config.app.env);
     const filteredWorkflows = mockWorkflows.filter(
       (w) =>
         w.name.toLowerCase().includes(name.toLowerCase()) &&
@@ -219,7 +274,8 @@ export const searchWorkflows = async (name: string, isActive: 'Y' | 'N', page = 
 
 // 10. Delete Workflow
 export const deleteWorkflow = async (workflowId: number): Promise<DeleteWorkflowResponse> => {
-  if (config.app.isMock) {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Deleting workflow in environment:', config.app.env);
     const index = mockWorkflows.findIndex((w) => w.workflowId === workflowId);
     if (index !== -1) {
       mockWorkflows.splice(index, 1);

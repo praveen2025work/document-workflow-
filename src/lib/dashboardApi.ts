@@ -1,10 +1,12 @@
 import { api } from './api';
 import { UserDashboard, AssignableTask } from '@/types/dashboard';
 import { mockUserDashboard, mockAssignableTasks } from './mock/dashboard';
+import { config } from './config';
 
 export const getUserDashboard = async (userId: number): Promise<UserDashboard> => {
-  // Use mock data in development
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'development') {
+  // Use mock data for preview/mock environments or when not in dev/prod
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Using mock dashboard data for environment:', config.app.env);
     return Promise.resolve(mockUserDashboard);
   }
   
@@ -13,8 +15,9 @@ export const getUserDashboard = async (userId: number): Promise<UserDashboard> =
 };
 
 export const getAssignableTasks = async (userId: number): Promise<AssignableTask[]> => {
-  // Use mock data in development
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'development') {
+  // Use mock data for preview/mock environments or when not in dev/prod
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Using mock assignable tasks data for environment:', config.app.env);
     return Promise.resolve(mockAssignableTasks);
   }
   
@@ -23,9 +26,9 @@ export const getAssignableTasks = async (userId: number): Promise<AssignableTask
 };
 
 export const assignTask = async (instanceTaskId: number, userId: number): Promise<void> => {
-  // Mock assignment in development
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'development') {
-    console.log(`Mock: Assigning task ${instanceTaskId} to user ${userId}`);
+  // Mock assignment for preview/mock environments or when not in dev/prod
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log(`Mock: Assigning task ${instanceTaskId} to user ${userId} in environment:`, config.app.env);
     return Promise.resolve();
   }
   
