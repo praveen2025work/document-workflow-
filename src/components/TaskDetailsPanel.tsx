@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { 
   Upload, 
@@ -720,163 +721,343 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
     </div>
   );
 
-  const renderQuerySection = () => (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Create New Query</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <Label htmlFor="query-title" className="text-xs">Query Title</Label>
-            <Input
-              id="query-title"
-              value={queryTitle}
-              onChange={(e) => setQueryTitle(e.target.value)}
-              placeholder="Enter query title..."
-              className="mt-1 h-8 text-sm"
-            />
-          </div>
+  const renderQuerySection = () => {
+    const [selectedQuery, setSelectedQuery] = useState<any>(null);
+    const [conversationOpen, setConversationOpen] = useState(false);
+    const [newMessage, setNewMessage] = useState('');
 
-          <div>
-            <Label htmlFor="query-description" className="text-xs">Query Description</Label>
-            <Textarea
-              id="query-description"
-              value={queryDescription}
-              onChange={(e) => setQueryDescription(e.target.value)}
-              placeholder="Describe your query in detail..."
-              className="mt-1 text-sm"
-              rows={3}
-            />
-          </div>
+    const handleViewConversation = async (query: any) => {
+      setSelectedQuery(query);
+      setConversationOpen(true);
+      // In real implementation, fetch conversation here
+      // const conversation = await getQueryConversation(query.id);
+    };
 
-          <div className="grid grid-cols-2 gap-2">
+    const handleSendMessage = async () => {
+      if (!newMessage.trim() || !selectedQuery) return;
+      
+      try {
+        await addQueryMessage(selectedQuery.id, {
+          messageText: newMessage,
+          messageType: 'TEXT',
+          sentByUserId: 1, // Current user
+          sentBy: 'alice' // Current user
+        });
+        setNewMessage('');
+        // Refresh conversation
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast.error('Failed to send message');
+      }
+    };
+
+    const handleResolveQuery = async (queryId: number) => {
+      try {
+        await updateQueryStatus(queryId, {
+          queryStatus: 'RESOLVED',
+          resolutionNotes: queryResponse,
+          updatedByUserId: 1,
+          updatedBy: 'alice'
+        });
+        toast.success('Query resolved successfully');
+        fetchTaskDetails();
+      } catch (error) {
+        console.error('Error resolving query:', error);
+        toast.error('Failed to resolve query');
+      }
+    };
+
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Create New Query</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             <div>
-              <Label htmlFor="query-priority" className="text-xs">Priority</Label>
-              <Select value={queryPriority} onValueChange={(value: 'LOW' | 'MEDIUM' | 'HIGH') => setQueryPriority(value)}>
-                <SelectTrigger className="mt-1 h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="LOW">Low</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="HIGH">High</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="query-title" className="text-xs">Query Title</Label>
+              <Input
+                id="query-title"
+                value={queryTitle}
+                onChange={(e) => setQueryTitle(e.target.value)}
+                placeholder="Enter query title..."
+                className="mt-1 h-8 text-sm"
+              />
             </div>
 
             <div>
-              <Label htmlFor="query-assigned-to" className="text-xs">Assign To</Label>
-              <Select value={queryAssignedTo?.toString() || ''} onValueChange={(value) => setQueryAssignedTo(value ? parseInt(value) : null)}>
-                <SelectTrigger className="mt-1 h-8 text-sm">
-                  <SelectValue placeholder="Select user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {workflowUsers.map((user) => (
-                    <SelectItem key={user.userId} value={user.userId.toString()}>
-                      {user.username} ({user.role})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="query-description" className="text-xs">Query Description</Label>
+              <Textarea
+                id="query-description"
+                value={queryDescription}
+                onChange={(e) => setQueryDescription(e.target.value)}
+                placeholder="Describe your query in detail..."
+                className="mt-1 text-sm"
+                rows={3}
+              />
             </div>
-          </div>
 
-          <Button 
-            onClick={handleCreateQuery} 
-            disabled={isLoading || !queryTitle || !queryDescription || !queryAssignedTo}
-            size="sm"
-            className="w-full h-8"
-          >
-            <MessageSquare className="h-3 w-3 mr-2" />
-            Create Query
-          </Button>
-        </CardContent>
-      </Card>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="query-priority" className="text-xs">Priority</Label>
+                <Select value={queryPriority} onValueChange={(value: 'LOW' | 'MEDIUM' | 'HIGH') => setQueryPriority(value)}>
+                  <SelectTrigger className="mt-1 h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="LOW">Low</SelectItem>
+                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                    <SelectItem value="HIGH">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {taskDetails?.queries && taskDetails.queries.length > 0 && (
-        <div>
-          <Label className="text-sm">Existing Queries</Label>
-          <div className="mt-2 space-y-2">
-            {taskDetails.queries.map((query) => (
-              <Card key={query.queryId}>
-                <CardContent className="p-3">
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-sm truncate">{query.queryTitle}</p>
-                          <Badge variant={query.queryStatus === 'OPEN' ? 'destructive' : 'default'} className="text-xs h-5">
-                            {query.queryStatus}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs h-5">{query.priority}</Badge>
+              <div>
+                <Label htmlFor="query-assigned-to" className="text-xs">Assign To</Label>
+                <Select value={queryAssignedTo?.toString() || ''} onValueChange={(value) => setQueryAssignedTo(value ? parseInt(value) : null)}>
+                  <SelectTrigger className="mt-1 h-8 text-sm">
+                    <SelectValue placeholder="Select user" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workflowUsers.map((user) => (
+                      <SelectItem key={user.userId} value={user.userId.toString()}>
+                        {user.username} ({user.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleCreateQuery} 
+              disabled={isLoading || !queryTitle || !queryDescription || !queryAssignedTo}
+              size="sm"
+              className="w-full h-8"
+            >
+              <MessageSquare className="h-3 w-3 mr-2" />
+              Create Query
+            </Button>
+          </CardContent>
+        </Card>
+
+        {taskDetails?.queries && taskDetails.queries.length > 0 && (
+          <div>
+            <Label className="text-sm">Existing Queries</Label>
+            <div className="mt-2 space-y-2">
+              {taskDetails.queries.map((query) => (
+                <Card key={query.queryId}>
+                  <CardContent className="p-3">
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-medium text-sm truncate">{query.queryTitle}</p>
+                            <Badge variant={query.queryStatus === 'OPEN' ? 'destructive' : query.queryStatus === 'RESOLVED' ? 'default' : 'secondary'} className="text-xs h-5">
+                              {query.queryStatus}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs h-5">{query.priority}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{query.queryDescription}</p>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {query.raisedByUsername}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {new Date(query.createdAt).toLocaleDateString()}
+                            </span>
+                            {query.messages && query.messages.length > 0 && (
+                              <span className="flex items-center gap-1">
+                                <MessageSquare className="h-3 w-3" />
+                                {query.messages.length} messages
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{query.queryDescription}</p>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {query.raisedByUsername}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewConversation(query)}
+                          className="h-7 text-xs px-2"
+                        >
+                          <MessageSquare className="h-3 w-3 mr-1" />
+                          Chat
+                        </Button>
+                      </div>
+                      
+                      {query.resolutionNotes && (
+                        <div className="p-2 bg-muted rounded text-xs">
+                          <p className="font-medium">Resolution:</p>
+                          <p>{query.resolutionNotes}</p>
+                        </div>
+                      )}
+
+                      {query.queryStatus === 'OPEN' && (
+                        <div className="space-y-2 pt-2 border-t border-border">
+                          <div>
+                            <Label className="text-xs">Quick Response</Label>
+                            <Textarea
+                              value={queryResponse}
+                              onChange={(e) => setQueryResponse(e.target.value)}
+                              placeholder="Type your response..."
+                              className="mt-1 text-sm"
+                              rows={2}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Select value={reassignTo?.toString() || ''} onValueChange={(value) => setReassignTo(value ? parseInt(value) : null)}>
+                              <SelectTrigger className="h-7 text-xs flex-1">
+                                <SelectValue placeholder="Reassign to..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {workflowUsers.map((user) => (
+                                  <SelectItem key={user.userId} value={user.userId.toString()}>
+                                    {user.username} ({user.role})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button 
+                              size="sm" 
+                              className="h-7 text-xs px-2"
+                              onClick={() => handleResolveQuery(query.queryId)}
+                              disabled={!queryResponse.trim()}
+                            >
+                              Resolve
+                            </Button>
+                            {reassignTo && (
+                              <Button size="sm" variant="outline" className="h-7 text-xs px-2">
+                                Reassign
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Query Conversation Dialog */}
+        <Dialog open={conversationOpen} onOpenChange={setConversationOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                {selectedQuery?.queryTitle} - Conversation
+              </DialogTitle>
+            </DialogHeader>
+            {selectedQuery && (
+              <div className="flex flex-col h-[60vh]">
+                {/* Query Info */}
+                <div className="p-3 bg-muted/30 rounded-lg mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant={selectedQuery.queryStatus === 'OPEN' ? 'destructive' : selectedQuery.queryStatus === 'RESOLVED' ? 'default' : 'secondary'} className="text-xs">
+                      {selectedQuery.queryStatus}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">{selectedQuery.priority}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      Assigned to: {selectedQuery.assignedToUsername}
+                    </span>
+                  </div>
+                  <p className="text-sm">{selectedQuery.queryDescription}</p>
+                </div>
+
+                {/* Messages */}
+                <ScrollArea className="flex-1 mb-4">
+                  <div className="space-y-3 pr-4">
+                    {/* Initial query message */}
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <User className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm">{selectedQuery.raisedByUsername}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(selectedQuery.createdAt).toLocaleString()}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {new Date(query.createdAt).toLocaleDateString()}
-                          </span>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-sm">{selectedQuery.queryDescription}</p>
                         </div>
                       </div>
                     </div>
-                    
-                    {query.resolutionNotes && (
-                      <div className="p-2 bg-muted rounded text-xs">
-                        <p className="font-medium">Resolution:</p>
-                        <p>{query.resolutionNotes}</p>
-                      </div>
-                    )}
 
-                    {query.queryStatus === 'OPEN' && (
-                      <div className="space-y-2 pt-2 border-t border-border">
-                        <div>
-                          <Label className="text-xs">Response</Label>
-                          <Textarea
-                            value={queryResponse}
-                            onChange={(e) => setQueryResponse(e.target.value)}
-                            placeholder="Type your response..."
-                            className="mt-1 text-sm"
-                            rows={2}
-                          />
+                    {/* Mock conversation messages */}
+                    {selectedQuery.messages && selectedQuery.messages.map((message: any, index: number) => (
+                      <div key={index} className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                          <User className="h-4 w-4 text-gray-600" />
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Select value={reassignTo?.toString() || ''} onValueChange={(value) => setReassignTo(value ? parseInt(value) : null)}>
-                            <SelectTrigger className="h-7 text-xs flex-1">
-                              <SelectValue placeholder="Reassign to..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {workflowUsers.map((user) => (
-                                <SelectItem key={user.userId} value={user.userId.toString()}>
-                                  {user.username} ({user.role})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button size="sm" className="h-7 text-xs px-2">
-                            Respond
-                          </Button>
-                          {reassignTo && (
-                            <Button size="sm" variant="outline" className="h-7 text-xs px-2">
-                              Reassign
-                            </Button>
-                          )}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm">{message.sentBy}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(message.sentAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <p className="text-sm">{message.messageText}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {selectedQuery.queryStatus === 'RESOLVED' && selectedQuery.resolutionNotes && (
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm">System</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(selectedQuery.updatedAt).toLocaleString()}
+                            </span>
+                            <Badge variant="default" className="text-xs">Resolved</Badge>
+                          </div>
+                          <div className="bg-green-50 p-3 rounded-lg">
+                            <p className="text-sm">{selectedQuery.resolutionNotes}</p>
+                          </div>
                         </div>
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+                </ScrollArea>
+
+                {/* Message Input */}
+                {selectedQuery.queryStatus !== 'RESOLVED' && (
+                  <div className="flex gap-2">
+                    <Textarea
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type your message..."
+                      className="flex-1"
+                      rows={2}
+                    />
+                    <Button 
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim()}
+                      className="self-end"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Send
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  };
 
   if (!task) return null;
 
@@ -949,62 +1130,41 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
               )}
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="files">Files</TabsTrigger>
-                  <TabsTrigger value="actions">Actions</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="files">Files & Actions</TabsTrigger>
                   <TabsTrigger value="queries">Queries</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="files" className="space-y-4 mt-4">
                   <TaskFileManager
                     workflowTaskFiles={getWorkflowTaskFiles()}
+                    taskDetails={taskDetails}
                     onDownload={handleDownload}
+                    onFileUpload={handleFileUpload}
+                    onFileUpdate={handleFileUpdate}
+                    onConsolidation={handleConsolidation}
+                    onCompleteTask={handleCompleteTask}
+                    selectedFiles={selectedFiles}
+                    setSelectedFiles={setSelectedFiles}
+                    fileCommentary={fileCommentary}
+                    setFileCommentary={setFileCommentary}
+                    selectedSourceFiles={selectedSourceFiles}
+                    setSelectedSourceFiles={setSelectedSourceFiles}
+                    updateFiles={updateFiles}
+                    setUpdateFiles={setUpdateFiles}
+                    consolidationFiles={consolidationFiles}
+                    setConsolidationFiles={setConsolidationFiles}
+                    outputFileName={outputFileName}
+                    setOutputFileName={setOutputFileName}
+                    decisionOutcome={decisionOutcome}
+                    setDecisionOutcome={setDecisionOutcome}
+                    decisionComments={decisionComments}
+                    setDecisionComments={setDecisionComments}
+                    isLoading={isLoading}
                     onViewVersions={(taskFileId) => {
                       console.log('View versions for task file:', taskFileId);
                     }}
                   />
-                </TabsContent>
-
-                <TabsContent value="actions" className="space-y-4 mt-4">
-                  {taskDetails.taskType === 'FILE_UPLOAD' && renderFileUploadActions()}
-                  {taskDetails.taskType === 'FILE_UPDATE' && renderFileUpdateActions()}
-                  {taskDetails.taskType === 'FILE_CONSOLIDATE' && renderConsolidationActions()}
-                  {taskDetails.taskType === 'DECISION' && renderDecisionActions()}
-                  
-                  {taskDetails.taskType === 'FILE_DOWNLOAD' && taskDetails.availableFiles && (
-                    <div className="space-y-4">
-                      <Label>Available Downloads</Label>
-                      <div className="space-y-2">
-                        {Object.entries(groupFilesByName(taskDetails.availableFiles)).map(([fileName, versions]) =>
-                          renderFileWithVersions(fileName, versions)
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Show existing files for completed tasks */}
-                  {taskDetails.instanceTaskFiles && taskDetails.instanceTaskFiles.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Task Files</Label>
-                      {Object.entries(groupFilesByName(taskDetails.instanceTaskFiles)).map(([fileName, versions]) =>
-                        renderFileWithVersions(fileName, versions)
-                      )}
-                    </div>
-                  )}
-
-                  {/* Complete Task Button */}
-                  {taskDetails.status === 'IN_PROGRESS' && taskDetails.taskType !== 'DECISION' && (
-                    <div className="pt-4 border-t border-border">
-                      <Button 
-                        onClick={handleCompleteTask} 
-                        disabled={isLoading}
-                        className="w-full"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Mark as Completed
-                      </Button>
-                    </div>
-                  )}
                 </TabsContent>
 
                 <TabsContent value="queries" className="mt-4">
