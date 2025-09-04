@@ -39,8 +39,14 @@ const DashboardPage: NextPage = () => {
     try {
       const response = await getUserDashboard(user.userId);
       setDashboardData(response);
+      console.log('Dashboard data loaded successfully:', response);
     } catch (error) {
+      console.error('Error fetching dashboard data:', error);
       toast.error('Failed to fetch dashboard data.');
+      // Fallback to mock data if API fails
+      const { mockUserDashboard } = await import('@/lib/mock/dashboard');
+      setDashboardData(mockUserDashboard);
+      console.log('Using fallback mock data:', mockUserDashboard);
     } finally {
       setIsLoading(false);
     }

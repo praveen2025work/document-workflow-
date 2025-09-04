@@ -1,18 +1,27 @@
 // Environment configuration
 console.log('NEXT_PUBLIC_CO_DEV_ENV:', process.env.NEXT_PUBLIC_CO_DEV_ENV);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('Window location:', typeof window !== 'undefined' ? window.location.hostname : 'server-side');
+
+// Detect if we're in preview environment
+const isPreviewEnvironment = typeof window !== 'undefined' && 
+  (window.location.hostname.includes('preview.co.dev') || 
+   window.location.hostname.includes('localhost') ||
+   window.location.hostname.includes('127.0.0.1'));
+
 export const config = {
   app: {
     env: process.env.NEXT_PUBLIC_CO_DEV_ENV || 'local',
     name: 'Workflow Designer',
     version: '1.0.0',
-    isMock: process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock',
+    isMock: process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock' || isPreviewEnvironment || process.env.NODE_ENV === 'development',
   },
   api: {
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api',
     userServiceUrl: process.env.NEXT_PUBLIC_USER_INFO_SERVICE_URL || 'http://localhost:3001/api/user',
   },
   features: {
-    debug: process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true',
+    debug: process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true' || isPreviewEnvironment,
     analytics: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',
   },
   theme: {
@@ -20,6 +29,7 @@ export const config = {
   },
   isDevelopment: process.env.NODE_ENV === 'development',
   isProduction: process.env.NODE_ENV === 'production',
+  isPreview: isPreviewEnvironment,
 };
 
 // Environment-specific configurations

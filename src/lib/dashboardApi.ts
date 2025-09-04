@@ -5,7 +5,19 @@ import { config } from './config';
 
 export const getUserDashboard = async (userId: number): Promise<UserDashboard> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  console.log('Dashboard API - Environment check:', {
+    isMock: config.app.isMock,
+    isPreview: config.isPreview,
+    env: config.app.env,
+    isDevelopment: config.isDevelopment,
+    shouldUseMock
+  });
+  
+  if (shouldUseMock) {
     console.log('Using mock dashboard data for environment:', config.app.env);
     console.log('Mock dashboard data:', mockUserDashboard);
     return Promise.resolve(mockUserDashboard);
@@ -18,7 +30,11 @@ export const getUserDashboard = async (userId: number): Promise<UserDashboard> =
 
 export const getAssignableTasks = async (userId: number): Promise<AssignableTask[]> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log('Using mock assignable tasks data for environment:', config.app.env);
     return Promise.resolve(mockAssignableTasks);
   }
@@ -29,7 +45,11 @@ export const getAssignableTasks = async (userId: number): Promise<AssignableTask
 
 export const assignTask = async (instanceTaskId: number, userId: number): Promise<void> => {
   // Mock assignment for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log(`Mock: Assigning task ${instanceTaskId} to user ${userId} in environment:`, config.app.env);
     return Promise.resolve();
   }
