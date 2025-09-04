@@ -332,6 +332,25 @@ const CanvasWorkflowPage: NextPage = () => {
     toast.success('Node deleted!');
   }, [selectedNodeId, setNodes, setEdges]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Backspace' || event.key === 'Delete') {
+        if (selectedNodeId) {
+          handleDeleteNode();
+        }
+        if (selectedEdgeId) {
+          handleDeleteEdge();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedNodeId, selectedEdgeId, handleDeleteNode, handleDeleteEdge]);
+
   const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) || null, [nodes, selectedNodeId]);
 
   const nodeTypes = useMemo(() => ({ start: WorkflowNode, end: WorkflowNode, action: WorkflowNode, decision: WorkflowNode }), []);
@@ -345,16 +364,26 @@ const CanvasWorkflowPage: NextPage = () => {
         {isDeploying ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />Deploying...</> : <><Play className="mr-2 h-4 w-4" />Deploy</>}
       </Button>
       {selectedNodeId && !['start', 'end'].includes(selectedNodeId) && (
-        <Button variant="outline" size="sm" onClick={handleDeleteNode} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
-          <Trash2 className="mr-2 h-4 w-4" />Delete Node
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={handleDeleteNode} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete Node (or press Delete)</TooltipContent>
+        </Tooltip>
       )}
       {selectedEdgeId && (
         <>
           <Button variant="outline" size="sm" onClick={handleToggleEdgeType}>Toggle Type</Button>
-          <Button variant="outline" size="sm" onClick={handleDeleteEdge} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
-            <Trash2 className="mr-2 h-4 w-4" />Delete Connection
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={handleDeleteEdge} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete Connection (or press Delete)</TooltipContent>
+          </Tooltip>
         </>
       )}
     </>
