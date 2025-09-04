@@ -78,11 +78,12 @@ const DashboardPage: NextPage = () => {
     if (user) {
       fetchDashboardData();
       fetchUsers();
+      fetchAssignableTasks(); // Load assignable tasks by default since "Available Tasks" is the default tab
     }
   }, [user]);
 
   const handleTabChange = (value: string) => {
-    if (value === 'assignable' && assignableTasks.length === 0) {
+    if (value === 'available' && assignableTasks.length === 0) {
       fetchAssignableTasks();
     }
   };
@@ -172,54 +173,104 @@ const DashboardPage: NextPage = () => {
     }
   };
 
-  const renderAssignableTaskList = () => {
-    if (isAssignableTasksLoading) {
-      return <p className="text-muted-foreground">Loading assignable tasks...</p>;
+  const renderAvailableTaskList = () => {
+    const isLoadingTasks = isLoading || isAssignableTasksLoading;
+    
+    if (isLoadingTasks) {
+      return <p className="text-muted-foreground">Loading available tasks...</p>;
     }
-    if (!assignableTasks || assignableTasks.length === 0) {
-      return <p className="text-muted-foreground">No assignable tasks available.</p>;
+
+    // Combine pending tasks assigned to current user and assignable tasks from role-based queue
+    const pendingTasks = dashboardData?.myTasks.filter(t => t.status === 'PENDING') || [];
+    const availableTasks = assignableTasks || [];
+    
+    if (pendingTasks.length === 0 && availableTasks.length === 0) {
+      return <p className="text-muted-foreground">No available tasks.</p>;
     }
+
     return (
-      <div className="space-y-4">
-        {assignableTasks.map((task) => (
-          <Card key={task.instanceTaskId} className="glass">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {getStatusIcon(task.status)}
-                    <p className="font-semibold text-foreground">{task.taskName}</p>
-                    <Badge variant={getStatusBadgeVariant(task.status)}>{task.status}</Badge>
-                  </div>
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <p>Task Type: <span className="font-medium">{task.taskType}</span></p>
-                    <p>Instance ID: <span className="font-medium">{task.instanceId}</span></p>
-                    <p>Assigned to: <span className="font-medium">{task.assignedToUsername}</span></p>
-                    {task.startedOn && (
-                      <p>Started: <span className="font-medium">{new Date(task.startedOn).toLocaleString()}</span></p>
-                    )}
-                    {task.completedOn && (
-                      <p>Completed: <span className="font-medium">{new Date(task.completedOn).toLocaleString()}</span></p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleOpenAssignDialog(task)}
-                    disabled={task.status === 'COMPLETED'}
-                  >
-                    <UserPlus className="h-4 w-4 mr-1" />
-                    Assign
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleOpenChat(task.instanceTaskId)}>
-                    <MessageSquare className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-6">
+        {/* User's Pending Tasks */}
+        {pendingTasks.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              My Pending Tasks
+            </h4>
+            <div className="space-y-3">
+              {pendingTasks.map((task) => (
+                <Card key={`pending-${task.instanceTaskId}`} className="glass border-l-4 border-l-blue-500">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        {getStatusIcon(task.status)}
+                        <p className="font-semibold text-foreground">{task.taskName}</p>
+                        <Badge variant="secondary">ASSIGNED TO ME</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Assigned to: {task.assignedToUsername}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={() => handlePickUpTask(task.instanceTaskId)}>
+                        Pick Up
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleOpenChat(task.instanceTaskId)}>
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Role-based Assignable Tasks */}
+        {availableTasks.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Role-based Available Tasks
+            </h4>
+            <div className="space-y-3">
+              {availableTasks.map((task) => (
+                <Card key={`assignable-${task.instanceTaskId}`} className="glass border-l-4 border-l-green-500">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {getStatusIcon(task.status)}
+                          <p className="font-semibold text-foreground">{task.taskName}</p>
+                          <Badge variant={getStatusBadgeVariant(task.status)}>{task.status}</Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>Task Type: <span className="font-medium">{task.taskType}</span></p>
+                          <p>Instance ID: <span className="font-medium">{task.instanceId}</span></p>
+                          <p>Currently assigned to: <span className="font-medium">{task.assignedToUsername}</span></p>
+                          {task.startedOn && (
+                            <p>Started: <span className="font-medium">{new Date(task.startedOn).toLocaleString()}</span></p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleOpenAssignDialog(task)}
+                          disabled={task.status === 'COMPLETED'}
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Assign to Me
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleOpenChat(task.instanceTaskId)}>
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -262,15 +313,22 @@ const DashboardPage: NextPage = () => {
     );
   };
 
+  const handleRefreshAll = async () => {
+    await Promise.all([
+      fetchDashboardData(),
+      fetchAssignableTasks()
+    ]);
+  };
+
   // Header actions for dashboard
   const headerActions = (
     <Button 
-      onClick={fetchDashboardData} 
+      onClick={handleRefreshAll} 
       variant="outline" 
       size="sm"
-      disabled={isLoading}
+      disabled={isLoading || isAssignableTasksLoading}
     >
-      <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+      <RefreshCw className={`mr-2 h-4 w-4 ${(isLoading || isAssignableTasksLoading) ? 'animate-spin' : ''}`} />
       Refresh
     </Button>
   );
@@ -289,20 +347,22 @@ const DashboardPage: NextPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Tabs defaultValue="pending" className="w-full" onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-4 glass">
-                <TabsTrigger value="pending">Pending</TabsTrigger>
+            <Tabs defaultValue="available" className="w-full" onValueChange={handleTabChange}>
+              <TabsList className="grid w-full grid-cols-3 glass">
+                <TabsTrigger value="available">Available Tasks</TabsTrigger>
                 <TabsTrigger value="in_progress">In Progress</TabsTrigger>
                 <TabsTrigger value="completed">Completed</TabsTrigger>
-                <TabsTrigger value="assignable">Assignable Tasks</TabsTrigger>
               </TabsList>
-              <TabsContent value="pending">
+              <TabsContent value="available">
                 <Card className="glass">
                   <CardHeader>
-                    <CardTitle className="text-foreground">Pending Tasks</CardTitle>
+                    <CardTitle className="text-foreground flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      Available Tasks
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {renderTaskList(dashboardData?.myTasks.filter(t => t.status === 'PENDING') || [], 'pending')}
+                    {renderAvailableTaskList()}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -326,19 +386,7 @@ const DashboardPage: NextPage = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-              <TabsContent value="assignable">
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle className="text-foreground flex items-center gap-2">
-                      <UserPlus className="h-5 w-5" />
-                      Assignable Tasks
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {renderAssignableTaskList()}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+
             </Tabs>
           </motion.div>
         </div>
