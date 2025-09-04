@@ -35,29 +35,30 @@ import { Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { getCalendars, createCalendarWithDays } from '@/lib/calendarApi';
-import { PaginatedCalendarsResponse, CreateCalendarDto } from '@/types/calendar';
+import { CalendarApiResponse, NewCalendarWithDays, Calendar as CalendarType, Recurrence, CalendarDay } from '@/types/calendar';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 const CalendarManager: React.FC = () => {
-  const [calendarsResponse, setCalendarsResponse] = useState<PaginatedCalendarsResponse | null>(null);
+  const [calendarsResponse, setCalendarsResponse] = useState<CalendarApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
-  const [newCalendar, setNewCalendar] = useState<Omit<CreateCalendarDto, 'createdBy' | 'calendarDays'>>({
+  const [newCalendar, setNewCalendar] = useState<Omit<NewCalendarWithDays, 'createdBy' | 'calendarDays'>>({
     calendarName: '',
     description: '',
-    startDate: new Date().toISOString(),
-    endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    startDate: format(new Date(), 'yyyy-MM-dd'),
+    endDate: format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
     recurrence: 'WEEKLY',
   });
+  const [calendarDays, setCalendarDays] = useState<Omit<CalendarDay, 'calendarDayId' | 'calendarId'>[]>([]);
   const { user } = useUser();
 
   const fetchCalendars = async () => {
     try {
       setLoading(true);
-      const response = await getCalendars({ page: 1, size: 10 });
+      const response = await getCalendars({ page: 0, size: 10 });
       setCalendarsResponse(response);
       setError(null);
     } catch (err) {
@@ -81,11 +82,11 @@ const CalendarManager: React.FC = () => {
 
   const handleDateChange = (date: Date | undefined, field: 'startDate' | 'endDate') => {
     if (date) {
-      setNewCalendar((prev) => ({ ...prev, [field]: date.toISOString() }));
+      setNewCalendar((prev) => ({ ...prev, [field]: format(date, 'yyyy-MM-dd') }));
     }
   };
 
-  const handleRecurrenceChange = (value: 'YEARLY' | 'MONTHLY' | 'WEEKLY' | 'DAILY') => {
+  const handleRecurrenceChange = (value: Recurrence) => {
     setNewCalendar((prev) => ({ ...prev, recurrence: value }));
   };
 
@@ -95,10 +96,10 @@ const CalendarManager: React.FC = () => {
       return;
     }
     try {
-      const calendarData: CreateCalendarDto = {
+      const calendarData: NewCalendarWithDays = {
         ...newCalendar,
-        createdBy: user?.email || 'mock.user@workflow.com',
-        calendarDays: [], // Sending empty array as per new API structure
+        createdBy: user?.email || 'system',
+        calendarDays: calendarDays,
       };
       await createCalendarWithDays(calendarData);
       toast.success('Calendar created successfully.');
@@ -106,11 +107,12 @@ const CalendarManager: React.FC = () => {
       setNewCalendar({
         calendarName: '',
         description: '',
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        startDate: format(new Date(), 'yyyy-MM-dd'),
+        endDate: format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
         recurrence: 'WEEKLY',
-      }); // Reset form
-      fetchCalendars(); // Refresh list
+      });
+      setCalendarDays([]);
+      fetchCalendars();
     } catch (error) {
       toast.error('Failed to create calendar.');
       console.error(error);

@@ -15,6 +15,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { WorkflowRole, TaskPriority, FileSelectionMode, YesNo, DecisionOutcome, WorkflowTaskFile } from '@/types/workflow';
+import { uploadFile, createNewFileVersion, consolidateFiles } from '@/lib/fileApi';
+import { useUser } from '@/context/UserContext';
 
 interface PropertiesPanelProps {
   selectedNode: Node<NodeData> | null;
@@ -28,6 +30,7 @@ interface PropertiesPanelProps {
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdateNode, onClose, roles, allNodes = [], edges = [], onUpdateEdges }) => {
   const [formData, setFormData] = useState<Partial<NodeData>>({});
+  const { user } = useUser();
 
   useEffect(() => {
     if (selectedNode) {

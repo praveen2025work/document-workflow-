@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import MainLayout from '@/components/MainLayout';
-import { getWorkflows, createWorkflow } from '@/lib/workflowApi';
+import { getApiWorkflows, createApiWorkflow } from '@/lib/workflowApi';
 import {
   Table,
   TableBody,
@@ -27,23 +27,23 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { PaginatedWorkflowsResponse, WorkflowDto } from '@/types/workflow';
+import { ApiWorkflowApiResponse, NewApiWorkflow, ApiWorkflow } from '@/types/workflow';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
 
 const WorkflowsPage: NextPage = () => {
-  const [workflowsResponse, setWorkflowsResponse] = useState<PaginatedWorkflowsResponse | null>(null);
+  const [workflowsResponse, setWorkflowsResponse] = useState<ApiWorkflowApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
-  const [newWorkflow, setNewWorkflow] = useState({
+  const [newWorkflow, setNewWorkflow] = useState<Omit<NewApiWorkflow, 'createdBy'>>({
     name: '',
     description: '',
     reminderBeforeDueMins: 30,
     minutesAfterDue: 15,
     escalationAfterMins: 60,
     dueInMins: 120,
-    isActive: true,
+    isActive: 'Y',
   });
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,7 +51,7 @@ const WorkflowsPage: NextPage = () => {
   const fetchWorkflows = async () => {
     try {
       setLoading(true);
-      const response = await getWorkflows({ page: 0, size: 100 });
+      const response = await getApiWorkflows({ page: 0, size: 10, isActive: 'Y' });
       setWorkflowsResponse(response);
       setError(null);
     } catch (err) {
@@ -80,11 +80,12 @@ const WorkflowsPage: NextPage = () => {
       return;
     }
     try {
-      await createWorkflow({
+      const workflowToCreate: NewApiWorkflow = {
         ...newWorkflow,
-        isActive: newWorkflow.isActive ? 'Y' : 'N',
+        isActive: newWorkflow.isActive,
         createdBy: user.email,
-      });
+      };
+      await createApiWorkflow(workflowToCreate);
       toast.success('Workflow created successfully.');
       setAddDialogOpen(false);
       fetchWorkflows();

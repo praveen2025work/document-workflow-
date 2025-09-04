@@ -1,29 +1,40 @@
-export interface UserDashboardData {
-  activeTasks: number;
+export interface DashboardSummary {
+  totalTasks: number;
+  pendingTasks: number;
   completedTasks: number;
   overdueTasks: number;
-  notifications: number;
-}
-
-export interface AdminDashboardData {
   totalWorkflows: number;
-  activeInstances: number;
-  totalUsers: number;
-  systemHealth: 'OK' | 'DEGRADED' | 'DOWN';
+  activeWorkflows: number;
+  notifications: number;
+  taskCompletionRate: number;
 }
 
-export interface UserWorkload {
+export interface DashboardTask {
+  instanceTaskId: number;
+  taskName: string;
+  status: string;
+  assignedToUsername: string;
+}
+
+export interface DashboardWorkflow {
+  instanceId: number;
+  workflowName: string;
+  status: string;
+}
+
+export interface DashboardWorkload {
+  userId: number;
+  currentWorkload: number;
+  maxCapacity: number;
+  utilization: number;
+}
+
+export interface UserDashboard {
   userId: number;
   username: string;
-  pendingTasks: number;
-  inProgressTasks: number;
-  completedTasks: number;
-}
-
-export interface UserNotification {
-  notificationId: number;
-  userId: number;
-  message: string;
-  status: 'UNREAD' | 'READ';
-  createdAt: string;
+  userRole: string;
+  summary: DashboardSummary;
+  myTasks: DashboardTask[];
+  myWorkflows: DashboardWorkflow[];
+  workload: DashboardWorkload;
 }

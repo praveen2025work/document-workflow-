@@ -11,6 +11,9 @@ import {
   WorkflowTask,
   WorkflowRole,
   DeleteWorkflowResponse,
+  ApiWorkflow,
+  ApiWorkflowApiResponse,
+  NewApiWorkflow,
 } from '@/types/workflow';
 import {
   mockWorkflows,
@@ -82,6 +85,17 @@ export const getAllWorkflows = async (page = 0, size = 20): Promise<PaginatedWor
   const response = await api.get<PaginatedWorkflowsResponse>('/workflows', {
     params: { pageable: `${page},${size}` },
   });
+  return response.data;
+};
+
+// New API functions
+export const getApiWorkflows = async (params: { page: number; size: number; isActive: 'Y' | 'N' }): Promise<ApiWorkflowApiResponse> => {
+  const response = await api.get('/workflows', { params });
+  return response.data;
+};
+
+export const createApiWorkflow = async (workflow: NewApiWorkflow): Promise<ApiWorkflow> => {
+  const response = await api.post('/workflows', workflow);
   return response.data;
 };
 

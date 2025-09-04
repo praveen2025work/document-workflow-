@@ -1,17 +1,22 @@
-export interface WorkflowRoleDto {
+import { YesNo } from './user';
+
+export interface Role {
   roleId: number;
   roleName: string;
-  isActive: 'Y' | 'N';
+  isActive: YesNo;
   createdBy: string;
-  createdOn: string;
-  updatedBy?: string;
-  updatedOn?: string;
 }
 
-export interface PaginatedRolesResponse {
-  content: WorkflowRoleDto[];
+export interface RoleApiResponse {
+  content: Role[];
   totalElements: number;
   totalPages: number;
   size: number;
   number: number;
+}
+
+export interface NewRole {
+  roleName: string;
+  isActive: YesNo;
+  createdBy: string;
 }

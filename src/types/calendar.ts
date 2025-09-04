@@ -1,30 +1,40 @@
-export interface WorkflowCalendarDayDto {
-  calendarDayId: number;
-  dayDate: string;
-  dayType: 'HOLIDAY' | 'RUNDAY' | 'WEEKEND';
+export type DayType = 'WORKING' | 'HOLIDAY' | 'WEEKEND' | 'RUNDAY';
+export type Recurrence = 'YEARLY' | 'MONTHLY' | 'WEEKLY' | 'DAILY' | 'NONE';
+
+export interface CalendarDay {
+  calendarDayId?: number;
+  calendarId?: number;
+  dayDate: string; // "YYYY-MM-DD"
+  dayType: DayType;
   note?: string;
 }
 
-export interface WorkflowCalendarDto {
+export interface Calendar {
   calendarId: number;
+  calendarName: string;
+  description?: string;
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string; // "YYYY-MM-DD"
+  recurrence: Recurrence;
+  createdBy: string;
+  createdAt: string; // "YYYY-MM-DDTHH:mm:ss"
+  updatedBy?: string | null;
+  updatedAt?: string | null;
+  calendarDays?: CalendarDay[];
+}
+
+export interface NewCalendarWithDays {
   calendarName: string;
   description?: string;
   startDate: string;
   endDate: string;
-  recurrence: 'YEARLY' | 'MONTHLY' | 'WEEKLY' | 'DAILY';
+  recurrence: Recurrence;
   createdBy: string;
-  createdAt: string;
-  updatedBy?: string;
-  updatedAt?: string;
-  calendarDays: WorkflowCalendarDayDto[];
+  calendarDays: Omit<CalendarDay, 'calendarDayId' | 'calendarId'>[];
 }
 
-export type CreateCalendarDto = Omit<WorkflowCalendarDto, 'calendarId' | 'createdAt' | 'updatedAt' | 'calendarDays'> & {
-  calendarDays: Omit<WorkflowCalendarDayDto, 'calendarDayId'>[];
-};
-
-export interface PaginatedCalendarsResponse {
-  content: WorkflowCalendarDto[];
+export interface CalendarApiResponse {
+  content: Calendar[];
   totalElements: number;
   totalPages: number;
   size: number;

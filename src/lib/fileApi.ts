@@ -1,25 +1,8 @@
-import axios from 'axios';
-import { config } from './config';
-import { FileUploadData, FileConsolidationData } from '@/types/file';
-import { mockUploadFile, mockDownloadFile, mockConsolidateFiles } from './mock/files';
+import { api } from './api';
+import { InstanceFile } from '@/types/file';
 
-const api = axios.create({
-  baseURL: config.api.baseUrl,
-});
-
-// Upload a file to the system
-export const uploadFile = async (data: FileUploadData): Promise<any> => {
-  const formData = new FormData();
-  formData.append('file', data.file);
-  formData.append('instanceTaskId', data.instanceTaskId);
-  formData.append('actionType', data.actionType);
-  formData.append('createdBy', data.createdBy);
-
-  if (config.app.isMock) {
-    return mockUploadFile(formData);
-  }
-
-  const response = await api.post('/api/files/upload', formData, {
+export const uploadFile = async (formData: FormData): Promise<InstanceFile> => {
+  const response = await api.post('/files/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -27,24 +10,50 @@ export const uploadFile = async (data: FileUploadData): Promise<any> => {
   return response.data;
 };
 
-// Download a file from the system
 export const downloadFile = async (fileName: string): Promise<Blob> => {
-  if (config.app.isMock) {
-    return mockDownloadFile(fileName);
-  }
-  const response = await api.get(`/api/files/download/${fileName}`, {
+  const response = await api.get(`/files/download/${fileName}`, {
     responseType: 'blob',
   });
   return response.data;
 };
 
-// Consolidate multiple files
-export const consolidateFiles = async (data: FileConsolidationData): Promise<any> => {
-  if (config.app.isMock) {
-    return mockConsolidateFiles(data);
-  }
-  const response = await api.post('/api/files/consolidate', null, {
-    params: data,
+export const consolidateFiles = async (params: {
+  instanceTaskId: string;
+  fileIds: string;
+  createdBy: string;
+}): Promise<void> => {
+  await api.post('/files/consolidate', null, { params });
+};
+
+export const getFileVersions = async (instanceFileId: number): Promise<InstanceFile[]> => {
+  const response = await api.get(`/files/versions/${instanceFileId}`);
+  return response.data;
+};
+
+export const getLatestFileVersion = async (instanceFileId: number): Promise<InstanceFile> => {
+  const response = await api.get(`/files/versions/${instanceFileId}/latest`);
+  return response.data;
+};
+
+export const getSpecificFileVersion = async (instanceFileId: number, version: number): Promise<InstanceFile> => {
+  const response = await api.get(`/files/versions/${instanceFileId}/${version}`);
+  return response.data;
+};
+
+export const createNewFileVersion = async (instanceFileId: number, formData: FormData): Promise<InstanceFile> => {
+  const response = await api.post(`/files/versions/${instanceFileId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
+  return response.data;
+};
+
+export const deleteFileVersion = async (instanceFileId: number, version: number): Promise<void> => {
+  await api.delete(`/files/versions/${instanceFileId}/${version}`);
+};
+
+export const getLatestFilesForTask = async (instanceTaskId: number): Promise<InstanceFile[]> => {
+  const response = await api.get(`/files/task/${instanceTaskId}/latest`);
   return response.data;
 };

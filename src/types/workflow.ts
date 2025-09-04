@@ -189,3 +189,35 @@ export interface DeleteWorkflowResponse {
   workflowId: number;
   deletedAt: string;
 }
+
+// New types for API integration
+export interface ApiWorkflow {
+  workflowId: number;
+  name: string;
+  description: string;
+  reminderBeforeDueMins: number;
+  minutesAfterDue: number;
+  escalationAfterMins: number;
+  dueInMins: number;
+  isActive: YesNo;
+  createdBy: string;
+}
+
+export interface ApiWorkflowApiResponse {
+  content: ApiWorkflow[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+export interface NewApiWorkflow {
+  name: string;
+  description: string;
+  reminderBeforeDueMins: number;
+  minutesAfterDue: number;
+  escalationAfterMins: number;
+  dueInMins: number;
+  isActive: YesNo;
+  createdBy: string;
+}

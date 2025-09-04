@@ -1,14 +1,9 @@
-export type ActionType = 'FILE_UPLOAD' | 'FILE_DOWNLOAD' | 'FILE_UPDATE' | 'CONSOLIDATE_FILES';
-
-export interface FileUploadData {
-  file: File;
-  instanceTaskId: string;
-  actionType: ActionType;
+export interface InstanceFile {
+  instanceFileId: number;
+  version: number;
+  fileName: string;
+  fileSize: number;
+  actionType: string;
   createdBy: string;
-}
-
-export interface FileConsolidationData {
-  instanceTaskId: string;
-  fileIds: string;
-  createdBy: string;
+  createdAt: string;
 }

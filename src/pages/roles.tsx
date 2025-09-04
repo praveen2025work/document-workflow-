@@ -27,11 +27,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { PaginatedRolesResponse, WorkflowRoleDto } from '@/types/role';
+import { Role, RoleApiResponse, NewRole } from '@/types/role';
 import { useUser } from '@/context/UserContext';
 
 const RolesPage: NextPage = () => {
-  const [rolesResponse, setRolesResponse] = useState<PaginatedRolesResponse | null>(null);
+  const [rolesResponse, setRolesResponse] = useState<RoleApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
@@ -43,8 +43,7 @@ const RolesPage: NextPage = () => {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      // Fetch a larger number of roles for effective client-side filtering
-      const response = await getRoles({ page: 0, size: 100 });
+      const response = await getRoles({ page: 0, size: 10, isActive: 'Y' });
       setRolesResponse(response);
       setError(null);
     } catch (err) {
@@ -64,11 +63,12 @@ const RolesPage: NextPage = () => {
       return;
     }
     try {
-      await createRole({
+      const roleToCreate: NewRole = {
         roleName: newRoleName,
         isActive: newRoleIsActive ? 'Y' : 'N',
         createdBy: user.email,
-      });
+      };
+      await createRole(roleToCreate);
       setAddRoleDialogOpen(false);
       setNewRoleName('');
       setNewRoleIsActive(true);
@@ -202,7 +202,7 @@ const RolesPage: NextPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredRoles.map((role: WorkflowRoleDto) => (
+                      {filteredRoles.map((role: Role) => (
                         <TableRow key={role.roleId}>
                           <TableCell className="font-medium">{role.roleName}</TableCell>
                           <TableCell>
@@ -211,7 +211,7 @@ const RolesPage: NextPage = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>{role.createdBy}</TableCell>
-                          <TableCell>{new Date(role.createdOn).toLocaleDateString()}</TableCell>
+                          <TableCell>{new Date().toLocaleDateString()}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

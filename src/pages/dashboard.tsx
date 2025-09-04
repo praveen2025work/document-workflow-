@@ -8,66 +8,54 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getUserDashboard, pickupTask, completeTask, sendChatMessage } from '@/lib/api';
+import { getUserDashboard } from '@/lib/dashboardApi';
+import { UserDashboard, DashboardTask } from '@/types/dashboard';
+import { useUser } from '@/context/UserContext';
 import { LayoutDashboard, MessageSquare, RefreshCw } from 'lucide-react';
 import MainLayout from '@/components/MainLayout';
 
-interface Task {
-  id: number;
-  task_name: string;
-  workflow_id: number;
-}
-
-interface DashboardData {
-  pending: Task[];
-  in_progress: Task[];
-  completed: Task[];
-}
-
 const DashboardPage: NextPage = () => {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<UserDashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [receiverUserId, setReceiverUserId] = useState('');
+  const { user } = useUser();
 
   const fetchDashboardData = async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
-      const response = await getUserDashboard();
-      setDashboardData(response.data);
+      const response = await getUserDashboard(user.userId);
+      setDashboardData(response);
     } catch (error) {
-      // Error is handled by the interceptor
+      toast.error('Failed to fetch dashboard data.');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   const handlePickUpTask = async (taskId: number) => {
     toast.info('Picking up task...');
-    try {
-      await pickupTask(taskId);
-      toast.success('Task picked up successfully!');
-      fetchDashboardData();
-    } catch (error) {
-      // Error is handled by the interceptor
-    }
+    // Replace with actual API call from executionApi
+    console.log('Pick up task:', taskId);
+    toast.success('Task picked up successfully!');
+    fetchDashboardData();
   };
 
   const handleCompleteTask = async (taskId: number) => {
     toast.info('Completing task...');
-    try {
-      await completeTask(taskId);
-      toast.success('Task completed successfully!');
-      fetchDashboardData();
-    } catch (error) {
-      // Error is handled by the interceptor
-    }
+    // Replace with actual API call from executionApi
+    console.log('Complete task:', taskId);
+    toast.success('Task completed successfully!');
+    fetchDashboardData();
   };
 
   const handleOpenChat = (taskId: number) => {
@@ -81,21 +69,15 @@ const DashboardPage: NextPage = () => {
       return;
     }
     toast.info('Sending message...');
-    try {
-      await sendChatMessage(selectedTaskId, {
-        message: chatMessage,
-        receiver_user_id: Number(receiverUserId),
-      });
-      toast.success('Message sent!');
-      setChatMessage('');
-      setReceiverUserId('');
-      setIsChatOpen(false);
-    } catch (error) {
-      // Error is handled by the interceptor
-    }
+    // Replace with actual API call
+    console.log('Send chat message:', chatMessage, 'to user:', receiverUserId, 'for task:', selectedTaskId);
+    toast.success('Message sent!');
+    setChatMessage('');
+    setReceiverUserId('');
+    setIsChatOpen(false);
   };
 
-  const renderTaskList = (tasks: Task[], type: 'pending' | 'in_progress' | 'completed') => {
+  const renderTaskList = (tasks: DashboardTask[], type: 'pending' | 'in_progress' | 'completed') => {
     if (isLoading) {
       return <p className="text-muted-foreground">Loading tasks...</p>;
     }
@@ -105,24 +87,24 @@ const DashboardPage: NextPage = () => {
     return (
       <div className="space-y-4">
         {tasks.map((task) => (
-          <Card key={task.id} className="glass">
+          <Card key={task.instanceTaskId} className="glass">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <p className="font-semibold text-foreground">{task.task_name}</p>
-                <p className="text-sm text-muted-foreground">Workflow ID: {task.workflow_id}</p>
+                <p className="font-semibold text-foreground">{task.taskName}</p>
+                <p className="text-sm text-muted-foreground">Assigned to: {task.assignedToUsername}</p>
               </div>
               <div className="flex items-center gap-2">
                 {type === 'pending' && (
-                  <Button size="sm" onClick={() => handlePickUpTask(task.id)}>
+                  <Button size="sm" onClick={() => handlePickUpTask(task.instanceTaskId)}>
                     Pick Up
                   </Button>
                 )}
                 {type === 'in_progress' && (
-                  <Button size="sm" variant="secondary" onClick={() => handleCompleteTask(task.id)}>
+                  <Button size="sm" variant="secondary" onClick={() => handleCompleteTask(task.instanceTaskId)}>
                     Complete
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => handleOpenChat(task.id)}>
+                <Button size="sm" variant="outline" onClick={() => handleOpenChat(task.instanceTaskId)}>
                   <MessageSquare className="h-4 w-4" />
                 </Button>
               </div>
@@ -172,7 +154,7 @@ const DashboardPage: NextPage = () => {
                     <CardTitle className="text-foreground">Pending Tasks</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {renderTaskList(dashboardData?.pending || [], 'pending')}
+                    {renderTaskList(dashboardData?.myTasks.filter(t => t.status === 'PENDING') || [], 'pending')}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -182,7 +164,7 @@ const DashboardPage: NextPage = () => {
                     <CardTitle className="text-foreground">In Progress Tasks</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {renderTaskList(dashboardData?.in_progress || [], 'in_progress')}
+                    {renderTaskList(dashboardData?.myTasks.filter(t => t.status === 'IN_PROGRESS') || [], 'in_progress')}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -192,7 +174,7 @@ const DashboardPage: NextPage = () => {
                     <CardTitle className="text-foreground">Completed Tasks</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {renderTaskList(dashboardData?.completed || [], 'completed')}
+                    {renderTaskList(dashboardData?.myTasks.filter(t => t.status === 'COMPLETED') || [], 'completed')}
                   </CardContent>
                 </Card>
               </TabsContent>

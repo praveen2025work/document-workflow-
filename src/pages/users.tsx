@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import MainLayout from '@/components/MainLayout';
 import { getUsers, createUser, updateUser, toggleUserStatus, searchUsers } from '@/lib/userApi';
-import { PaginatedUsersResponse, WorkflowUserDto } from '@/types/user';
+import { User, UserApiResponse, NewUser, UpdateUser } from '@/types/user';
 import {
   Table,
   TableBody,
@@ -37,12 +37,12 @@ import { Switch } from "@/components/ui/switch";
 import { useUser } from '@/context/UserContext';
 
 const UsersPage: NextPage = () => {
-  const [usersResponse, setUsersResponse] = useState<PaginatedUsersResponse | null>(null);
+  const [usersResponse, setUsersResponse] = useState<UserApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [isEditUserDialogOpen, setEditUserDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<WorkflowUserDto | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newUser, setNewUser] = useState({
     username: '',
     firstName: '',
@@ -50,7 +50,7 @@ const UsersPage: NextPage = () => {
     email: '',
     isActive: true,
   });
-  const [editingUser, setEditingUser] = useState<Partial<WorkflowUserDto> & { isActive: boolean } | null>(null);
+  const [editingUser, setEditingUser] = useState<Partial<User> & { isActive: boolean } | null>(null);
   const { user: currentUser } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -59,7 +59,7 @@ const UsersPage: NextPage = () => {
       setLoading(true);
       const response = query
         ? await searchUsers({ username: query, firstName: query, page: 0, size: 10 })
-        : await getUsers({ page: 0, size: 10 });
+        : await getUsers({ page: 0, size: 10, isActive: 'Y' });
       setUsersResponse(response);
       setError(null);
     } catch (err) {
@@ -89,11 +89,16 @@ const UsersPage: NextPage = () => {
       return;
     }
     try {
-      await createUser({
-        ...newUser,
+      const userToCreate: NewUser = {
+        username: newUser.username,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
         isActive: newUser.isActive ? 'Y' : 'N',
-        createdBy: currentUser?.email || 'mock.user@workflow.com',
-      });
+        isAdmin: 'N',
+        createdBy: currentUser?.email || 'system',
+      };
+      await createUser(userToCreate);
       setAddUserDialogOpen(false);
       setNewUser({ username: '', firstName: '', lastName: '', email: '', isActive: true });
       fetchUsers(searchQuery);
@@ -102,7 +107,7 @@ const UsersPage: NextPage = () => {
     }
   };
 
-  const handleEditUser = (user: WorkflowUserDto) => {
+  const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setEditingUser({ ...user, isActive: user.isActive === 'Y' });
     setEditUserDialogOpen(true);
@@ -113,13 +118,15 @@ const UsersPage: NextPage = () => {
       return;
     }
     try {
-      const { isActive, ...updateData } = editingUser;
-      await updateUser(String(selectedUser.userId), {
-        ...updateData,
-        updatedBy: currentUser?.email || 'mock.user@workflow.com',
-      });
+      const userToUpdate: UpdateUser = {
+        firstName: editingUser.firstName || '',
+        lastName: editingUser.lastName || '',
+        email: editingUser.email || '',
+      };
+      await updateUser(selectedUser.userId, userToUpdate);
+
       if ((editingUser.isActive ? 'Y' : 'N') !== selectedUser.isActive) {
-        await toggleUserStatus(String(selectedUser.userId), editingUser.isActive ? 'Y' : 'N');
+        await toggleUserStatus(selectedUser.userId, editingUser.isActive ? 'Y' : 'N');
       }
       setEditUserDialogOpen(false);
       setSelectedUser(null);
@@ -251,7 +258,7 @@ const UsersPage: NextPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usersResponse.content.map((user: WorkflowUserDto) => (
+                    {usersResponse.content.map((user: User) => (
                       <TableRow key={user.userId}>
                         <TableCell className="font-medium">{`${user.firstName} ${user.lastName}`}</TableCell>
                         <TableCell>{user.email}</TableCell>

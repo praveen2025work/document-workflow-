@@ -26,13 +26,13 @@ import WorkflowSettings from '@/components/workflow/WorkflowSettings';
 import { NodeType, NodeData } from '@/components/workflow/types';
 import {
   Workflow,
-  WorkflowTask,
   CreateWorkflowDto,
   TaskType,
   createWorkflow,
   getWorkflowById,
   updateWorkflow,
 } from '@/lib/workflowApi';
+import { startWorkflowWithCalendar, startWorkflowWithoutCalendar } from '@/lib/executionApi';
 import { useUser } from '@/context/UserContext';
 
 // Icon components (assuming they are defined elsewhere or here)
@@ -227,54 +227,38 @@ const CanvasWorkflowPage: NextPage = () => {
   };
 
   const handleDeploy = async () => {
-    if (!validateWorkflow() || !workflow) return;
+    if (!validateWorkflow() || !workflow || !user) return;
 
     setIsDeploying(true);
     toast.info('Deploying workflow...');
 
-    const tasksToCreate = nodes
-      .filter(n => n.type !== 'start' && n.type !== 'end')
-      .map((node, index) => {
-        const { data } = node;
-        return {
-          name: data.description || 'Unnamed Task',
-          taskType: (data.taskType || 'FILE_UPLOAD') as TaskType,
-          roleId: data.roleId || 1, // Default to role 1 if not set
-          sequenceOrder: index + 1,
-          expectedCompletion: data.expectedCompletion || 60,
-          // Add other task properties from your form/data model
-          escalationRules: data.escalationRules || "Default escalation",
-          canBeRevisited: data.canBeRevisited || 'N',
-          maxRevisits: data.maxRevisits || 0,
-          fileSelectionMode: data.fileSelectionMode || 'USER_SELECT',
-          taskDescription: data.taskDescription || data.description || '',
-          taskPriority: data.taskPriority || 'MEDIUM',
-          autoEscalationEnabled: data.autoEscalationEnabled || 'N',
-          notificationRequired: data.notificationRequired || 'N',
-          allowNewFiles: data.allowNewFiles || 'Y',
-          fileRetentionDays: data.fileRetentionDays || 30,
-        };
-      });
-
     try {
-      if (workflow.workflowId) {
-        // Update existing workflow
-        const updatePayload = {
-          name: workflow.name,
-          description: workflow.description || '',
-          reminderBeforeDueMins: workflow.reminderBeforeDueMins || 60,
-          minutesAfterDue: workflow.minutesAfterDue || 30,
-          escalationAfterMins: workflow.escalationAfterMins || 120,
-          dueInMins: workflow.dueInMins || 1440,
-          isActive: workflow.isActive || 'Y',
-          calendarId: workflow.calendarId || null,
-          updatedBy: user?.email || 'system',
-        };
-        const updatedWorkflow = await updateWorkflow(workflow.workflowId, updatePayload);
-        // Here you would handle task updates/creations/deletions which is more complex
-        toast.success(`Workflow "${updatedWorkflow.name}" updated successfully!`);
-      } else {
-        // Create new workflow
+      // First, ensure the workflow definition is saved
+      let savedWorkflow = workflow;
+      if (workflow.workflowId === 0) { // Assuming 0 is for a new workflow
+        const tasksToCreate = nodes
+          .filter(n => n.type !== 'start' && n.type !== 'end')
+          .map((node, index) => {
+            const { data } = node;
+            return {
+              name: data.description || 'Unnamed Task',
+              taskType: (data.taskType || 'FILE_UPLOAD') as TaskType,
+              roleId: data.roleId || 1,
+              sequenceOrder: index + 1,
+              expectedCompletion: data.expectedCompletion || 60,
+              escalationRules: data.escalationRules || "Default escalation",
+              canBeRevisited: data.canBeRevisited || 'N',
+              maxRevisits: data.maxRevisits || 0,
+              fileSelectionMode: data.fileSelectionMode || 'USER_SELECT',
+              taskDescription: data.taskDescription || data.description || '',
+              taskPriority: data.taskPriority || 'MEDIUM',
+              autoEscalationEnabled: data.autoEscalationEnabled || 'N',
+              notificationRequired: data.notificationRequired || 'N',
+              allowNewFiles: data.allowNewFiles || 'Y',
+              fileRetentionDays: data.fileRetentionDays || 30,
+            };
+          });
+
         const createPayload: CreateWorkflowDto = {
           name: workflow.name,
           description: workflow.description || 'New workflow from canvas.',
@@ -284,18 +268,39 @@ const CanvasWorkflowPage: NextPage = () => {
           dueInMins: workflow.dueInMins || 1440,
           isActive: 'Y',
           calendarId: workflow.calendarId || null,
-          createdBy: user?.email || 'canvas-user@example.com',
+          createdBy: user.email,
           tasks: tasksToCreate,
           workflowRoles: workflow.workflowRoles || [],
           parameters: workflow.parameters || [],
         };
-        const newWorkflow = await createWorkflow(createPayload);
-        setWorkflow(newWorkflow);
-        toast.success(`Workflow "${newWorkflow.name}" created successfully!`);
+        savedWorkflow = await createWorkflow(createPayload);
+        setWorkflow(savedWorkflow);
+        toast.success(`Workflow "${savedWorkflow.name}" definition saved!`);
       }
+
+      // Now, start the workflow instance
+      toast.info('Starting workflow instance...');
+      if (savedWorkflow.calendarId) {
+        await startWorkflowWithCalendar({
+          workflowId: savedWorkflow.workflowId,
+          startedBy: user.userId,
+          calendarId: savedWorkflow.calendarId,
+          triggeredBy: 'manual',
+          scheduledStartTime: new Date().toISOString(),
+        });
+      } else {
+        await startWorkflowWithoutCalendar({
+          workflowId: savedWorkflow.workflowId,
+          startedBy: user.userId,
+          triggeredBy: 'manual',
+          scheduledStartTime: null,
+        });
+      }
+      toast.success('Workflow instance started successfully!');
+
     } catch (error) {
-      console.error('Failed to save workflow', error);
-      toast.error('Failed to save workflow. Check console for details.');
+      console.error('Failed to deploy workflow', error);
+      toast.error('Failed to deploy workflow. Check console for details.');
     } finally {
       setIsDeploying(false);
     }
