@@ -8,10 +8,10 @@ export const mockQueries: Query[] = [
     queryDescription: "The uploaded file doesn't match the expected format. Can you please clarify the required structure and provide a template?",
     queryStatus: "OPEN",
     priority: "HIGH",
-    raisedByUserId: 1,
-    raisedBy: "alice",
-    assignedToUserId: 2,
-    assignedTo: "bob",
+    raisedByUserId: 2,
+    raisedBy: "bob",
+    assignedToUserId: 1,
+    assignedTo: "alice",
     createdAt: "2025-01-04T10:30:00Z",
     updatedAt: "2025-01-04T10:30:00Z",
     messages: [
@@ -20,8 +20,8 @@ export const mockQueries: Query[] = [
         messageText: "The uploaded file doesn't match the expected format. Can you please clarify the required structure and provide a template?",
         messageType: "TEXT",
         sentAt: "2025-01-04T10:30:00Z",
-        sentByUserId: 1,
-        sentBy: "alice",
+        sentByUserId: 2,
+        sentBy: "bob",
         attachments: [
           {
             id: 1,
@@ -30,8 +30,8 @@ export const mockQueries: Query[] = [
             fileSize: 128000,
             mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             uploadedAt: "2025-01-04T10:30:00Z",
-            uploadedByUserId: 1,
-            uploadedBy: "alice",
+            uploadedByUserId: 2,
+            uploadedBy: "bob",
             description: "Current data format sample"
           }
         ]
@@ -202,26 +202,88 @@ export const mockQueries: Query[] = [
         ]
       }
     ]
+  },
+  {
+    id: 6,
+    instanceTaskId: 2,
+    queryTitle: "Budget approval process",
+    queryDescription: "Need clarification on the new budget approval process for Q1 2025.",
+    queryStatus: "OPEN",
+    priority: "HIGH",
+    raisedByUserId: 3,
+    raisedBy: "charlie",
+    assignedToUserId: 1,
+    assignedTo: "alice",
+    createdAt: "2025-01-04T08:15:00Z",
+    updatedAt: "2025-01-04T08:15:00Z",
+    messages: [
+      {
+        id: 9,
+        messageText: "Need clarification on the new budget approval process for Q1 2025. The previous workflow seems to have changed.",
+        messageType: "TEXT",
+        sentAt: "2025-01-04T08:15:00Z",
+        sentByUserId: 3,
+        sentBy: "charlie",
+        attachments: []
+      }
+    ]
+  },
+  {
+    id: 7,
+    instanceTaskId: 3,
+    queryTitle: "File validation error",
+    queryDescription: "Getting validation errors when uploading financial reports. Need assistance.",
+    queryStatus: "OPEN",
+    priority: "MEDIUM",
+    raisedByUserId: 4,
+    raisedBy: "diana",
+    assignedToUserId: 1,
+    assignedTo: "alice",
+    createdAt: "2025-01-04T12:30:00Z",
+    updatedAt: "2025-01-04T12:30:00Z",
+    messages: [
+      {
+        id: 10,
+        messageText: "Getting validation errors when uploading financial reports. The system says 'Invalid format' but I'm using the standard template.",
+        messageType: "TEXT",
+        sentAt: "2025-01-04T12:30:00Z",
+        sentByUserId: 4,
+        sentBy: "diana",
+        attachments: [
+          {
+            id: 5,
+            fileName: "error_log.txt",
+            filePath: "/uploads/queries/error_log.txt",
+            fileSize: 2048,
+            mimeType: "text/plain",
+            uploadedAt: "2025-01-04T12:30:00Z",
+            uploadedByUserId: 4,
+            uploadedBy: "diana",
+            description: "System error log"
+          }
+        ]
+      }
+    ]
   }
 ];
 
 export const mockQueryStatistics: QueryStatistics = {
   userId: 1,
-  openQueries: 2,
-  resolvedQueries: 8,
+  openQueries: 3,
+  resolvedQueries: 2,
   closedQueries: 1,
-  totalQueries: 11,
+  totalQueries: 7,
   averageResolutionTime: "4.2 hours",
   queriesByPriority: {
     HIGH: 3,
-    MEDIUM: 5,
-    LOW: 2,
+    MEDIUM: 2,
+    LOW: 1,
     CRITICAL: 1
   },
   queriesByStatus: {
-    OPEN: 2,
+    OPEN: 3,
     IN_PROGRESS: 1,
-    RESOLVED: 8,
+    RESOLVED: 2,
     CLOSED: 1
   }
 };
@@ -259,6 +321,20 @@ export const mockQueryConversations: { [queryId: number]: QueryConversation } = 
     queryId: 5,
     messages: mockQueries[4].messages,
     totalMessages: 2,
+    page: 0,
+    size: 20
+  },
+  6: {
+    queryId: 6,
+    messages: mockQueries[5].messages,
+    totalMessages: 1,
+    page: 0,
+    size: 20
+  },
+  7: {
+    queryId: 7,
+    messages: mockQueries[6].messages,
+    totalMessages: 1,
     page: 0,
     size: 20
   }

@@ -28,7 +28,10 @@ import {
   Eye,
   Calendar,
   Target,
-  TrendingUp
+  TrendingUp,
+  Paperclip,
+  Upload,
+  X
 } from 'lucide-react';
 import {
   getQueryDashboard,
@@ -69,6 +72,7 @@ const QueriesPage: NextPage = () => {
   // Response states
   const [responseText, setResponseText] = useState('');
   const [reassignTo, setReassignTo] = useState<number | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const { user } = useUser();
 
@@ -145,6 +149,15 @@ const QueriesPage: NextPage = () => {
     }
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSendResponse = async (queryId: number) => {
     if (!user || !responseText.trim()) {
       toast.error('Please enter a response');
@@ -152,6 +165,19 @@ const QueriesPage: NextPage = () => {
     }
 
     try {
+      // Create mock attachments for selected files
+      const mockAttachments = selectedFiles.map((file, index) => ({
+        id: Date.now() + index,
+        fileName: file.name,
+        filePath: `/uploads/queries/${file.name}`,
+        fileSize: file.size,
+        mimeType: file.type,
+        uploadedAt: new Date().toISOString(),
+        uploadedByUserId: user.userId,
+        uploadedBy: user.username,
+        description: `Attachment: ${file.name}`
+      }));
+
       await addQueryMessage(queryId, {
         messageText: responseText,
         messageType: 'TEXT',
@@ -161,6 +187,8 @@ const QueriesPage: NextPage = () => {
       
       toast.success('Response sent successfully');
       setResponseText('');
+      setSelectedFiles([]);
+      
       // Refresh the selected query to show the new message
       if (selectedQuery) {
         // In a real app, you'd fetch the updated query here
@@ -175,7 +203,7 @@ const QueriesPage: NextPage = () => {
               sentByUserId: user.userId,
               sentBy: user.username,
               sentAt: new Date().toISOString(),
-              attachments: []
+              attachments: mockAttachments
             }
           ]
         });
@@ -610,22 +638,22 @@ const QueriesPage: NextPage = () => {
               {/* Left Panel - Query List */}
               <div className={`${selectedQuery ? 'w-1/5' : 'w-full'} transition-all duration-300`}>
                 <Tabs defaultValue="assigned" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 glass">
-                    <TabsTrigger value="assigned" className="flex items-center gap-2">
+                  <TabsList className={`grid w-full grid-cols-4 glass ${selectedQuery ? 'text-xs' : ''}`}>
+                    <TabsTrigger value="assigned" className={`flex items-center gap-1 ${selectedQuery ? 'text-xs px-1' : 'gap-2'}`}>
                       <Target className="h-4 w-4" />
-                      Assigned ({dashboardData?.assignedToMe.length || 0})
+                      {selectedQuery ? `Assigned (${dashboardData?.assignedToMe.length || 0})` : `Assigned (${dashboardData?.assignedToMe.length || 0})`}
                     </TabsTrigger>
-                    <TabsTrigger value="raised" className="flex items-center gap-2">
+                    <TabsTrigger value="raised" className={`flex items-center gap-1 ${selectedQuery ? 'text-xs px-1' : 'gap-2'}`}>
                       <User className="h-4 w-4" />
-                      Raised ({dashboardData?.raisedByMe.length || 0})
+                      {selectedQuery ? `Raised (${dashboardData?.raisedByMe.length || 0})` : `Raised (${dashboardData?.raisedByMe.length || 0})`}
                     </TabsTrigger>
-                    <TabsTrigger value="open" className="flex items-center gap-2">
+                    <TabsTrigger value="open" className={`flex items-center gap-1 ${selectedQuery ? 'text-xs px-1' : 'gap-2'}`}>
                       <AlertCircle className="h-4 w-4" />
-                      Open ({dashboardData?.openQueries.length || 0})
+                      {selectedQuery ? `Open (${dashboardData?.openQueries.length || 0})` : `Open (${dashboardData?.openQueries.length || 0})`}
                     </TabsTrigger>
-                    <TabsTrigger value="resolved" className="flex items-center gap-2">
+                    <TabsTrigger value="resolved" className={`flex items-center gap-1 ${selectedQuery ? 'text-xs px-1' : 'gap-2'}`}>
                       <CheckCircle className="h-4 w-4" />
-                      Resolved ({dashboardData?.resolvedQueries.length || 0})
+                      {selectedQuery ? `Resolved (${dashboardData?.resolvedQueries.length || 0})` : `Resolved (${dashboardData?.resolvedQueries.length || 0})`}
                     </TabsTrigger>
                   </TabsList>
                   
@@ -820,6 +848,52 @@ const QueriesPage: NextPage = () => {
                               rows={3}
                             />
                           </div>
+                          
+                          {/* File Upload Section */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="file-upload" className="cursor-pointer">
+                                <Button variant="outline" size="sm" asChild>
+                                  <span>
+                                    <Paperclip className="h-4 w-4 mr-2" />
+                                    Attach Files
+                                  </span>
+                                </Button>
+                              </Label>
+                              <input
+                                id="file-upload"
+                                type="file"
+                                multiple
+                                onChange={handleFileSelect}
+                                className="hidden"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
+                              />
+                            </div>
+                            
+                            {selectedFiles.length > 0 && (
+                              <div className="space-y-1">
+                                <Label className="text-sm text-muted-foreground">Selected Files:</Label>
+                                {selectedFiles.map((file, index) => (
+                                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <Upload className="h-3 w-3" />
+                                      <span>{file.name}</span>
+                                      <span className="text-muted-foreground">({(file.size / 1024).toFixed(1)} KB)</span>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => removeFile(index)}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
                           <div className="flex justify-end gap-2">
                             <Button
                               variant="outline"
