@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getUserDashboard, getAssignableTasks, assignTask } from '@/lib/dashboardApi';
 import { UserDashboard, DashboardTask, AssignableTask } from '@/types/dashboard';
 import { useUser } from '@/context/UserContext';
-import { LayoutDashboard, RefreshCw, Clock, CheckCircle, AlertCircle, X, Check } from 'lucide-react';
+import { LayoutDashboard, RefreshCw, Clock, CheckCircle, AlertCircle, X, Check, Play, Pause, UserCheck, Timer, Target, FileText, User } from 'lucide-react';
 import MainLayout from '@/components/MainLayout';
 
 const DashboardPage: NextPage = () => {
@@ -107,13 +107,16 @@ const DashboardPage: NextPage = () => {
     });
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string, isAssigned?: boolean) => {
     switch (status) {
       case 'PENDING':
+        return isAssigned ? 
+          <Timer className="h-4 w-4 text-orange-500" /> : 
+          <Clock className="h-4 w-4 text-yellow-500" />;
       case 'NOT_STARTED':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Pause className="h-4 w-4 text-gray-500" />;
       case 'IN_PROGRESS':
-        return <AlertCircle className="h-4 w-4 text-blue-500" />;
+        return <Play className="h-4 w-4 text-blue-500" />;
       case 'COMPLETED':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       default:
@@ -121,17 +124,61 @@ const DashboardPage: NextPage = () => {
     }
   };
 
-  const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+  const getStatusBadgeVariant = (status: string, isAssigned?: boolean): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case 'PENDING':
+        return isAssigned ? 'default' : 'secondary';
       case 'NOT_STARTED':
-        return 'secondary';
+        return 'outline';
       case 'IN_PROGRESS':
         return 'default';
       case 'COMPLETED':
         return 'outline';
       default:
         return 'secondary';
+    }
+  };
+
+  const getStatusText = (status: string, isAssigned?: boolean) => {
+    switch (status) {
+      case 'PENDING':
+        return isAssigned ? 'ASSIGNED TO ME' : 'PENDING ASSIGNMENT';
+      case 'NOT_STARTED':
+        return 'NOT STARTED';
+      case 'IN_PROGRESS':
+        return 'IN PROGRESS';
+      case 'COMPLETED':
+        return 'COMPLETED';
+      default:
+        return status;
+    }
+  };
+
+  const getPriorityIndicator = (dueDate?: string) => {
+    if (!dueDate) return { color: 'bg-gray-400', label: 'No Priority' };
+    
+    const due = new Date(dueDate);
+    const now = new Date();
+    const diffHours = (due.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (diffHours < 0) return { color: 'bg-red-500', label: 'Overdue' };
+    if (diffHours < 24) return { color: 'bg-orange-500', label: 'High Priority' };
+    if (diffHours < 72) return { color: 'bg-yellow-500', label: 'Medium Priority' };
+    return { color: 'bg-green-500', label: 'Low Priority' };
+  };
+
+  const getTaskTypeIcon = (taskType?: string) => {
+    switch (taskType) {
+      case 'FILE_UPLOAD':
+        return <FileText className="h-4 w-4 text-blue-500" />;
+      case 'FILE_UPDATE':
+        return <FileText className="h-4 w-4 text-purple-500" />;
+      case 'CONSOLIDATE_FILES':
+        return <Target className="h-4 w-4 text-green-600" />;
+      case 'DECISION':
+        return <AlertCircle className="h-4 w-4 text-orange-500" />;
+      default:
+        return <FileText className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -160,75 +207,126 @@ const DashboardPage: NextPage = () => {
     }
 
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Workflow Name</TableHead>
-            <TableHead>Task Name</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Due By</TableHead>
-            <TableHead>Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {allActiveTasks.map((task) => (
-            <TableRow key={`active-${task.instanceTaskId}`}>
-              <TableCell className="font-medium">
-                {task.workflowName || 'Unknown Workflow'}
-              </TableCell>
-              <TableCell>{task.taskName}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(task.status)}
-                  <Badge variant={getStatusBadgeVariant(task.status)}>
-                    {task.status}
-                  </Badge>
-                  {task.isAssigned && (
-                    <Badge variant="secondary" className="text-xs">
-                      MINE
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className={getDueDateIndicator(task.dueDate)}>
-                  {formatDueDate(task.dueDate)}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {!task.isAssigned && (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={() => handleAssignTask(task)}
-                        className="h-8"
-                      >
-                        <Check className="h-3 w-3 mr-1" />
-                        Assign
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRejectTask(task.instanceTaskId)}
-                        className="h-8"
-                      >
-                        <X className="h-3 w-3 mr-1" />
-                        Reject
-                      </Button>
-                    </>
-                  )}
-                  {task.isAssigned && task.status === 'IN_PROGRESS' && (
-                    <Button size="sm" variant="secondary" className="h-8">
-                      In Progress
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
+      <div className="space-y-4">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border/50">
+              <TableHead className="w-[200px]">Workflow</TableHead>
+              <TableHead className="w-[250px]">Task Details</TableHead>
+              <TableHead className="w-[180px]">Status</TableHead>
+              <TableHead className="w-[150px]">Priority</TableHead>
+              <TableHead className="w-[120px]">Due Date</TableHead>
+              <TableHead className="w-[150px]">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {allActiveTasks.map((task) => {
+              const priority = getPriorityIndicator(task.dueDate);
+              return (
+                <TableRow 
+                  key={`active-${task.instanceTaskId}`}
+                  className={`hover:bg-muted/50 transition-colors ${
+                    task.isAssigned ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
+                  }`}
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1 h-8 rounded-full ${task.isAssigned ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                      <div>
+                        <div className="font-semibold text-sm">
+                          {task.workflowName || 'Unknown Workflow'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: {task.instanceId || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getTaskTypeIcon((task as any).taskType)}
+                      <div>
+                        <div className="font-medium text-sm">{task.taskName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {(task as any).taskType || 'General Task'}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(task.status, task.isAssigned)}
+                      <div className="flex flex-col gap-1">
+                        <Badge 
+                          variant={getStatusBadgeVariant(task.status, task.isAssigned)}
+                          className="text-xs"
+                        >
+                          {getStatusText(task.status, task.isAssigned)}
+                        </Badge>
+                        {task.isAssigned && (
+                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            <UserCheck className="h-3 w-3 mr-1" />
+                            MINE
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${priority.color}`} />
+                      <span className="text-xs font-medium">{priority.label}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div className={getDueDateIndicator(task.dueDate)}>
+                        {formatDueDate(task.dueDate)}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      {!task.isAssigned && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAssignTask(task)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Assign
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRejectTask(task.instanceTaskId)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                      {task.isAssigned && task.status === 'IN_PROGRESS' && (
+                        <Badge variant="default" className="text-xs">
+                          <Play className="h-3 w-3 mr-1" />
+                          Working
+                        </Badge>
+                      )}
+                      {task.isAssigned && task.status === 'PENDING' && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Timer className="h-3 w-3 mr-1" />
+                          Ready
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     );
   };
 
@@ -244,45 +342,86 @@ const DashboardPage: NextPage = () => {
     }
 
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Workflow Name</TableHead>
-            <TableHead>Task Name</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Due By</TableHead>
-            <TableHead>Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {completedTasks.map((task) => (
-            <TableRow key={`completed-${task.instanceTaskId}`}>
-              <TableCell className="font-medium">
-                {task.workflowName || 'Unknown Workflow'}
-              </TableCell>
-              <TableCell>{task.taskName}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(task.status)}
-                  <Badge variant={getStatusBadgeVariant(task.status)}>
-                    {task.status}
-                  </Badge>
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className={getDueDateIndicator(task.dueDate)}>
-                  {formatDueDate(task.dueDate)}
-                </span>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline" className="text-xs">
-                  COMPLETED
-                </Badge>
-              </TableCell>
+      <div className="space-y-4">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border/50">
+              <TableHead className="w-[200px]">Workflow</TableHead>
+              <TableHead className="w-[250px]">Task Details</TableHead>
+              <TableHead className="w-[180px]">Status</TableHead>
+              <TableHead className="w-[150px]">Completion</TableHead>
+              <TableHead className="w-[120px]">Due Date</TableHead>
+              <TableHead className="w-[150px]">Result</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {completedTasks.map((task) => {
+              const priority = getPriorityIndicator(task.dueDate);
+              return (
+                <TableRow 
+                  key={`completed-${task.instanceTaskId}`}
+                  className="hover:bg-muted/50 transition-colors bg-green-50/30 dark:bg-green-950/10"
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-8 rounded-full bg-green-500" />
+                      <div>
+                        <div className="font-semibold text-sm">
+                          {task.workflowName || 'Unknown Workflow'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: {task.instanceId || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getTaskTypeIcon('General')}
+                      <div>
+                        <div className="font-medium text-sm">{task.taskName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          General Task
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(task.status)}
+                      <Badge variant="outline" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        COMPLETED
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                        Success
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div className={getDueDateIndicator(task.dueDate)}>
+                        {formatDueDate(task.dueDate)}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Done
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     );
   };
 
@@ -298,45 +437,86 @@ const DashboardPage: NextPage = () => {
     }
 
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Workflow Name</TableHead>
-            <TableHead>Task Name</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Due By</TableHead>
-            <TableHead>Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {upcomingTasks.map((task) => (
-            <TableRow key={`upcoming-${task.instanceTaskId}`}>
-              <TableCell className="font-medium">
-                {task.workflowName || 'Unknown Workflow'}
-              </TableCell>
-              <TableCell>{task.taskName}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(task.status)}
-                  <Badge variant={getStatusBadgeVariant(task.status)}>
-                    NOT STARTED
-                  </Badge>
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className={getDueDateIndicator(task.dueDate)}>
-                  {formatDueDate(task.dueDate)}
-                </span>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline" className="text-xs">
-                  UPCOMING
-                </Badge>
-              </TableCell>
+      <div className="space-y-4">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border/50">
+              <TableHead className="w-[200px]">Workflow</TableHead>
+              <TableHead className="w-[250px]">Task Details</TableHead>
+              <TableHead className="w-[180px]">Status</TableHead>
+              <TableHead className="w-[150px]">Scheduled</TableHead>
+              <TableHead className="w-[120px]">Due Date</TableHead>
+              <TableHead className="w-[150px]">Availability</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {upcomingTasks.map((task) => {
+              const priority = getPriorityIndicator(task.dueDate);
+              return (
+                <TableRow 
+                  key={`upcoming-${task.instanceTaskId}`}
+                  className="hover:bg-muted/50 transition-colors bg-gray-50/30 dark:bg-gray-950/10"
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-8 rounded-full bg-gray-400" />
+                      <div>
+                        <div className="font-semibold text-sm">
+                          {task.workflowName || 'Unknown Workflow'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: {task.instanceId || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getTaskTypeIcon('General')}
+                      <div>
+                        <div className="font-medium text-sm">{task.taskName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          General Task
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(task.status)}
+                      <Badge variant="outline" className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                        <Pause className="h-3 w-3 mr-1" />
+                        NOT STARTED
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-gray-400" />
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                        Scheduled
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div className={getDueDateIndicator(task.dueDate)}>
+                        {formatDueDate(task.dueDate)}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Upcoming
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     );
   };
 
@@ -360,6 +540,20 @@ const DashboardPage: NextPage = () => {
     </Button>
   );
 
+  // Calculate summary statistics
+  const getSummaryStats = () => {
+    if (!dashboardData) return { active: 0, completed: 0, upcoming: 0, assignable: 0 };
+    
+    const active = dashboardData.myTasks.filter(t => t.status === 'PENDING' || t.status === 'IN_PROGRESS').length;
+    const completed = dashboardData.myTasks.filter(t => t.status === 'COMPLETED').length;
+    const upcoming = dashboardData.myTasks.filter(t => t.status === 'NOT_STARTED').length;
+    const assignable = assignableTasks.filter(t => !rejectedTasks.has(t.instanceTaskId)).length;
+    
+    return { active, completed, upcoming, assignable };
+  };
+
+  const stats = getSummaryStats();
+
   return (
     <MainLayout
       title="User Dashboard"
@@ -373,11 +567,79 @@ const DashboardPage: NextPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card className="glass">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Active Tasks</p>
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.active}</p>
+                  </div>
+                  <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                    <Play className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="glass">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</p>
+                  </div>
+                  <div className="h-8 w-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                    <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="glass">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Upcoming</p>
+                    <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.upcoming}</p>
+                  </div>
+                  <div className="h-8 w-8 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="glass">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Available to Assign</p>
+                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.assignable}</p>
+                  </div>
+                  <div className="h-8 w-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+                    <UserCheck className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <Tabs defaultValue="active" className="w-full">
             <TabsList className="grid w-full grid-cols-3 glass">
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="active" className="flex items-center gap-2">
+                <Play className="h-4 w-4" />
+                Active ({stats.active})
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Completed ({stats.completed})
+              </TabsTrigger>
+              <TabsTrigger value="upcoming" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Upcoming ({stats.upcoming})
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="active">
