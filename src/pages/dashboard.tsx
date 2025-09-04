@@ -8,17 +8,27 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getUserDashboard } from '@/lib/dashboardApi';
-import { UserDashboard, DashboardTask } from '@/types/dashboard';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getUserDashboard, getAssignableTasks, assignTask } from '@/lib/dashboardApi';
+import { getUsers } from '@/lib/userApi';
+import { UserDashboard, DashboardTask, AssignableTask } from '@/types/dashboard';
+import { User } from '@/types/user';
 import { useUser } from '@/context/UserContext';
-import { LayoutDashboard, MessageSquare, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, RefreshCw, UserPlus, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import MainLayout from '@/components/MainLayout';
 
 const DashboardPage: NextPage = () => {
   const [dashboardData, setDashboardData] = useState<UserDashboard | null>(null);
+  const [assignableTasks, setAssignableTasks] = useState<AssignableTask[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAssignableTasksLoading, setIsAssignableTasksLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [selectedTaskForAssignment, setSelectedTaskForAssignment] = useState<AssignableTask | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [chatMessage, setChatMessage] = useState('');
   const [receiverUserId, setReceiverUserId] = useState('');
   const { user } = useUser();
@@ -36,11 +46,40 @@ const DashboardPage: NextPage = () => {
     }
   };
 
+  const fetchAssignableTasks = async () => {
+    if (!user) return;
+    setIsAssignableTasksLoading(true);
+    try {
+      const response = await getAssignableTasks(user.userId);
+      setAssignableTasks(response);
+    } catch (error) {
+      toast.error('Failed to fetch assignable tasks.');
+    } finally {
+      setIsAssignableTasksLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getUsers();
+      setUsers(response.users || []);
+    } catch (error) {
+      toast.error('Failed to fetch users.');
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchDashboardData();
+      fetchUsers();
     }
   }, [user]);
+
+  const handleTabChange = (value: string) => {
+    if (value === 'assignable' && assignableTasks.length === 0) {
+      fetchAssignableTasks();
+    }
+  };
 
   const handlePickUpTask = async (taskId: number) => {
     toast.info('Picking up task...');
@@ -75,6 +114,108 @@ const DashboardPage: NextPage = () => {
     setChatMessage('');
     setReceiverUserId('');
     setIsChatOpen(false);
+  };
+
+  const handleOpenAssignDialog = (task: AssignableTask) => {
+    setSelectedTaskForAssignment(task);
+    setSelectedUserId('');
+    setIsAssignDialogOpen(true);
+  };
+
+  const handleAssignTask = async () => {
+    if (!selectedTaskForAssignment || !selectedUserId) {
+      toast.error('Please select a user to assign the task to.');
+      return;
+    }
+    
+    try {
+      await assignTask(selectedTaskForAssignment.instanceTaskId, parseInt(selectedUserId));
+      toast.success('Task assigned successfully!');
+      setIsAssignDialogOpen(false);
+      setSelectedTaskForAssignment(null);
+      setSelectedUserId('');
+      fetchAssignableTasks(); // Refresh the assignable tasks
+    } catch (error) {
+      toast.error('Failed to assign task.');
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'IN_PROGRESS':
+        return <AlertCircle className="h-4 w-4 text-blue-500" />;
+      case 'COMPLETED':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return 'secondary';
+      case 'IN_PROGRESS':
+        return 'default';
+      case 'COMPLETED':
+        return 'outline';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const renderAssignableTaskList = () => {
+    if (isAssignableTasksLoading) {
+      return <p className="text-muted-foreground">Loading assignable tasks...</p>;
+    }
+    if (!assignableTasks || assignableTasks.length === 0) {
+      return <p className="text-muted-foreground">No assignable tasks available.</p>;
+    }
+    return (
+      <div className="space-y-4">
+        {assignableTasks.map((task) => (
+          <Card key={task.instanceTaskId} className="glass">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    {getStatusIcon(task.status)}
+                    <p className="font-semibold text-foreground">{task.taskName}</p>
+                    <Badge variant={getStatusBadgeVariant(task.status)}>{task.status}</Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>Task Type: <span className="font-medium">{task.taskType}</span></p>
+                    <p>Instance ID: <span className="font-medium">{task.instanceId}</span></p>
+                    <p>Assigned to: <span className="font-medium">{task.assignedToUsername}</span></p>
+                    {task.startedOn && (
+                      <p>Started: <span className="font-medium">{new Date(task.startedOn).toLocaleString()}</span></p>
+                    )}
+                    {task.completedOn && (
+                      <p>Completed: <span className="font-medium">{new Date(task.completedOn).toLocaleString()}</span></p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleOpenAssignDialog(task)}
+                    disabled={task.status === 'COMPLETED'}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Assign
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleOpenChat(task.instanceTaskId)}>
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
   };
 
   const renderTaskList = (tasks: DashboardTask[], type: 'pending' | 'in_progress' | 'completed') => {
@@ -142,11 +283,12 @@ const DashboardPage: NextPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 glass">
+            <Tabs defaultValue="pending" className="w-full" onValueChange={handleTabChange}>
+              <TabsList className="grid w-full grid-cols-4 glass">
                 <TabsTrigger value="pending">Pending</TabsTrigger>
                 <TabsTrigger value="in_progress">In Progress</TabsTrigger>
                 <TabsTrigger value="completed">Completed</TabsTrigger>
+                <TabsTrigger value="assignable">Assignable Tasks</TabsTrigger>
               </TabsList>
               <TabsContent value="pending">
                 <Card className="glass">
@@ -175,6 +317,19 @@ const DashboardPage: NextPage = () => {
                   </CardHeader>
                   <CardContent>
                     {renderTaskList(dashboardData?.myTasks.filter(t => t.status === 'COMPLETED') || [], 'completed')}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="assignable">
+                <Card className="glass">
+                  <CardHeader>
+                    <CardTitle className="text-foreground flex items-center gap-2">
+                      <UserPlus className="h-5 w-5" />
+                      Assignable Tasks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {renderAssignableTaskList()}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -213,6 +368,56 @@ const DashboardPage: NextPage = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsChatOpen(false)}>Cancel</Button>
             <Button onClick={handleSendChatMessage}>Send</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+        <DialogContent className="glass border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Assign Task</DialogTitle>
+          </DialogHeader>
+          {selectedTaskForAssignment && (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted/20 rounded-lg">
+                <h4 className="font-semibold text-foreground mb-2">Task Details</h4>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-medium">Name:</span> {selectedTaskForAssignment.taskName}</p>
+                  <p><span className="font-medium">Type:</span> {selectedTaskForAssignment.taskType}</p>
+                  <p><span className="font-medium">Instance ID:</span> {selectedTaskForAssignment.instanceId}</p>
+                  <p><span className="font-medium">Current Assignee:</span> {selectedTaskForAssignment.assignedToUsername}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Status:</span>
+                    {getStatusIcon(selectedTaskForAssignment.status)}
+                    <Badge variant={getStatusBadgeVariant(selectedTaskForAssignment.status)}>
+                      {selectedTaskForAssignment.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="userSelect" className="text-foreground">Assign to User</Label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger className="glass border-border">
+                    <SelectValue placeholder="Select a user to assign this task to" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.userId} value={user.userId.toString()}>
+                        {user.username} ({user.firstName} {user.lastName})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAssignTask} disabled={!selectedUserId}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Assign Task
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

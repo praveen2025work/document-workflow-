@@ -16,6 +16,22 @@ export interface DashboardTask {
   assignedToUsername: string;
 }
 
+export interface AssignableTask {
+  instanceTaskId: number;
+  instanceId: number;
+  taskId: number;
+  status: string;
+  assignedTo: number;
+  startedOn: string | null;
+  completedOn: string | null;
+  decisionOutcome: string | null;
+  taskName: string;
+  taskType: string;
+  assignedToUsername: string;
+  instanceTaskFiles: any[] | null;
+  decisionOutcomes: any[] | null;
+}
+
 export interface DashboardWorkflow {
   instanceId: number;
   workflowName: string;
@@ -37,4 +53,35 @@ export interface UserDashboard {
   myTasks: DashboardTask[];
   myWorkflows: DashboardWorkflow[];
   workload: DashboardWorkload;
+}
+
+// Legacy types for existing mock data
+export interface UserDashboardData {
+  activeTasks: number;
+  completedTasks: number;
+  overdueTasks: number;
+  notifications: number;
+}
+
+export interface AdminDashboardData {
+  totalWorkflows: number;
+  activeInstances: number;
+  totalUsers: number;
+  systemHealth: string;
+}
+
+export interface UserWorkload {
+  userId: number;
+  username: string;
+  pendingTasks: number;
+  inProgressTasks: number;
+  completedTasks: number;
+}
+
+export interface UserNotification {
+  notificationId: number;
+  userId: number;
+  message: string;
+  status: string;
+  createdAt: string;
 }
