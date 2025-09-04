@@ -230,7 +230,7 @@ const CanvasWorkflowPage: NextPage = () => {
     if (!validateWorkflow() || !workflow) return;
 
     setIsDeploying(true);
-    toast.info('Saving workflow...');
+    toast.info('Deploying workflow...');
 
     const tasksToCreate = nodes
       .filter(n => n.type !== 'start' && n.type !== 'end')
