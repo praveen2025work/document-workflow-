@@ -54,7 +54,6 @@ const QueriesPage: NextPage = () => {
   const [statistics, setStatistics] = useState<QueryStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedQuery, setSelectedQuery] = useState<Query | null>(null);
-  const [isConversationOpen, setIsConversationOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
@@ -323,10 +322,7 @@ const QueriesPage: NextPage = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    setSelectedQuery(query);
-                    setIsConversationOpen(true);
-                  }}
+                  onClick={() => setSelectedQuery(query)}
                   className="h-7 text-xs"
                 >
                   <MessageSquare className="h-3 w-3 mr-1" />
@@ -610,238 +606,254 @@ const QueriesPage: NextPage = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <Tabs defaultValue="assigned" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 glass">
-                <TabsTrigger value="assigned" className="flex items-center gap-2">
-                  <Target className="h-4 w-4" />
-                  Assigned to Me ({dashboardData?.assignedToMe.length || 0})
-                </TabsTrigger>
-                <TabsTrigger value="raised" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Raised by Me ({dashboardData?.raisedByMe.length || 0})
-                </TabsTrigger>
-                <TabsTrigger value="open" className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4" />
-                  Open ({dashboardData?.openQueries.length || 0})
-                </TabsTrigger>
-                <TabsTrigger value="resolved" className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Resolved ({dashboardData?.resolvedQueries.length || 0})
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="assigned" className="mt-6">
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle className="text-foreground flex items-center gap-2">
-                      <Target className="h-5 w-5" />
-                      Queries Assigned to Me
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[600px]">
-                      {dashboardData?.assignedToMe && dashboardData.assignedToMe.length > 0 ? (
-                        filterQueries(dashboardData.assignedToMe).map(query => renderQueryCard(query))
-                      ) : (
-                        <p className="text-muted-foreground text-center py-8">No queries assigned to you.</p>
-                      )}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="raised" className="mt-6">
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle className="text-foreground flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Queries Raised by Me
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[600px]">
-                      {dashboardData?.raisedByMe && dashboardData.raisedByMe.length > 0 ? (
-                        filterQueries(dashboardData.raisedByMe).map(query => renderQueryCard(query, false))
-                      ) : (
-                        <p className="text-muted-foreground text-center py-8">You haven't raised any queries yet.</p>
-                      )}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="open" className="mt-6">
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle className="text-foreground flex items-center gap-2">
-                      <AlertCircle className="h-5 w-5" />
-                      Open Queries
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[600px]">
-                      {dashboardData?.openQueries && dashboardData.openQueries.length > 0 ? (
-                        filterQueries(dashboardData.openQueries).map(query => renderQueryCard(query))
-                      ) : (
-                        <p className="text-muted-foreground text-center py-8">No open queries.</p>
-                      )}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="resolved" className="mt-6">
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle className="text-foreground flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5" />
-                      Resolved Queries
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[600px]">
-                      {dashboardData?.resolvedQueries && dashboardData.resolvedQueries.length > 0 ? (
-                        filterQueries(dashboardData.resolvedQueries).map(query => renderQueryCard(query, false))
-                      ) : (
-                        <p className="text-muted-foreground text-center py-8">No resolved queries.</p>
-                      )}
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          )}
-        </motion.div>
-      </div>
-
-      {/* Query Conversation Dialog */}
-      <Dialog open={isConversationOpen} onOpenChange={setIsConversationOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              {selectedQuery?.queryTitle} - Chat History
-            </DialogTitle>
-          </DialogHeader>
-          {selectedQuery && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Badge className={`text-xs ${getPriorityColor(selectedQuery.priority)}`}>
-                  {selectedQuery.priority}
-                </Badge>
-                <Badge className={`text-xs ${getStatusColor(selectedQuery.queryStatus)}`}>
-                  {selectedQuery.queryStatus}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  Task: {mockInstanceTasks.find(t => t.instanceTaskId === selectedQuery.instanceTaskId)?.taskName || 'Unknown Task'}
-                </span>
-              </div>
-              
-              <div className="p-3 bg-muted rounded">
-                <p className="text-sm font-medium mb-1">Original Query:</p>
-                <p className="text-sm">{selectedQuery.queryDescription}</p>
+            <div className="flex gap-4 h-full">
+              {/* Left Panel - Query List */}
+              <div className={`${selectedQuery ? 'w-1/5' : 'w-full'} transition-all duration-300`}>
+                <Tabs defaultValue="assigned" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4 glass">
+                    <TabsTrigger value="assigned" className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Assigned ({dashboardData?.assignedToMe.length || 0})
+                    </TabsTrigger>
+                    <TabsTrigger value="raised" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Raised ({dashboardData?.raisedByMe.length || 0})
+                    </TabsTrigger>
+                    <TabsTrigger value="open" className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Open ({dashboardData?.openQueries.length || 0})
+                    </TabsTrigger>
+                    <TabsTrigger value="resolved" className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Resolved ({dashboardData?.resolvedQueries.length || 0})
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="assigned" className="mt-6">
+                    <Card className="glass">
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <Target className="h-5 w-5" />
+                          {selectedQuery ? 'Assigned' : 'Queries Assigned to Me'}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ScrollArea className="h-[600px]">
+                          {dashboardData?.assignedToMe && dashboardData.assignedToMe.length > 0 ? (
+                            filterQueries(dashboardData.assignedToMe).map(query => renderQueryCard(query))
+                          ) : (
+                            <p className="text-muted-foreground text-center py-8">No queries assigned to you.</p>
+                          )}
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="raised" className="mt-6">
+                    <Card className="glass">
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <User className="h-5 w-5" />
+                          {selectedQuery ? 'Raised' : 'Queries Raised by Me'}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ScrollArea className="h-[600px]">
+                          {dashboardData?.raisedByMe && dashboardData.raisedByMe.length > 0 ? (
+                            filterQueries(dashboardData.raisedByMe).map(query => renderQueryCard(query, false))
+                          ) : (
+                            <p className="text-muted-foreground text-center py-8">You haven't raised any queries yet.</p>
+                          )}
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="open" className="mt-6">
+                    <Card className="glass">
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <AlertCircle className="h-5 w-5" />
+                          {selectedQuery ? 'Open' : 'Open Queries'}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ScrollArea className="h-[600px]">
+                          {dashboardData?.openQueries && dashboardData.openQueries.length > 0 ? (
+                            filterQueries(dashboardData.openQueries).map(query => renderQueryCard(query))
+                          ) : (
+                            <p className="text-muted-foreground text-center py-8">No open queries.</p>
+                          )}
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="resolved" className="mt-6">
+                    <Card className="glass">
+                      <CardHeader>
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5" />
+                          {selectedQuery ? 'Resolved' : 'Resolved Queries'}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ScrollArea className="h-[600px]">
+                          {dashboardData?.resolvedQueries && dashboardData.resolvedQueries.length > 0 ? (
+                            filterQueries(dashboardData.resolvedQueries).map(query => renderQueryCard(query, false))
+                          ) : (
+                            <p className="text-muted-foreground text-center py-8">No resolved queries.</p>
+                          )}
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </div>
 
-              <ScrollArea className="h-[300px] border rounded p-3">
-                <div className="space-y-3">
-                  {/* Initial query message */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <User className="h-3 w-3" />
-                      <span>{selectedQuery.raisedBy}</span>
-                      <Clock className="h-3 w-3" />
-                      <span>{new Date(selectedQuery.createdAt).toLocaleString()}</span>
-                      <Badge variant="outline" className="text-xs">Query Created</Badge>
-                    </div>
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded">
-                      <p className="text-sm">{selectedQuery.queryDescription}</p>
-                    </div>
-                  </div>
-
-                  {/* Conversation messages */}
-                  {selectedQuery.messages.map((message) => (
-                    <div key={message.id} className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <User className="h-3 w-3" />
-                        <span>{message.sentBy}</span>
-                        <Clock className="h-3 w-3" />
-                        <span>{new Date(message.sentAt).toLocaleString()}</span>
+              {/* Right Panel - Chat */}
+              {selectedQuery && (
+                <div className="w-4/5 transition-all duration-300">
+                  <Card className="glass h-full">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                          <MessageSquare className="h-5 w-5" />
+                          {selectedQuery.queryTitle} - Chat History
+                        </CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedQuery(null)}
+                          className="h-8 w-8 p-0"
+                        >
+                          ×
+                        </Button>
                       </div>
-                      <div className="p-2 bg-background border rounded">
-                        <p className="text-sm">{message.messageText}</p>
-                        {message.attachments.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {message.attachments.map((attachment) => (
-                              <div key={attachment.id} className="flex items-center gap-2 text-xs">
-                                <Download className="h-3 w-3" />
-                                <span>{attachment.fileName}</span>
-                              </div>
-                            ))}
+                      <div className="flex items-center gap-2">
+                        <Badge className={`text-xs ${getPriorityColor(selectedQuery.priority)}`}>
+                          {selectedQuery.priority}
+                        </Badge>
+                        <Badge className={`text-xs ${getStatusColor(selectedQuery.queryStatus)}`}>
+                          {selectedQuery.queryStatus}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          Task: {mockInstanceTasks.find(t => t.instanceTaskId === selectedQuery.instanceTaskId)?.taskName || 'Unknown Task'}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex flex-col h-full">
+                      <div className="p-3 bg-muted rounded mb-4">
+                        <p className="text-sm font-medium mb-1">Original Query:</p>
+                        <p className="text-sm">{selectedQuery.queryDescription}</p>
+                      </div>
+
+                      <ScrollArea className="flex-1 border rounded p-3 mb-4">
+                        <div className="space-y-3">
+                          {/* Initial query message */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <User className="h-3 w-3" />
+                              <span>{selectedQuery.raisedBy}</span>
+                              <Clock className="h-3 w-3" />
+                              <span>{new Date(selectedQuery.createdAt).toLocaleString()}</span>
+                              <Badge variant="outline" className="text-xs">Query Created</Badge>
+                            </div>
+                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded">
+                              <p className="text-sm">{selectedQuery.queryDescription}</p>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
 
-                  {selectedQuery.queryStatus === 'RESOLVED' && selectedQuery.resolutionNotes && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <CheckCircle className="h-3 w-3 text-green-600" />
-                        <span>System</span>
-                        <Clock className="h-3 w-3" />
-                        <span>{new Date(selectedQuery.updatedAt || selectedQuery.createdAt).toLocaleString()}</span>
-                        <Badge variant="default" className="text-xs bg-green-600">Resolved</Badge>
-                      </div>
-                      <div className="p-3 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded">
-                        <p className="text-sm font-medium mb-1">Resolution:</p>
-                        <p className="text-sm">{selectedQuery.resolutionNotes}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+                          {/* Conversation messages */}
+                          {selectedQuery.messages.map((message) => (
+                            <div key={message.id} className="space-y-2">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <User className="h-3 w-3" />
+                                <span>{message.sentBy}</span>
+                                <Clock className="h-3 w-3" />
+                                <span>{new Date(message.sentAt).toLocaleString()}</span>
+                              </div>
+                              <div className="p-2 bg-background border rounded">
+                                <p className="text-sm">{message.messageText}</p>
+                                {message.attachments.length > 0 && (
+                                  <div className="mt-2 space-y-1">
+                                    {message.attachments.map((attachment) => (
+                                      <div key={attachment.id} className="flex items-center gap-2 text-xs">
+                                        <Download className="h-3 w-3" />
+                                        <span>{attachment.fileName}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
 
-              {selectedQuery.queryStatus === 'OPEN' && selectedQuery.assignedToUserId === user?.userId && (
-                <div className="space-y-3 border-t pt-4">
-                  <div>
-                    <Label htmlFor="response">Add Comment</Label>
-                    <Textarea
-                      id="response"
-                      value={responseText}
-                      onChange={(e) => setResponseText(e.target.value)}
-                      placeholder="Type your response..."
-                      className="mt-1"
-                      rows={3}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleResolveQuery(selectedQuery.id)}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Mark Resolved
-                    </Button>
-                    <Button
-                      onClick={() => handleSendResponse(selectedQuery.id)}
-                      disabled={!responseText.trim()}
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Send Response
-                    </Button>
-                  </div>
-                </div>
-              )}
+                          {selectedQuery.queryStatus === 'RESOLVED' && selectedQuery.resolutionNotes && (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <CheckCircle className="h-3 w-3 text-green-600" />
+                                <span>System</span>
+                                <Clock className="h-3 w-3" />
+                                <span>{new Date(selectedQuery.updatedAt || selectedQuery.createdAt).toLocaleString()}</span>
+                                <Badge variant="default" className="text-xs bg-green-600">Resolved</Badge>
+                              </div>
+                              <div className="p-3 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded">
+                                <p className="text-sm font-medium mb-1">Resolution:</p>
+                                <p className="text-sm">{selectedQuery.resolutionNotes}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </ScrollArea>
 
-              {selectedQuery.queryStatus !== 'OPEN' && (
-                <div className="text-center py-4 text-muted-foreground border-t">
-                  <p className="text-sm">This query has been {selectedQuery.queryStatus.toLowerCase()}.</p>
+                      {selectedQuery.queryStatus === 'OPEN' && selectedQuery.assignedToUserId === user?.userId && (
+                        <div className="space-y-3 border-t pt-4">
+                          <div>
+                            <Label htmlFor="response">Add Comment</Label>
+                            <Textarea
+                              id="response"
+                              value={responseText}
+                              onChange={(e) => setResponseText(e.target.value)}
+                              placeholder="Type your response..."
+                              className="mt-1"
+                              rows={3}
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => handleResolveQuery(selectedQuery.id)}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Mark Resolved
+                            </Button>
+                            <Button
+                              onClick={() => handleSendResponse(selectedQuery.id)}
+                              disabled={!responseText.trim()}
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Send Response
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedQuery.queryStatus !== 'OPEN' && (
+                        <div className="text-center py-4 text-muted-foreground border-t">
+                          <p className="text-sm">This query has been {selectedQuery.queryStatus.toLowerCase()}.</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </motion.div>
+      </div>
+
+
     </MainLayout>
   );
 };
