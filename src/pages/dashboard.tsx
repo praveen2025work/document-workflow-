@@ -128,7 +128,6 @@ const DashboardPage: NextPage = () => {
     
     return { colorClass, priorityDot, formattedDate, priorityLabel };
   };
-=======
 
   const getStatusIcon = (status: string, isAssigned?: boolean) => {
     switch (status) {
@@ -176,9 +175,6 @@ const DashboardPage: NextPage = () => {
         return status;
     }
   };
-=======
-
-=======
 
   const getTaskTypeIcon = (taskType?: string) => {
     switch (taskType) {
