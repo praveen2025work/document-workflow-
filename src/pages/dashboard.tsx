@@ -206,7 +206,7 @@ const DashboardPage: NextPage = () => {
             </h4>
             <div className="space-y-3">
               {availableTasks.map((task) => (
-                <Card key={`assignable-${task.instanceTaskId}`} className="glass border-l-4 border-l-green-500">
+                <Card key={`assignable-${task.instanceTaskId}`} className="glass border-l-4 border-l-gray-500">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -255,13 +255,29 @@ const DashboardPage: NextPage = () => {
     if (!tasks || tasks.length === 0) {
       return <p className="text-muted-foreground">No tasks in this category.</p>;
     }
+
+    const getBorderColor = (taskType: string) => {
+      switch (taskType) {
+        case 'in_progress':
+          return 'border-l-orange-500';
+        case 'completed':
+          return 'border-l-green-500';
+        default:
+          return 'border-l-blue-500';
+      }
+    };
+
     return (
       <div className="space-y-4">
         {tasks.map((task) => (
-          <Card key={task.instanceTaskId} className="glass">
+          <Card key={task.instanceTaskId} className={`glass border-l-4 ${getBorderColor(type)}`}>
             <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-foreground">{task.taskName}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  {getStatusIcon(task.status)}
+                  <p className="font-semibold text-foreground">{task.taskName}</p>
+                  <Badge variant={getStatusBadgeVariant(task.status)}>{task.status}</Badge>
+                </div>
                 <p className="text-sm text-muted-foreground">Assigned to: {task.assignedToUsername}</p>
               </div>
               <div className="flex items-center gap-2">
