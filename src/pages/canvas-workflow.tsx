@@ -46,6 +46,11 @@ const DecisionIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L22 12L12 22L2 12Z" /><path d="M8 12h8" /><path d="M12 8v8" /></svg>
 );
 
+const CustomEdge: React.FC<EdgeProps> = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd }) => {
+  const [edgePath] = getSmoothStepPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, borderRadius: 16 });
+  return <path id={id} style={style} className="react-flow__edge-path" d={edgePath} markerEnd={markerEnd} />;
+};
+
 const GoBackEdge: React.FC<EdgeProps> = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd }) => {
   const [edgePath] = getSmoothStepPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, borderRadius: 16 });
   return <path id={id} style={{ ...style, stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '8,4', fill: 'none' }} className="react-flow__edge-path" d={edgePath} markerEnd={markerEnd} />;
@@ -330,14 +335,14 @@ const CanvasWorkflowPage: NextPage = () => {
   const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) || null, [nodes, selectedNodeId]);
 
   const nodeTypes = useMemo(() => ({ start: WorkflowNode, end: WorkflowNode, action: WorkflowNode, decision: WorkflowNode }), []);
-  const edgeTypes = useMemo(() => ({ goBack: GoBackEdge }), []);
+  const edgeTypes = useMemo(() => ({ goBack: GoBackEdge, default: CustomEdge }), []);
 
   const headerActions = (
     <>
       {workflow?.name && <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" />{workflow.name}</Badge>}
       <Button onClick={handleCreateNew} variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" />New</Button>
       <Button onClick={handleDeploy} variant="default" size="sm" disabled={isDeploying} className="bg-success text-success-foreground hover:bg-success/90">
-        {isDeploying ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />Saving...</> : <><Play className="mr-2 h-4 w-4" />Save</>}
+        {isDeploying ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />Deploying...</> : <><Play className="mr-2 h-4 w-4" />Deploy</>}
       </Button>
       {selectedNodeId && !['start', 'end'].includes(selectedNodeId) && (
         <Button variant="outline" size="sm" onClick={handleDeleteNode} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
@@ -387,7 +392,7 @@ const CanvasWorkflowPage: NextPage = () => {
             connectionLineStyle={{ stroke: '#3b82f6', strokeWidth: 3 }}
             snapToGrid={true}
             snapGrid={[20, 20]}
-            connectionRadius={50}
+            connectionRadius={30}
             minZoom={0.1}
             maxZoom={3}
             proOptions={{ hideAttribution: true }}
