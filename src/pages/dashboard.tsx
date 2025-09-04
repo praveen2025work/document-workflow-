@@ -9,11 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getUserDashboard, getAssignableTasks, assignTask } from '@/lib/dashboardApi';
-import { getUsers } from '@/lib/userApi';
 import { UserDashboard, DashboardTask, AssignableTask } from '@/types/dashboard';
-import { User } from '@/types/user';
 import { useUser } from '@/context/UserContext';
 import { LayoutDashboard, MessageSquare, RefreshCw, UserPlus, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import MainLayout from '@/components/MainLayout';
@@ -21,14 +18,11 @@ import MainLayout from '@/components/MainLayout';
 const DashboardPage: NextPage = () => {
   const [dashboardData, setDashboardData] = useState<UserDashboard | null>(null);
   const [assignableTasks, setAssignableTasks] = useState<AssignableTask[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isAssignableTasksLoading, setIsAssignableTasksLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
-  const [selectedTaskForAssignment, setSelectedTaskForAssignment] = useState<AssignableTask | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [chatMessage, setChatMessage] = useState('');
   const [receiverUserId, setReceiverUserId] = useState('');
   const { user } = useUser();
@@ -65,19 +59,9 @@ const DashboardPage: NextPage = () => {
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      const response = await getUsers();
-      setUsers(response.users || []);
-    } catch (error) {
-      toast.error('Failed to fetch users.');
-    }
-  };
-
   useEffect(() => {
     if (user) {
       fetchDashboardData();
-      fetchUsers();
       fetchAssignableTasks(); // Load assignable tasks by default since "Available Tasks" is the default tab
     }
   }, [user]);
@@ -123,25 +107,17 @@ const DashboardPage: NextPage = () => {
     setIsChatOpen(false);
   };
 
-  const handleOpenAssignDialog = (task: AssignableTask) => {
-    setSelectedTaskForAssignment(task);
-    setSelectedUserId('');
-    setIsAssignDialogOpen(true);
-  };
-
-  const handleAssignTask = async () => {
-    if (!selectedTaskForAssignment || !selectedUserId) {
-      toast.error('Please select a user to assign the task to.');
+  const handleAssignTaskToMe = async (task: AssignableTask) => {
+    if (!user) {
+      toast.error('User information not available.');
       return;
     }
     
     try {
-      await assignTask(selectedTaskForAssignment.instanceTaskId, parseInt(selectedUserId));
-      toast.success('Task assigned successfully!');
-      setIsAssignDialogOpen(false);
-      setSelectedTaskForAssignment(null);
-      setSelectedUserId('');
+      await assignTask(task.instanceTaskId, user.userId);
+      toast.success('Task assigned to you successfully!');
       fetchAssignableTasks(); // Refresh the assignable tasks
+      fetchDashboardData(); // Refresh dashboard data to show the newly assigned task
     } catch (error) {
       toast.error('Failed to assign task.');
     }
@@ -210,9 +186,6 @@ const DashboardPage: NextPage = () => {
                       <p className="text-sm text-muted-foreground">Assigned to: {task.assignedToUsername}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" onClick={() => handlePickUpTask(task.instanceTaskId)}>
-                        Pick Up
-                      </Button>
                       <Button size="sm" variant="outline" onClick={() => handleOpenChat(task.instanceTaskId)}>
                         <MessageSquare className="h-4 w-4" />
                       </Button>
@@ -254,7 +227,7 @@ const DashboardPage: NextPage = () => {
                       <div className="flex items-center gap-2">
                         <Button 
                           size="sm" 
-                          onClick={() => handleOpenAssignDialog(task)}
+                          onClick={() => handleAssignTaskToMe(task)}
                           disabled={task.status === 'COMPLETED'}
                         >
                           <UserPlus className="h-4 w-4 mr-1" />
@@ -426,55 +399,7 @@ const DashboardPage: NextPage = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent className="glass border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Assign Task</DialogTitle>
-          </DialogHeader>
-          {selectedTaskForAssignment && (
-            <div className="space-y-4">
-              <div className="p-4 bg-muted/20 rounded-lg">
-                <h4 className="font-semibold text-foreground mb-2">Task Details</h4>
-                <div className="space-y-1 text-sm">
-                  <p><span className="font-medium">Name:</span> {selectedTaskForAssignment.taskName}</p>
-                  <p><span className="font-medium">Type:</span> {selectedTaskForAssignment.taskType}</p>
-                  <p><span className="font-medium">Instance ID:</span> {selectedTaskForAssignment.instanceId}</p>
-                  <p><span className="font-medium">Current Assignee:</span> {selectedTaskForAssignment.assignedToUsername}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Status:</span>
-                    {getStatusIcon(selectedTaskForAssignment.status)}
-                    <Badge variant={getStatusBadgeVariant(selectedTaskForAssignment.status)}>
-                      {selectedTaskForAssignment.status}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="userSelect" className="text-foreground">Assign to User</Label>
-                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                  <SelectTrigger className="glass border-border">
-                    <SelectValue placeholder="Select a user to assign this task to" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.userId} value={user.userId.toString()}>
-                        {user.username} ({user.firstName} {user.lastName})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAssignTask} disabled={!selectedUserId}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Assign Task
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </>
   );
 };
