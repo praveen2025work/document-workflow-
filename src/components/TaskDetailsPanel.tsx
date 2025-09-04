@@ -809,54 +809,50 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   return (
     <div className="h-full flex flex-col bg-background border-l border-border">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          {taskDetails && getTaskTypeIcon(taskDetails.taskType)}
-          <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-base truncate">{task.taskName}</h3>
-            <p className="text-xs text-muted-foreground truncate">
-              {taskDetails?.workflowName || 'Loading...'}
-            </p>
-          </div>
-        </div>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Task Info - Compact */}
-      <div className="p-3 border-b border-border bg-muted/10">
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Status:</span>
-              <Badge variant="outline" className="text-xs h-5">{taskDetails?.status || task.status}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Type:</span>
-              <span className="font-medium text-xs">{taskDetails?.taskType.replace('_', ' ') || 'Loading...'}</span>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Assigned:</span>
-              <span className="font-medium text-xs truncate">{taskDetails?.assignedToUsername || 'Loading...'}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className={`w-1.5 h-1.5 rounded-full ${dueDateInfo.priorityDot}`} />
-              <div className={`font-medium text-xs ${dueDateInfo.colorClass} truncate`}>
-                {dueDateInfo.formattedDate}
+      <div className="p-3 border-b border-border bg-muted/30">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {taskDetails && getTaskTypeIcon(taskDetails.taskType)}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-base truncate">{task.taskName}</h3>
+                <Badge variant="outline" className="text-xs h-5 shrink-0">
+                  {taskDetails?.status || task.status}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground truncate mb-2">
+                {taskDetails?.workflowName || 'Loading...'}
+              </p>
+              
+              {/* Inline Task Information */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <span>Type:</span>
+                  <span className="font-medium text-foreground">
+                    {taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>Assigned:</span>
+                  <span className="font-medium text-foreground">
+                    {taskDetails?.assignedToUsername || 'alice'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className={`w-1.5 h-1.5 rounded-full ${dueDateInfo.priorityDot} mr-1`} />
+                  <span className={`font-medium ${dueDateInfo.colorClass}`}>
+                    {dueDateInfo.formattedDate}
+                  </span>
+                  {dueDateInfo.priorityLabel === 'Overdue' && (
+                    <span className="text-red-500 font-medium ml-1">Overdue</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="mt-2 text-center">
-          <div className={`text-xs font-medium ${dueDateInfo.colorClass}`}>
-            {dueDateInfo.priorityLabel}
-            {dueDateInfo.daysLeft !== null && dueDateInfo.daysLeft > 0 && (
-              <span> • {dueDateInfo.daysLeft} days left</span>
-            )}
-          </div>
+          <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 ml-2">
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
