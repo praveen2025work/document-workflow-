@@ -1269,7 +1269,8 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
                   </TabsList>
                 </div>
 
-                <TabsContent value="files" className="flex-1 mt-4 px-4 pb-4 overflow-auto">
+                <TabsContent value="files" className="flex-1 mt-4 px-4 pb-4 overflow-hidden">
+                  <ScrollArea className="h-full">
                   <TaskFileManager
                     workflowTaskFiles={getWorkflowTaskFiles()}
                     taskDetails={taskDetails}
@@ -1299,9 +1300,11 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
                       console.log('View versions for task file:', taskFileId);
                     }}
                   />
+                  </ScrollArea>
                 </TabsContent>
 
-                <TabsContent value="queries" className="flex-1 mt-4 px-4 pb-4 overflow-auto">
+                <TabsContent value="queries" className="flex-1 mt-4 px-4 pb-4 overflow-hidden">
+                  <ScrollArea className="h-full">
                   {renderQuerySection()}
                 </TabsContent>
               </Tabs>

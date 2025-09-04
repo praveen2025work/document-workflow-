@@ -685,8 +685,8 @@ const QueriesPage: NextPage = () => {
                           {selectedQuery ? 'Assigned' : 'Queries Assigned to Me'}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <ScrollArea className="h-[600px]">
+                      <CardContent className="h-[600px] p-0">
+                        <ScrollArea className="h-full p-6">
                           {dashboardData?.assignedToMe && dashboardData.assignedToMe.length > 0 ? (
                             filterQueries(dashboardData.assignedToMe).map(query => renderQueryCard(query))
                           ) : (
@@ -705,8 +705,8 @@ const QueriesPage: NextPage = () => {
                           {selectedQuery ? 'Raised' : 'Queries Raised by Me'}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <ScrollArea className="h-[600px]">
+                      <CardContent className="h-[600px] p-0">
+                        <ScrollArea className="h-full p-6">
                           {dashboardData?.raisedByMe && dashboardData.raisedByMe.length > 0 ? (
                             filterQueries(dashboardData.raisedByMe).map(query => renderQueryCard(query, false))
                           ) : (
@@ -725,8 +725,8 @@ const QueriesPage: NextPage = () => {
                           {selectedQuery ? 'Open' : 'Open Queries'}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <ScrollArea className="h-[600px]">
+                      <CardContent className="h-[600px] p-0">
+                        <ScrollArea className="h-full p-6">
                           {dashboardData?.openQueries && dashboardData.openQueries.length > 0 ? (
                             filterQueries(dashboardData.openQueries).map(query => renderQueryCard(query))
                           ) : (
@@ -745,8 +745,8 @@ const QueriesPage: NextPage = () => {
                           {selectedQuery ? 'Resolved' : 'Resolved Queries'}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <ScrollArea className="h-[600px]">
+                      <CardContent className="h-[600px] p-0">
+                        <ScrollArea className="h-full p-6">
                           {dashboardData?.resolvedQueries && dashboardData.resolvedQueries.length > 0 ? (
                             filterQueries(dashboardData.resolvedQueries).map(query => renderQueryCard(query, false))
                           ) : (

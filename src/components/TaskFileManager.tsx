@@ -351,7 +351,8 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
               {taskDetails.sourceFiles && taskDetails.sourceFiles.length > 0 && (
                 <div>
                   <Label className="text-xs">Available Files</Label>
-                  <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                  <ScrollArea className="mt-2 max-h-32">
+                    <div className="space-y-2 pr-4">
                     {taskDetails.sourceFiles.map((file) => (
                       <div key={file.instanceFileId} className="flex items-center space-x-2 p-2 border rounded">
                         <Checkbox
@@ -380,7 +381,8 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                         </Button>
                       </div>
                     ))}
-                  </div>
+                    </div>
+                  </ScrollArea>
                 </div>
               )}
 
@@ -447,11 +449,13 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
               {taskDetails.reviewFiles && taskDetails.reviewFiles.length > 0 && (
                 <div>
                   <Label className="text-xs">Files to Review</Label>
-                  <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                  <ScrollArea className="mt-2 max-h-40">
+                    <div className="space-y-2 pr-4">
                     {Object.entries(groupFilesByName(taskDetails.reviewFiles)).map(([fileName, versions]) =>
                       renderFileWithVersions(fileName, versions)
                     )}
-                  </div>
+                    </div>
+                  </ScrollArea>
                 </div>
               )}
 
@@ -771,14 +775,16 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                 {selectedFiles.length > 0 && (
                   <div>
                     <Label className="text-sm">Selected Files:</Label>
-                    <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                    <ScrollArea className="mt-2 max-h-32">
+                      <div className="space-y-2 pr-4">
                       {selectedFiles.map((file, index) => (
                         <div key={index} className="flex items-center justify-between p-2 border rounded">
                           <span className="text-sm truncate">{file.name}</span>
                           <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
                         </div>
                       ))}
-                    </div>
+                      </div>
+                    </ScrollArea>
                   </div>
                 )}
 
