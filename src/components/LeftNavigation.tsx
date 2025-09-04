@@ -10,7 +10,8 @@ import {
   LayoutDashboard,
   ChevronRight,
   Layers,
-  FileText
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -80,6 +81,13 @@ const navigationItems: NavigationItem[] = [
     icon: LayoutDashboard,
     path: '/dashboard',
     description: 'Task management and execution'
+  },
+  {
+    id: 'queries',
+    label: 'Query Management',
+    icon: MessageSquare,
+    path: '/queries',
+    description: 'Manage and track queries'
   }
 ];
 

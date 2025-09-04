@@ -35,11 +35,17 @@ import {
   updateFile, 
   consolidateFiles, 
   downloadFile, 
-  completeTaskWithOutcome, 
-  createQuery,
+  completeTaskWithOutcome,
   TaskDetails,
   TaskFile 
 } from '@/lib/executionApi';
+import {
+  createQuery,
+  addQueryMessage,
+  updateQueryStatus,
+  getQueryConversation
+} from '@/lib/queryApi';
+import { Query } from '@/types/query';
 import { DashboardTask, AssignableTask } from '@/types/dashboard';
 import { TaskFileManager } from './TaskFileManager';
 
@@ -222,7 +228,15 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
 
     setIsLoading(true);
     try {
-      await createQuery(task.instanceTaskId, queryTitle, queryDescription, queryAssignedTo, queryPriority);
+      await createQuery({
+        instanceTaskId: task.instanceTaskId,
+        queryTitle,
+        queryDescription,
+        raisedByUserId: 1, // Current user ID - should come from context
+        assignedToUserId: queryAssignedTo,
+        priority: queryPriority,
+        createdBy: 'alice' // Current user - should come from context
+      });
       toast.success('Query created successfully');
       setQueryTitle('');
       setQueryDescription('');
