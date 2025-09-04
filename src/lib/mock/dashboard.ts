@@ -111,7 +111,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Document Processing',
       dueDate: '2025-01-10T10:00:00.000Z',
-      instanceId: 1
+      instanceId: 1,
+      taskType: 'FILE_UPLOAD'
     },
     {
       instanceTaskId: 2,
@@ -121,7 +122,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Quality Review',
       dueDate: '2025-01-08T15:30:00.000Z',
-      instanceId: 2
+      instanceId: 2,
+      taskType: 'DECISION'
     },
     {
       instanceTaskId: 3,
@@ -131,7 +133,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Financial Processing',
       dueDate: '2025-01-06T12:00:00.000Z',
-      instanceId: 3
+      instanceId: 3,
+      taskType: 'FILE_UPDATE'
     },
     {
       instanceTaskId: 4,
@@ -141,7 +144,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Customer Management',
       dueDate: '2025-01-12T09:00:00.000Z',
-      instanceId: 4
+      instanceId: 4,
+      taskType: 'FILE_UPDATE'
     },
     {
       instanceTaskId: 5,
@@ -151,7 +155,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Document Processing',
       dueDate: '2025-01-03T16:00:00.000Z',
-      instanceId: 1
+      instanceId: 1,
+      taskType: 'DECISION'
     },
     {
       instanceTaskId: 6,
@@ -161,7 +166,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Monthly Report Generation',
       dueDate: '2025-01-02T14:00:00.000Z',
-      instanceId: 5
+      instanceId: 5,
+      taskType: 'FILE_CONSOLIDATE'
     },
     {
       instanceTaskId: 7,
@@ -171,7 +177,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Quality Review',
       dueDate: '2025-01-01T11:00:00.000Z',
-      instanceId: 2
+      instanceId: 2,
+      taskType: 'DECISION'
     },
     {
       instanceTaskId: 8,
@@ -181,7 +188,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Data Processing',
       dueDate: '2025-01-15T10:00:00.000Z',
-      instanceId: 6
+      instanceId: 6,
+      taskType: 'FILE_UPLOAD'
     },
     {
       instanceTaskId: 9,
@@ -191,7 +199,8 @@ export const mockUserDashboard: UserDashboard = {
       assignedToUsername: 'alice',
       workflowName: 'Security Audit',
       dueDate: '2025-01-20T14:00:00.000Z',
-      instanceId: 7
+      instanceId: 7,
+      taskType: 'DECISION'
     }
   ],
   myWorkflows: [

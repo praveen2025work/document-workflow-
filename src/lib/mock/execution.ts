@@ -1,4 +1,5 @@
 import { WorkflowInstance, InstanceTask } from '@/types/execution';
+import { TaskDetails, TaskFile, TaskQuery } from '../executionApi';
 
 export const mockWorkflowInstances: WorkflowInstance[] = [
   {
@@ -318,4 +319,284 @@ export const mockInstanceTasks: InstanceTask[] = [
     taskName: 'Document Collection',
     taskType: 'FILE_UPLOAD',
   },
+];
+
+export const mockTaskDetails: TaskDetails[] = [
+  {
+    instanceTaskId: 1,
+    instanceId: 1,
+    taskId: 21,
+    taskName: 'Upload Financial Data',
+    taskType: 'FILE_UPLOAD',
+    status: 'COMPLETED',
+    assignedTo: 1,
+    assignedToUsername: 'alice',
+    startedOn: new Date(Date.now() - 3600000).toISOString(),
+    completedOn: new Date(Date.now() - 1800000).toISOString(),
+    decisionOutcome: 'APPROVED',
+    workflowName: 'Monthly Finance Review Workflow',
+    workflowId: 1,
+    taskConfiguration: {
+      fileSelectionMode: 'USER_SELECT',
+      allowedFileTypes: ['*.xlsx', '*.xls', '*.csv'],
+      maxFileSize: '10MB',
+      isRequired: true,
+      fileDescription: 'Upload monthly financial data in Excel format'
+    },
+    instanceTaskFiles: [
+      {
+        instanceFileId: 1,
+        version: 1,
+        fileName: 'financial_data_jan.xlsx',
+        filePath: '/uploads/financial_data_jan.xlsx',
+        fileSize: 2048000,
+        actionType: 'UPLOAD',
+        fileStatus: 'COMPLETED',
+        fileCommentary: 'January financial data uploaded',
+        createdBy: 'alice',
+        createdAt: new Date(Date.now() - 1800000).toISOString()
+      }
+    ],
+    queries: [
+      {
+        queryId: 1,
+        queryTitle: 'File format clarification',
+        queryDescription: 'What format should the financial data be in?',
+        queryStatus: 'RESOLVED',
+        priority: 'MEDIUM',
+        raisedByUsername: 'alice',
+        assignedToUsername: 'bob',
+        createdAt: new Date(Date.now() - 2700000).toISOString(),
+        resolutionNotes: 'Please use Excel format (.xlsx)',
+        resolvedAt: new Date(Date.now() - 2400000).toISOString()
+      }
+    ]
+  },
+  {
+    instanceTaskId: 2,
+    instanceId: 1,
+    taskId: 22,
+    taskName: 'Update Budget Data',
+    taskType: 'FILE_UPDATE',
+    status: 'IN_PROGRESS',
+    assignedTo: 2,
+    assignedToUsername: 'bob',
+    startedOn: new Date(Date.now() - 1800000).toISOString(),
+    completedOn: null,
+    decisionOutcome: null,
+    workflowName: 'Monthly Finance Review Workflow',
+    workflowId: 1,
+    taskConfiguration: {
+      sourceFileId: 1,
+      updateType: 'MODIFY_EXISTING',
+      backupOriginal: true,
+      isRequired: true,
+      fileDescription: 'Update the budget data with latest figures'
+    },
+    sourceFile: {
+      instanceFileId: 1,
+      version: 1,
+      fileName: 'financial_data_jan.xlsx',
+      filePath: '/uploads/financial_data_jan.xlsx',
+      fileSize: 2048000,
+      actionType: 'UPLOAD',
+      fileStatus: 'COMPLETED',
+      createdBy: 'alice',
+      createdAt: new Date(Date.now() - 1800000).toISOString()
+    },
+    updatedFiles: [
+      {
+        instanceFileId: 1,
+        version: 2,
+        fileName: 'financial_data_jan_v2.xlsx',
+        filePath: '/uploads/financial_data_jan_v2.xlsx',
+        fileSize: 2150000,
+        actionType: 'UPDATE',
+        fileStatus: 'IN_PROGRESS',
+        fileCommentary: 'Updated with latest budget figures',
+        createdBy: 'bob',
+        createdAt: new Date(Date.now() - 900000).toISOString()
+      }
+    ],
+    queries: []
+  },
+  {
+    instanceTaskId: 3,
+    instanceId: 2,
+    taskId: 25,
+    taskName: 'Document Collection',
+    taskType: 'FILE_UPLOAD',
+    status: 'COMPLETED',
+    assignedTo: 7,
+    assignedToUsername: 'charlie',
+    startedOn: new Date(Date.now() - 86400000).toISOString(),
+    completedOn: new Date(Date.now() - 43200000).toISOString(),
+    decisionOutcome: 'APPROVED',
+    workflowName: 'Quarterly Audit Workflow',
+    workflowId: 2,
+    taskConfiguration: {
+      fileSelectionMode: 'USER_SELECT',
+      allowedFileTypes: ['*.pdf', '*.docx', '*.xlsx'],
+      maxFileSize: '25MB',
+      isRequired: true,
+      fileDescription: 'Upload audit documents and supporting materials'
+    },
+    instanceTaskFiles: [
+      {
+        instanceFileId: 2,
+        version: 1,
+        fileName: 'audit_documents_q1.pdf',
+        filePath: '/uploads/audit_documents_q1.pdf',
+        fileSize: 15360000,
+        actionType: 'UPLOAD',
+        fileStatus: 'COMPLETED',
+        fileCommentary: 'Q1 audit documents uploaded',
+        createdBy: 'charlie',
+        createdAt: new Date(Date.now() - 43200000).toISOString()
+      },
+      {
+        instanceFileId: 3,
+        version: 1,
+        fileName: 'supporting_data.xlsx',
+        filePath: '/uploads/supporting_data.xlsx',
+        fileSize: 3072000,
+        actionType: 'UPLOAD',
+        fileStatus: 'COMPLETED',
+        fileCommentary: 'Supporting financial data',
+        createdBy: 'charlie',
+        createdAt: new Date(Date.now() - 43200000).toISOString()
+      }
+    ],
+    queries: []
+  },
+  {
+    instanceTaskId: 4,
+    instanceId: 2,
+    taskId: 26,
+    taskName: 'Consolidate Audit Report',
+    taskType: 'FILE_CONSOLIDATE',
+    status: 'COMPLETED',
+    assignedTo: 8,
+    assignedToUsername: 'diana',
+    startedOn: new Date(Date.now() - 43200000).toISOString(),
+    completedOn: new Date(Date.now() - 3600000).toISOString(),
+    decisionOutcome: 'APPROVED',
+    workflowName: 'Quarterly Audit Workflow',
+    workflowId: 2,
+    taskConfiguration: {
+      consolidationMode: 'MERGE_FILES',
+      outputFormat: 'PDF',
+      includeSummary: true,
+      isRequired: true,
+      fileDescription: 'Consolidate all audit documents into a single report'
+    },
+    sourceFiles: [
+      {
+        instanceFileId: 2,
+        version: 1,
+        fileName: 'audit_documents_q1.pdf',
+        filePath: '/uploads/audit_documents_q1.pdf',
+        fileSize: 15360000,
+        actionType: 'UPLOAD',
+        fileStatus: 'COMPLETED',
+        createdBy: 'charlie',
+        createdAt: new Date(Date.now() - 43200000).toISOString()
+      },
+      {
+        instanceFileId: 3,
+        version: 1,
+        fileName: 'supporting_data.xlsx',
+        filePath: '/uploads/supporting_data.xlsx',
+        fileSize: 3072000,
+        actionType: 'UPLOAD',
+        fileStatus: 'COMPLETED',
+        createdBy: 'charlie',
+        createdAt: new Date(Date.now() - 43200000).toISOString()
+      }
+    ],
+    consolidatedFile: {
+      instanceFileId: 4,
+      version: 1,
+      fileName: 'consolidated_audit_report_q1.pdf',
+      filePath: '/reports/consolidated_audit_report_q1.pdf',
+      fileSize: 20480000,
+      actionType: 'CONSOLIDATE',
+      fileStatus: 'COMPLETED',
+      fileCommentary: 'Consolidated Q1 audit report with all supporting documents',
+      createdBy: 'system',
+      createdAt: new Date(Date.now() - 3600000).toISOString()
+    },
+    queries: []
+  },
+  {
+    instanceTaskId: 7,
+    instanceId: 3,
+    taskId: 23,
+    taskName: 'Manager Review',
+    taskType: 'DECISION',
+    status: 'PENDING',
+    assignedTo: 4,
+    assignedToUsername: 'sarahwilson',
+    startedOn: null,
+    completedOn: null,
+    decisionOutcome: null,
+    workflowName: 'Monthly Finance Review Workflow',
+    workflowId: 1,
+    taskConfiguration: {
+      decisionType: 'APPROVAL',
+      decisionOptions: ['APPROVED', 'REJECTED', 'NEEDS_REVISION'],
+      requiresComments: true,
+      isRequired: true,
+      fileDescription: 'Review and approve the monthly financial report'
+    },
+    reviewFiles: [
+      {
+        instanceFileId: 1,
+        version: 2,
+        fileName: 'financial_data_jan_v2.xlsx',
+        filePath: '/uploads/financial_data_jan_v2.xlsx',
+        fileSize: 2150000,
+        actionType: 'UPDATE',
+        fileStatus: 'COMPLETED',
+        createdBy: 'bob',
+        createdAt: new Date(Date.now() - 86400000).toISOString()
+      }
+    ],
+    queries: [
+      {
+        queryId: 2,
+        queryTitle: 'Clarification on budget variance',
+        queryDescription: 'Can you explain the 15% variance in the marketing budget?',
+        queryStatus: 'OPEN',
+        priority: 'HIGH',
+        raisedByUsername: 'sarahwilson',
+        assignedToUsername: 'bob',
+        createdAt: new Date(Date.now() - 7200000).toISOString()
+      }
+    ]
+  },
+  {
+    instanceTaskId: 8,
+    instanceId: 4,
+    taskId: 21,
+    taskName: 'Data Collection',
+    taskType: 'FILE_UPLOAD',
+    status: 'PENDING',
+    assignedTo: 9,
+    assignedToUsername: 'eve',
+    startedOn: null,
+    completedOn: null,
+    decisionOutcome: null,
+    workflowName: 'Monthly Finance Review Workflow',
+    workflowId: 1,
+    taskConfiguration: {
+      fileSelectionMode: 'USER_SELECT',
+      allowedFileTypes: ['*.xlsx', '*.xls', '*.csv'],
+      maxFileSize: '10MB',
+      isRequired: true,
+      fileDescription: 'Upload monthly financial data in Excel format'
+    },
+    instanceTaskFiles: [],
+    queries: []
+  }
 ];

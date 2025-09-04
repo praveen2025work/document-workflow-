@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getUserDashboard, getAssignableTasks, assignTask } from '@/lib/dashboardApi';
 import { UserDashboard, DashboardTask, AssignableTask } from '@/types/dashboard';
 import { useUser } from '@/context/UserContext';
-import { LayoutDashboard, RefreshCw, Clock, CheckCircle, AlertCircle, X, Check, Play, Pause, UserCheck, Timer, Target, FileText, User } from 'lucide-react';
+import { LayoutDashboard, RefreshCw, Clock, CheckCircle, AlertCircle, X, Check, Play, Pause, UserCheck, Timer, Target, FileText, User, Settings } from 'lucide-react';
 import MainLayout from '@/components/MainLayout';
+import { TaskActionModal } from '@/components/TaskActionModal';
 
 const DashboardPage: NextPage = () => {
   const [dashboardData, setDashboardData] = useState<UserDashboard | null>(null);
@@ -20,6 +21,11 @@ const DashboardPage: NextPage = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isAssignableTasksLoading, setIsAssignableTasksLoading] = useState(false);
+  
+  // Task action modal states
+  const [selectedTask, setSelectedTask] = useState<DashboardTask | AssignableTask | null>(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  
   const { user } = useUser();
 
   const fetchDashboardData = async () => {
@@ -83,6 +89,22 @@ const DashboardPage: NextPage = () => {
   const handleRejectTask = (taskId: number) => {
     setRejectedTasks(prev => new Set([...prev, taskId]));
     toast.success('Task rejected and removed from your queue.');
+  };
+
+  const handleOpenTaskActions = (task: DashboardTask | AssignableTask) => {
+    setSelectedTask(task);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleCloseTaskModal = () => {
+    setSelectedTask(null);
+    setIsTaskModalOpen(false);
+  };
+
+  const handleTaskUpdate = () => {
+    // Refresh data after task update
+    fetchDashboardData();
+    fetchAssignableTasks();
   };
 
   const getDueDateWithPriority = (dueDate?: string) => {
@@ -308,10 +330,17 @@ const DashboardPage: NextPage = () => {
                         </>
                       )}
                       {task.isAssigned && task.status === 'IN_PROGRESS' && (
-                        <Badge variant="default" className="text-xs">
-                          <Play className="h-3 w-3 mr-1" />
-                          Working
-                        </Badge>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenTaskActions(task)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            <Settings className="h-3 w-3 mr-1" />
+                            Actions
+                          </Button>
+                        </>
                       )}
                     </div>
                   </TableCell>
@@ -686,6 +715,14 @@ const DashboardPage: NextPage = () => {
           </Tabs>
         </motion.div>
       </div>
+
+      {/* Task Action Modal */}
+      <TaskActionModal
+        isOpen={isTaskModalOpen}
+        onClose={handleCloseTaskModal}
+        task={selectedTask}
+        onTaskUpdate={handleTaskUpdate}
+      />
     </MainLayout>
   );
 };

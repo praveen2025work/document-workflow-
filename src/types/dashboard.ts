@@ -18,6 +18,7 @@ export interface DashboardTask {
   workflowName?: string;
   dueDate?: string;
   instanceId?: number;
+  taskType?: string;
 }
 
 export interface AssignableTask {
