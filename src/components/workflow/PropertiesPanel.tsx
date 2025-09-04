@@ -31,6 +31,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
   useEffect(() => {
     if (selectedNode) {
+      console.log("PropertiesPanel useEffect triggered for node:", selectedNode.id, "data:", selectedNode.data);
       // Deep copy of node data to avoid unintended mutations
       const nodeData = JSON.parse(JSON.stringify(selectedNode.data));
       
@@ -45,11 +46,13 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
       
       // Recreate red dotted lines for existing decision outcomes
       if (nodeData.taskType === 'DECISION' && nodeData.decisionOutcomes && onUpdateEdges) {
+        console.log("Recreating decision edges for outcomes:", nodeData.decisionOutcomes);
         setTimeout(() => {
           nodeData.decisionOutcomes.forEach((outcome, index) => {
             if (outcome.nextTaskId && outcome.nextTaskId > 0) {
               const targetNodeId = findNodeIdByTaskId(outcome.nextTaskId);
               if (targetNodeId) {
+                console.log(`Recreating edge for outcome ${index}: ${selectedNode.id} -> ${targetNodeId}`);
                 createDecisionOutcomeEdge(selectedNode.id, targetNodeId, outcome.outcomeName || `Outcome ${index + 1}`, index);
               }
             }
@@ -57,7 +60,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
         }, 100); // A slightly longer delay to ensure all state updates are processed
       }
     }
-  }, [selectedNode?.id]);
+  }, [selectedNode]);
 
   const handleInputChange = (field: keyof NodeData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -83,7 +86,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
     const updatedFormData = { ...formData, decisionOutcomes: newOutcomes };
     setFormData(updatedFormData);
     
-    // The user will persist the changes by clicking "Save Changes"
+    // Also update the node data immediately to persist the change
+    if (selectedNode) {
+      onUpdateNode(selectedNode.id, updatedFormData);
+    }
     
     // If nextTaskId is being changed and we have onUpdateEdges callback, create/update the decision edge immediately
     if (field === 'nextTaskId' && selectedNode && onUpdateEdges) {
