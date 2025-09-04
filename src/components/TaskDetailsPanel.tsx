@@ -1305,7 +1305,8 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
 
                 <TabsContent value="queries" className="flex-1 mt-4 px-4 pb-4 overflow-hidden">
                   <ScrollArea className="h-full">
-                  {renderQuerySection()}
+                    {renderQuerySection()}
+                  </ScrollArea>
                 </TabsContent>
               </Tabs>
             </div>
