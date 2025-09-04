@@ -85,27 +85,50 @@ const DashboardPage: NextPage = () => {
     toast.success('Task rejected and removed from your queue.');
   };
 
-  const getDueDateIndicator = (dueDate?: string) => {
-    if (!dueDate) return 'text-gray-500';
+  const getDueDateWithPriority = (dueDate?: string) => {
+    if (!dueDate) return { 
+      colorClass: 'text-gray-500', 
+      priorityDot: 'bg-gray-400',
+      formattedDate: 'No due date',
+      priorityLabel: 'No Priority'
+    };
     
     const due = new Date(dueDate);
     const now = new Date();
     const diffHours = (due.getTime() - now.getTime()) / (1000 * 60 * 60);
     
-    if (diffHours < 0) return 'text-red-500'; // Overdue
-    if (diffHours < 24) return 'text-yellow-500'; // Due within 24 hours
-    return 'text-green-500'; // Due later
-  };
+    let colorClass = '';
+    let priorityDot = '';
+    let priorityLabel = '';
+    
+    if (diffHours < 0) {
+      colorClass = 'text-red-500';
+      priorityDot = 'bg-red-500';
+      priorityLabel = 'Overdue';
+    } else if (diffHours < 24) {
+      colorClass = 'text-orange-500';
+      priorityDot = 'bg-orange-500';
+      priorityLabel = 'High Priority';
+    } else if (diffHours < 72) {
+      colorClass = 'text-yellow-500';
+      priorityDot = 'bg-yellow-500';
+      priorityLabel = 'Medium Priority';
+    } else {
+      colorClass = 'text-green-500';
+      priorityDot = 'bg-green-500';
+      priorityLabel = 'Low Priority';
+    }
 
-  const formatDueDate = (dueDate?: string) => {
-    if (!dueDate) return 'No due date';
-    return new Date(dueDate).toLocaleDateString('en-US', {
+    const formattedDate = due.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
+    
+    return { colorClass, priorityDot, formattedDate, priorityLabel };
   };
+=======
 
   const getStatusIcon = (status: string, isAssigned?: boolean) => {
     switch (status) {
@@ -142,7 +165,7 @@ const DashboardPage: NextPage = () => {
   const getStatusText = (status: string, isAssigned?: boolean) => {
     switch (status) {
       case 'PENDING':
-        return isAssigned ? 'ASSIGNED TO ME' : 'PENDING ASSIGNMENT';
+        return isAssigned ? 'ASSIGNED' : 'AVAILABLE';
       case 'NOT_STARTED':
         return 'NOT STARTED';
       case 'IN_PROGRESS':
@@ -153,19 +176,9 @@ const DashboardPage: NextPage = () => {
         return status;
     }
   };
+=======
 
-  const getPriorityIndicator = (dueDate?: string) => {
-    if (!dueDate) return { color: 'bg-gray-400', label: 'No Priority' };
-    
-    const due = new Date(dueDate);
-    const now = new Date();
-    const diffHours = (due.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
-    if (diffHours < 0) return { color: 'bg-red-500', label: 'Overdue' };
-    if (diffHours < 24) return { color: 'bg-orange-500', label: 'High Priority' };
-    if (diffHours < 72) return { color: 'bg-yellow-500', label: 'Medium Priority' };
-    return { color: 'bg-green-500', label: 'Low Priority' };
-  };
+=======
 
   const getTaskTypeIcon = (taskType?: string) => {
     switch (taskType) {
@@ -213,15 +226,13 @@ const DashboardPage: NextPage = () => {
             <TableRow className="border-b border-border/50">
               <TableHead className="w-[200px]">Workflow</TableHead>
               <TableHead className="w-[250px]">Task Details</TableHead>
-              <TableHead className="w-[180px]">Status</TableHead>
-              <TableHead className="w-[150px]">Priority</TableHead>
-              <TableHead className="w-[120px]">Due Date</TableHead>
+              <TableHead className="w-[150px]">Status</TableHead>
+              <TableHead className="w-[200px]">Due Date & Priority</TableHead>
               <TableHead className="w-[150px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {allActiveTasks.map((task) => {
-              const priority = getPriorityIndicator(task.dueDate);
               return (
                 <TableRow 
                   key={`active-${task.instanceTaskId}`}
@@ -256,32 +267,26 @@ const DashboardPage: NextPage = () => {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(task.status, task.isAssigned)}
-                      <div className="flex flex-col gap-1">
-                        <Badge 
-                          variant={getStatusBadgeVariant(task.status, task.isAssigned)}
-                          className="text-xs"
-                        >
-                          {getStatusText(task.status, task.isAssigned)}
-                        </Badge>
-                        {task.isAssigned && (
-                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            <UserCheck className="h-3 w-3 mr-1" />
-                            MINE
-                          </Badge>
-                        )}
+                      <Badge 
+                        variant={getStatusBadgeVariant(task.status, task.isAssigned)}
+                        className={`text-xs ${task.isAssigned ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : ''}`}
+                      >
+                        {getStatusText(task.status, task.isAssigned)}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
+                        <div className="text-sm">
+                          <div className={getDueDateWithPriority(task.dueDate).colorClass}>
+                            {getDueDateWithPriority(task.dueDate).formattedDate}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${priority.color}`} />
-                      <span className="text-xs font-medium">{priority.label}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div className={getDueDateIndicator(task.dueDate)}>
-                        {formatDueDate(task.dueDate)}
+                      <div className="text-xs text-muted-foreground">
+                        {getDueDateWithPriority(task.dueDate).priorityLabel}
                       </div>
                     </div>
                   </TableCell>
@@ -348,15 +353,13 @@ const DashboardPage: NextPage = () => {
             <TableRow className="border-b border-border/50">
               <TableHead className="w-[200px]">Workflow</TableHead>
               <TableHead className="w-[250px]">Task Details</TableHead>
-              <TableHead className="w-[180px]">Status</TableHead>
-              <TableHead className="w-[150px]">Completion</TableHead>
-              <TableHead className="w-[120px]">Due Date</TableHead>
+              <TableHead className="w-[150px]">Status</TableHead>
+              <TableHead className="w-[200px]">Due Date & Priority</TableHead>
               <TableHead className="w-[150px]">Result</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {completedTasks.map((task) => {
-              const priority = getPriorityIndicator(task.dueDate);
               return (
                 <TableRow 
                   key={`completed-${task.instanceTaskId}`}
@@ -396,17 +399,17 @@ const DashboardPage: NextPage = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                        Success
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div className={getDueDateIndicator(task.dueDate)}>
-                        {formatDueDate(task.dueDate)}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
+                        <div className="text-sm">
+                          <div className={getDueDateWithPriority(task.dueDate).colorClass}>
+                            {getDueDateWithPriority(task.dueDate).formattedDate}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {getDueDateWithPriority(task.dueDate).priorityLabel}
                       </div>
                     </div>
                   </TableCell>
@@ -443,15 +446,13 @@ const DashboardPage: NextPage = () => {
             <TableRow className="border-b border-border/50">
               <TableHead className="w-[200px]">Workflow</TableHead>
               <TableHead className="w-[250px]">Task Details</TableHead>
-              <TableHead className="w-[180px]">Status</TableHead>
-              <TableHead className="w-[150px]">Scheduled</TableHead>
-              <TableHead className="w-[120px]">Due Date</TableHead>
+              <TableHead className="w-[150px]">Status</TableHead>
+              <TableHead className="w-[200px]">Due Date & Priority</TableHead>
               <TableHead className="w-[150px]">Availability</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {upcomingTasks.map((task) => {
-              const priority = getPriorityIndicator(task.dueDate);
               return (
                 <TableRow 
                   key={`upcoming-${task.instanceTaskId}`}
@@ -491,17 +492,17 @@ const DashboardPage: NextPage = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-gray-400" />
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                        Scheduled
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div className={getDueDateIndicator(task.dueDate)}>
-                        {formatDueDate(task.dueDate)}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
+                        <div className="text-sm">
+                          <div className={getDueDateWithPriority(task.dueDate).colorClass}>
+                            {getDueDateWithPriority(task.dueDate).formattedDate}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {getDueDateWithPriority(task.dueDate).priorityLabel}
                       </div>
                     </div>
                   </TableCell>
