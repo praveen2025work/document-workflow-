@@ -65,6 +65,7 @@ const QueriesPage: NextPage = () => {
   const [newQueryDescription, setNewQueryDescription] = useState('');
   const [newQueryPriority, setNewQueryPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM');
   const [newQueryAssignedTo, setNewQueryAssignedTo] = useState<number | null>(null);
+  const [selectedInstanceTaskId, setSelectedInstanceTaskId] = useState<number | null>(null);
   
   // Response states
   const [responseText, setResponseText] = useState('');
@@ -80,6 +81,15 @@ const QueriesPage: NextPage = () => {
     { userId: 4, username: 'sarahwilson', role: 'Manager' },
     { userId: 5, username: 'diana', role: 'Analyst' },
     { userId: 6, username: 'frank', role: 'IT Support' },
+  ];
+
+  // Mock instance tasks for query creation
+  const mockInstanceTasks = [
+    { instanceTaskId: 1, taskName: 'Financial Data Upload', workflowName: 'Monthly Report Process' },
+    { instanceTaskId: 2, taskName: 'Document Review', workflowName: 'Approval Workflow' },
+    { instanceTaskId: 3, taskName: 'Data Consolidation', workflowName: 'Quarterly Analysis' },
+    { instanceTaskId: 4, taskName: 'Final Approval', workflowName: 'Budget Planning' },
+    { instanceTaskId: 5, taskName: 'File Processing', workflowName: 'Document Management' },
   ];
 
   const fetchDashboardData = async () => {
@@ -107,14 +117,14 @@ const QueriesPage: NextPage = () => {
   }, [user]);
 
   const handleCreateQuery = async () => {
-    if (!user || !newQueryTitle || !newQueryDescription || !newQueryAssignedTo) {
-      toast.error('Please fill in all required fields');
+    if (!user || !newQueryTitle || !newQueryDescription || !newQueryAssignedTo || !selectedInstanceTaskId) {
+      toast.error('Please fill in all required fields including task selection');
       return;
     }
 
     try {
       await createQuery({
-        instanceTaskId: 1, // This would come from task selection in real app
+        instanceTaskId: selectedInstanceTaskId,
         queryTitle: newQueryTitle,
         queryDescription: newQueryDescription,
         raisedByUserId: user.userId,
@@ -127,6 +137,7 @@ const QueriesPage: NextPage = () => {
       setNewQueryTitle('');
       setNewQueryDescription('');
       setNewQueryAssignedTo(null);
+      setSelectedInstanceTaskId(null);
       setIsCreateQueryOpen(false);
       fetchDashboardData();
     } catch (error) {

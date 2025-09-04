@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { 
   FileText, 
   Download, 
@@ -23,7 +24,8 @@ import {
   ChevronRight,
   Eye,
   Target,
-  Plus
+  Plus,
+  RefreshCw
 } from 'lucide-react';
 import { TaskFile, TaskDetails } from '@/lib/executionApi';
 
@@ -99,6 +101,7 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
   const [selectedTaskFile, setSelectedTaskFile] = useState<WorkflowTaskFile | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [currentUploadFile, setCurrentUploadFile] = useState<WorkflowTaskFile | null>(null);
+  const [isTaskCompleted, setIsTaskCompleted] = useState(false);
 
   const toggleFileExpansion = (taskFileId: number) => {
     const newExpanded = new Set(expandedFiles);
@@ -160,10 +163,24 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
   };
 
   const handleFileNameClick = (taskFile: WorkflowTaskFile) => {
-    if (taskDetails.status === 'COMPLETED') return;
+    if (taskDetails.status === 'COMPLETED' && !isTaskCompleted) return;
     
     setCurrentUploadFile(taskFile);
     setUploadDialogOpen(true);
+  };
+
+  const handleMarkAsComplete = () => {
+    setIsTaskCompleted(!isTaskCompleted);
+    if (!isTaskCompleted) {
+      onCompleteTask();
+    }
+  };
+
+  const canReuploadFile = (taskFile: WorkflowTaskFile) => {
+    return taskFile.status === 'PENDING' || 
+           taskDetails.status === 'IN_PROGRESS' || 
+           (taskFile.status === 'FAILED') ||
+           isTaskCompleted;
   };
 
   const handleUploadDialogClose = () => {
@@ -519,12 +536,23 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                         <button
                           onClick={() => handleFileNameClick(taskFile)}
                           className={`font-medium truncate text-left hover:underline ${
-                            taskDetails.status === 'COMPLETED' ? 'cursor-default' : 'cursor-pointer text-blue-600 hover:text-blue-800'
+                            !canReuploadFile(taskFile) ? 'cursor-default' : 'cursor-pointer text-blue-600 hover:text-blue-800'
                           }`}
-                          disabled={taskDetails.status === 'COMPLETED'}
+                          disabled={!canReuploadFile(taskFile)}
                         >
                           {taskFile.fileName}
                         </button>
+                        {canReuploadFile(taskFile) && taskFile.uploadedFiles.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0 ml-1"
+                            onClick={() => handleFileNameClick(taskFile)}
+                            title="Reupload file"
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                          </Button>
+                        )}
                         <Badge 
                           variant="outline" 
                           className={`text-xs h-5 ${getStatusColor(taskFile.status)}`}
@@ -666,7 +694,7 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
                       {taskFile.isRequired && (
                         <p className="text-xs text-red-500 mt-1">This file is required</p>
                       )}
-                      {taskDetails.status !== 'COMPLETED' && (
+                      {canReuploadFile(taskFile) && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -689,18 +717,26 @@ export const TaskFileManager: React.FC<TaskFileManagerProps> = ({
       {/* Task-specific Actions */}
       {renderTaskSpecificActions()}
 
-      {/* Complete Task Button for non-decision tasks */}
-      {taskDetails.status === 'IN_PROGRESS' && taskDetails.taskType !== 'DECISION' && (
+      {/* Mark as Complete Toggle for all task types */}
+      {taskDetails.status === 'IN_PROGRESS' && (
         <Card>
           <CardContent className="p-4">
-            <Button 
-              onClick={onCompleteTask} 
-              disabled={isLoading}
-              className="w-full"
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Mark as Completed
-            </Button>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="task-complete-toggle" className="text-sm font-medium">
+                  Mark Task as Complete
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Toggle to complete this step and move to the next task
+                </p>
+              </div>
+              <Switch
+                id="task-complete-toggle"
+                checked={isTaskCompleted}
+                onCheckedChange={handleMarkAsComplete}
+                disabled={isLoading}
+              />
+            </div>
           </CardContent>
         </Card>
       )}
