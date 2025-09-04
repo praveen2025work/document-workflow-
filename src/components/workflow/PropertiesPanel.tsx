@@ -140,54 +140,58 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
   // Remove decision outcome edge for a specific outcome index
   const removeDecisionOutcomeEdge = (sourceNodeId: string, outcomeIndex: number) => {
     if (!onUpdateEdges) return;
-    
-    // Remove any existing decision edges from this source for the specific outcome index
+
     const updatedEdges = edges.filter(edge => {
-      if (edge.source === sourceNodeId && edge.type === 'goBack') {
-        // Remove edges that match the outcome index pattern
-        return !edge.id.includes(`decision-${sourceNodeId}-`) || !edge.id.endsWith(`-${outcomeIndex}`);
+      // Do not remove edge if it's not a decision edge from the same source and for the same outcome
+      const isDecisionEdge = edge.source === sourceNodeId && edge.id.startsWith('decision-');
+      if (isDecisionEdge) {
+        return !edge.id.endsWith(`-${outcomeIndex}`);
       }
       return true;
     });
-    
-    // Update the edges
+
     onUpdateEdges(updatedEdges);
-    
     console.log('Removed decision edge for outcome index:', outcomeIndex);
   };
 
   // Create or update decision outcome edge
   const createDecisionOutcomeEdge = (sourceNodeId: string, targetNodeId: string, outcomeName: string, outcomeIndex?: number) => {
     if (!onUpdateEdges) return;
-    
+
     // Create a unique edge ID that includes the outcome index to avoid conflicts
     const newEdgeId = `decision-${sourceNodeId}-${targetNodeId}-${outcomeIndex !== undefined ? outcomeIndex : outcomeName.replace(/\s+/g, '-')}`;
     const newEdge = {
       id: newEdgeId,
       source: sourceNodeId,
       target: targetNodeId,
-      type: 'goBack', // Use the red dotted line type
-      style: { 
-        stroke: '#ef4444', 
-        strokeWidth: 3, 
-        strokeDasharray: '8,4' 
+      type: 'smoothstep', // Use a built-in type for better compatibility
+      style: {
+        stroke: '#ef4444', // Red color
+        strokeWidth: 2,
+        strokeDasharray: '5 5', // Dotted line style
       },
       label: outcomeName,
-      animated: true,
-      markerEnd: {
+      markerStart: { // Arrow at the beginning of the line
         type: 'arrowclosed',
         color: '#ef4444',
-      }
+        width: 20,
+        height: 20,
+      },
+      markerEnd: { // Arrow at the end of the line
+        type: 'arrowclosed',
+        color: '#ef4444',
+        width: 20,
+        height: 20,
+      },
     };
 
     // Remove any existing decision edges from this source for the same outcome index
     const updatedEdges = edges.filter(edge => {
-      if (edge.source === sourceNodeId && edge.type === 'goBack') {
-        // If we have an outcome index, remove edges with the same index pattern
+      const isDecisionEdge = edge.source === sourceNodeId && edge.id.startsWith('decision-');
+      if (isDecisionEdge) {
         if (outcomeIndex !== undefined) {
           return !edge.id.endsWith(`-${outcomeIndex}`);
         }
-        // Otherwise, remove edges with the same label
         return edge.label !== outcomeName;
       }
       return true;
