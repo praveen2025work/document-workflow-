@@ -13,6 +13,7 @@ export interface DashboardTask {
   instanceTaskId: number;
   taskName: string;
   status: string;
+  assignedTo: number | null;
   assignedToUsername: string;
   workflowName?: string;
   dueDate?: string;
@@ -24,7 +25,7 @@ export interface AssignableTask {
   instanceId: number;
   taskId: number;
   status: string;
-  assignedTo: number;
+  assignedTo: number | null;
   startedOn: string | null;
   completedOn: string | null;
   decisionOutcome: string | null;

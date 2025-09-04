@@ -130,15 +130,14 @@ const DashboardPage: NextPage = () => {
   };
 
   const getStatusIcon = (status: string, isAssigned?: boolean) => {
+    if (status === 'IN_PROGRESS') {
+      return isAssigned ? 
+        <Play className="h-4 w-4 text-blue-500" /> : 
+        <Clock className="h-4 w-4 text-yellow-500" />;
+    }
     switch (status) {
-      case 'PENDING':
-        return isAssigned ? 
-          <Timer className="h-4 w-4 text-orange-500" /> : 
-          <Clock className="h-4 w-4 text-yellow-500" />;
       case 'NOT_STARTED':
         return <Pause className="h-4 w-4 text-gray-500" />;
-      case 'IN_PROGRESS':
-        return <Play className="h-4 w-4 text-blue-500" />;
       case 'COMPLETED':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       default:
@@ -147,13 +146,12 @@ const DashboardPage: NextPage = () => {
   };
 
   const getStatusBadgeVariant = (status: string, isAssigned?: boolean): "default" | "secondary" | "destructive" | "outline" => {
+    if (status === 'IN_PROGRESS') {
+      return isAssigned ? 'default' : 'secondary';
+    }
     switch (status) {
-      case 'PENDING':
-        return isAssigned ? 'default' : 'secondary';
       case 'NOT_STARTED':
         return 'outline';
-      case 'IN_PROGRESS':
-        return 'default';
       case 'COMPLETED':
         return 'outline';
       default:
@@ -162,13 +160,12 @@ const DashboardPage: NextPage = () => {
   };
 
   const getStatusText = (status: string, isAssigned?: boolean) => {
+    if (status === 'IN_PROGRESS') {
+      return isAssigned ? 'ASSIGNED' : 'AVAILABLE';
+    }
     switch (status) {
-      case 'PENDING':
-        return isAssigned ? 'ASSIGNED' : 'AVAILABLE';
       case 'NOT_STARTED':
         return 'NOT STARTED';
-      case 'IN_PROGRESS':
-        return 'IN PROGRESS';
       case 'COMPLETED':
         return 'COMPLETED';
       default:
@@ -196,14 +193,16 @@ const DashboardPage: NextPage = () => {
       return <p className="text-muted-foreground p-4">Loading active tasks...</p>;
     }
 
-    // Combine assigned tasks (PENDING/IN_PROGRESS) and assignable tasks
+    // Get assigned tasks (IN_PROGRESS with assignedTo = current user)
     const myActiveTasks = dashboardData?.myTasks.filter(t => 
-      t.status === 'PENDING' || t.status === 'IN_PROGRESS'
+      t.status === 'IN_PROGRESS' && t.assignedTo === user?.userId
     ) || [];
     
+    // Get unassigned tasks (IN_PROGRESS with assignedTo = null)
     const availableForAssignment = assignableTasks.filter(t => 
       !rejectedTasks.has(t.instanceTaskId) && 
-      (t.status === 'PENDING' || t.status === 'IN_PROGRESS')
+      t.status === 'IN_PROGRESS' && 
+      t.assignedTo === null
     ) || [];
 
     const allActiveTasks = [
@@ -312,12 +311,6 @@ const DashboardPage: NextPage = () => {
                         <Badge variant="default" className="text-xs">
                           <Play className="h-3 w-3 mr-1" />
                           Working
-                        </Badge>
-                      )}
-                      {task.isAssigned && task.status === 'PENDING' && (
-                        <Badge variant="secondary" className="text-xs">
-                          <Timer className="h-3 w-3 mr-1" />
-                          Ready
                         </Badge>
                       )}
                     </div>
@@ -541,10 +534,20 @@ const DashboardPage: NextPage = () => {
   const getSummaryStats = () => {
     if (!dashboardData) return { active: 0, completed: 0, upcoming: 0, assignable: 0 };
     
-    const active = dashboardData.myTasks.filter(t => t.status === 'PENDING' || t.status === 'IN_PROGRESS').length;
+    // Active tasks are IN_PROGRESS tasks assigned to current user
+    const active = dashboardData.myTasks.filter(t => 
+      t.status === 'IN_PROGRESS' && t.assignedTo === user?.userId
+    ).length;
+    
     const completed = dashboardData.myTasks.filter(t => t.status === 'COMPLETED').length;
     const upcoming = dashboardData.myTasks.filter(t => t.status === 'NOT_STARTED').length;
-    const assignable = assignableTasks.filter(t => !rejectedTasks.has(t.instanceTaskId)).length;
+    
+    // Assignable tasks are IN_PROGRESS tasks with no assignment that haven't been rejected
+    const assignable = assignableTasks.filter(t => 
+      !rejectedTasks.has(t.instanceTaskId) && 
+      t.status === 'IN_PROGRESS' && 
+      t.assignedTo === null
+    ).length;
     
     return { active, completed, upcoming, assignable };
   };
