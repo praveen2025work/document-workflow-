@@ -162,6 +162,25 @@ const QueriesPage: NextPage = () => {
       
       toast.success('Response sent successfully');
       setResponseText('');
+      // Refresh the selected query to show the new message
+      if (selectedQuery) {
+        // In a real app, you'd fetch the updated query here
+        setSelectedQuery({
+          ...selectedQuery,
+          messages: [
+            ...selectedQuery.messages,
+            {
+              id: Date.now(),
+              messageText: responseText,
+              messageType: 'TEXT',
+              sentByUserId: user.userId,
+              sentBy: user.username,
+              sentAt: new Date().toISOString(),
+              attachments: []
+            }
+          ]
+        });
+      }
       fetchDashboardData();
     } catch (error) {
       console.error('Error sending response:', error);
@@ -304,8 +323,8 @@ const QueriesPage: NextPage = () => {
               }}
               className="h-7 text-xs"
             >
-              <Eye className="h-3 w-3 mr-1" />
-              View
+              <MessageSquare className="h-3 w-3 mr-1" />
+              Chat
             </Button>
             
             {query.queryStatus === 'OPEN' && query.assignedToUserId === user?.userId && (
@@ -428,6 +447,21 @@ const QueriesPage: NextPage = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
+              <Label htmlFor="instance-task">Related Task *</Label>
+              <Select value={selectedInstanceTaskId?.toString() || ''} onValueChange={(value) => setSelectedInstanceTaskId(value ? parseInt(value) : null)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select a task for this query" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockInstanceTasks.map((task) => (
+                    <SelectItem key={task.instanceTaskId} value={task.instanceTaskId.toString()}>
+                      {task.taskName} - {task.workflowName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label htmlFor="query-title">Query Title</Label>
               <Input
                 id="query-title"
@@ -485,7 +519,7 @@ const QueriesPage: NextPage = () => {
               </Button>
               <Button 
                 onClick={handleCreateQuery}
-                disabled={!newQueryTitle || !newQueryDescription || !newQueryAssignedTo}
+                disabled={!newQueryTitle || !newQueryDescription || !newQueryAssignedTo || !selectedInstanceTaskId}
               >
                 Create Query
               </Button>
@@ -677,7 +711,7 @@ const QueriesPage: NextPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              {selectedQuery?.queryTitle}
+              {selectedQuery?.queryTitle} - Chat History
             </DialogTitle>
           </DialogHeader>
           {selectedQuery && (
@@ -689,14 +723,33 @@ const QueriesPage: NextPage = () => {
                 <Badge className={`text-xs ${getStatusColor(selectedQuery.queryStatus)}`}>
                   {selectedQuery.queryStatus}
                 </Badge>
+                <span className="text-xs text-muted-foreground">
+                  Task: {mockInstanceTasks.find(t => t.instanceTaskId === selectedQuery.instanceTaskId)?.taskName || 'Unknown Task'}
+                </span>
               </div>
               
               <div className="p-3 bg-muted rounded">
+                <p className="text-sm font-medium mb-1">Original Query:</p>
                 <p className="text-sm">{selectedQuery.queryDescription}</p>
               </div>
 
               <ScrollArea className="h-[300px] border rounded p-3">
                 <div className="space-y-3">
+                  {/* Initial query message */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <User className="h-3 w-3" />
+                      <span>{selectedQuery.raisedBy}</span>
+                      <Clock className="h-3 w-3" />
+                      <span>{new Date(selectedQuery.createdAt).toLocaleString()}</span>
+                      <Badge variant="outline" className="text-xs">Query Created</Badge>
+                    </div>
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded">
+                      <p className="text-sm">{selectedQuery.queryDescription}</p>
+                    </div>
+                  </div>
+
+                  {/* Conversation messages */}
                   {selectedQuery.messages.map((message) => (
                     <div key={message.id} className="space-y-2">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -720,13 +773,29 @@ const QueriesPage: NextPage = () => {
                       </div>
                     </div>
                   ))}
+
+                  {selectedQuery.queryStatus === 'RESOLVED' && selectedQuery.resolutionNotes && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        <span>System</span>
+                        <Clock className="h-3 w-3" />
+                        <span>{new Date(selectedQuery.updatedAt || selectedQuery.createdAt).toLocaleString()}</span>
+                        <Badge variant="default" className="text-xs bg-green-600">Resolved</Badge>
+                      </div>
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded">
+                        <p className="text-sm font-medium mb-1">Resolution:</p>
+                        <p className="text-sm">{selectedQuery.resolutionNotes}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
 
               {selectedQuery.queryStatus === 'OPEN' && selectedQuery.assignedToUserId === user?.userId && (
-                <div className="space-y-3">
+                <div className="space-y-3 border-t pt-4">
                   <div>
-                    <Label htmlFor="response">Your Response</Label>
+                    <Label htmlFor="response">Add Comment</Label>
                     <Textarea
                       id="response"
                       value={responseText}
@@ -738,6 +807,13 @@ const QueriesPage: NextPage = () => {
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button
+                      variant="outline"
+                      onClick={() => handleResolveQuery(selectedQuery.id)}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Mark Resolved
+                    </Button>
+                    <Button
                       onClick={() => handleSendResponse(selectedQuery.id)}
                       disabled={!responseText.trim()}
                     >
@@ -745,6 +821,12 @@ const QueriesPage: NextPage = () => {
                       Send Response
                     </Button>
                   </div>
+                </div>
+              )}
+
+              {selectedQuery.queryStatus !== 'OPEN' && (
+                <div className="text-center py-4 text-muted-foreground border-t">
+                  <p className="text-sm">This query has been {selectedQuery.queryStatus.toLowerCase()}.</p>
                 </div>
               )}
             </div>
