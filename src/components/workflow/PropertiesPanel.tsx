@@ -57,7 +57,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
         }, 100); // A slightly longer delay to ensure all state updates are processed
       }
     }
-  }, [selectedNode]);
+  }, [selectedNode?.id]);
 
   const handleInputChange = (field: keyof NodeData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
