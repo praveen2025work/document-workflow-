@@ -77,12 +77,36 @@ export const mockUserDashboard: UserDashboard = {
     {
       instanceTaskId: 2,
       taskName: 'Review Document',
-      status: 'IN_PROGRESS',
+      status: 'PENDING',
       assignedToUsername: 'alice'
     },
     {
       instanceTaskId: 3,
+      taskName: 'Process Invoice',
+      status: 'IN_PROGRESS',
+      assignedToUsername: 'alice'
+    },
+    {
+      instanceTaskId: 4,
+      taskName: 'Update Customer Records',
+      status: 'IN_PROGRESS',
+      assignedToUsername: 'alice'
+    },
+    {
+      instanceTaskId: 5,
       taskName: 'Final Approval',
+      status: 'COMPLETED',
+      assignedToUsername: 'alice'
+    },
+    {
+      instanceTaskId: 6,
+      taskName: 'Generate Report',
+      status: 'COMPLETED',
+      assignedToUsername: 'alice'
+    },
+    {
+      instanceTaskId: 7,
+      taskName: 'Quality Check',
       status: 'COMPLETED',
       assignedToUsername: 'alice'
     }
@@ -96,6 +120,11 @@ export const mockUserDashboard: UserDashboard = {
     {
       instanceId: 2,
       workflowName: 'Quality Review',
+      status: 'ACTIVE'
+    },
+    {
+      instanceId: 3,
+      workflowName: 'Monthly Report Generation',
       status: 'COMPLETED'
     }
   ],
@@ -112,12 +141,12 @@ export const mockAssignableTasks: AssignableTask[] = [
     instanceTaskId: 1,
     instanceId: 1,
     taskId: 1,
-    status: "COMPLETED",
+    status: "PENDING",
     assignedTo: 1,
-    startedOn: "2025-08-29T09:09:00.721631",
+    startedOn: null,
     completedOn: null,
     decisionOutcome: null,
-    taskName: "Upload Raw Data",
+    taskName: "Upload Customer Documents",
     taskType: "FILE_UPLOAD",
     assignedToUsername: "alice",
     instanceTaskFiles: null,
@@ -126,43 +155,43 @@ export const mockAssignableTasks: AssignableTask[] = [
   {
     instanceTaskId: 5,
     instanceId: 2,
-    taskId: 1,
-    status: "COMPLETED",
-    assignedTo: 1,
-    startedOn: "2025-08-28T11:09:00.724241",
-    completedOn: "2025-08-28T12:09:00.724241",
+    taskId: 2,
+    status: "PENDING",
+    assignedTo: 2,
+    startedOn: null,
+    completedOn: null,
     decisionOutcome: null,
-    taskName: "Upload Raw Data",
-    taskType: "FILE_UPLOAD",
-    assignedToUsername: "alice",
+    taskName: "Review Contract Terms",
+    taskType: "FILE_UPDATE",
+    assignedToUsername: "bob",
     instanceTaskFiles: null,
     decisionOutcomes: null
   },
   {
     instanceTaskId: 9,
     instanceId: 3,
-    taskId: 1,
-    status: "PENDING",
-    assignedTo: 1,
-    startedOn: null,
+    taskId: 3,
+    status: "IN_PROGRESS",
+    assignedTo: 3,
+    startedOn: "2025-01-04T10:30:00.000000",
     completedOn: null,
     decisionOutcome: null,
-    taskName: "Upload Raw Data",
-    taskType: "FILE_UPLOAD",
-    assignedToUsername: "alice",
+    taskName: "Consolidate Financial Reports",
+    taskType: "CONSOLIDATE_FILES",
+    assignedToUsername: "charlie",
     instanceTaskFiles: null,
     decisionOutcomes: null
   },
   {
     instanceTaskId: 13,
     instanceId: 4,
-    taskId: 1,
+    taskId: 4,
     status: "COMPLETED",
     assignedTo: 1,
-    startedOn: "2025-08-29T07:09:00.728794",
-    completedOn: "2025-08-29T08:09:00.728794",
+    startedOn: "2025-01-03T14:15:00.000000",
+    completedOn: "2025-01-03T16:45:00.000000",
     decisionOutcome: null,
-    taskName: "Upload Raw Data",
+    taskName: "Process Invoice Payment",
     taskType: "FILE_UPLOAD",
     assignedToUsername: "alice",
     instanceTaskFiles: null,
@@ -171,15 +200,45 @@ export const mockAssignableTasks: AssignableTask[] = [
   {
     instanceTaskId: 20,
     instanceId: 7,
-    taskId: 10,
+    taskId: 5,
     status: "PENDING",
-    assignedTo: 1,
+    assignedTo: 4,
     startedOn: null,
     completedOn: null,
     decisionOutcome: null,
-    taskName: "Approve Document",
+    taskName: "Approve Budget Request",
     taskType: "DECISION",
-    assignedToUsername: "alice",
+    assignedToUsername: "diana",
+    instanceTaskFiles: null,
+    decisionOutcomes: null
+  },
+  {
+    instanceTaskId: 25,
+    instanceId: 8,
+    taskId: 6,
+    status: "IN_PROGRESS",
+    assignedTo: 2,
+    startedOn: "2025-01-04T09:00:00.000000",
+    completedOn: null,
+    decisionOutcome: null,
+    taskName: "Update Employee Records",
+    taskType: "FILE_UPDATE",
+    assignedToUsername: "bob",
+    instanceTaskFiles: null,
+    decisionOutcomes: null
+  },
+  {
+    instanceTaskId: 30,
+    instanceId: 9,
+    taskId: 7,
+    status: "PENDING",
+    assignedTo: 5,
+    startedOn: null,
+    completedOn: null,
+    decisionOutcome: null,
+    taskName: "Quality Assurance Check",
+    taskType: "DECISION",
+    assignedToUsername: "eve",
     instanceTaskFiles: null,
     decisionOutcomes: null
   }

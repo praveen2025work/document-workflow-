@@ -3,6 +3,7 @@ import axios from 'axios';
 import { config, debugLog } from '@/lib/config';
 
 interface User {
+  userId: number;
   id: number;
   name: string;
   email: string;
@@ -33,6 +34,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (config.app.isMock || config.isDevelopment) {
       debugLog('Using mock user data');
       setUser({
+        userId: 1,
         id: 1,
         name: 'Mock User',
         email: 'mock.user@workflow.com',
@@ -49,6 +51,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setError(errorMsg);
       // Set mock user as fallback
       setUser({
+        userId: 1,
         id: 1,
         name: 'Development User',
         email: 'dev@workflow.com'
@@ -77,6 +80,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       // Always set a mock user as fallback to prevent app from breaking
       debugLog('Setting mock user as fallback due to service error');
       setUser({
+        userId: 1,
         id: 1,
         name: 'Development User',
         email: 'dev@workflow.com'

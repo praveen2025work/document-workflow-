@@ -7,9 +7,11 @@ export const getUserDashboard = async (userId: number): Promise<UserDashboard> =
   // Use mock data for preview/mock environments or when not in dev/prod
   if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
     console.log('Using mock dashboard data for environment:', config.app.env);
+    console.log('Mock dashboard data:', mockUserDashboard);
     return Promise.resolve(mockUserDashboard);
   }
   
+  console.log('Making API call to fetch dashboard data for userId:', userId);
   const response = await api.get('/dashboard/user', { params: { userId } });
   return response.data;
 };
