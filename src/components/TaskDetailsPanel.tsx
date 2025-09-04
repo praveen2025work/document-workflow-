@@ -26,7 +26,8 @@ import {
   Target,
   History,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Files
 } from 'lucide-react';
 import { 
   getTaskDetails, 
@@ -40,6 +41,7 @@ import {
   TaskFile 
 } from '@/lib/executionApi';
 import { DashboardTask, AssignableTask } from '@/types/dashboard';
+import { TaskFileManager } from './TaskFileManager';
 
 interface TaskDetailsPanelProps {
   task: DashboardTask | AssignableTask | null;
@@ -54,7 +56,7 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
 }) => {
   const [taskDetails, setTaskDetails] = useState<TaskDetails | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('actions');
+  const [activeTab, setActiveTab] = useState('files');
   const [expandedFileVersions, setExpandedFileVersions] = useState<Set<number>>(new Set());
   
   // File upload states
@@ -242,6 +244,66 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
     { userId: 4, username: 'sarahwilson', role: 'Manager' },
     { userId: 5, username: 'diana', role: 'Analyst' },
   ];
+
+  // Mock workflow task files - in real app, this would come from API based on workflow configuration
+  const getWorkflowTaskFiles = () => {
+    if (!taskDetails) return [];
+    
+    // Generate mock workflow task files based on task type
+    const mockFiles = [];
+    
+    if (taskDetails.taskType === 'FILE_UPLOAD') {
+      mockFiles.push({
+        taskFileId: 1,
+        fileName: 'Financial Data',
+        fileDescription: 'Monthly financial data in Excel format',
+        isRequired: true,
+        allowedFileTypes: ['*.xlsx', '*.xls', '*.csv'],
+        maxFileSize: '10MB',
+        status: taskDetails.instanceTaskFiles && taskDetails.instanceTaskFiles.length > 0 ? 'UPLOADED' : 'PENDING',
+        uploadedFiles: taskDetails.instanceTaskFiles || []
+      });
+      
+      mockFiles.push({
+        taskFileId: 2,
+        fileName: 'Supporting Documents',
+        fileDescription: 'Additional supporting documents (optional)',
+        isRequired: false,
+        allowedFileTypes: ['*.pdf', '*.docx'],
+        maxFileSize: '5MB',
+        status: 'PENDING',
+        uploadedFiles: []
+      });
+    }
+    
+    if (taskDetails.taskType === 'FILE_UPDATE') {
+      mockFiles.push({
+        taskFileId: 3,
+        fileName: 'Updated Financial Data',
+        fileDescription: 'Updated version of the financial data',
+        isRequired: true,
+        allowedFileTypes: ['*.xlsx', '*.xls'],
+        maxFileSize: '10MB',
+        status: taskDetails.updatedFiles && taskDetails.updatedFiles.length > 0 ? 'UPLOADED' : 'PENDING',
+        uploadedFiles: taskDetails.updatedFiles || []
+      });
+    }
+    
+    if (taskDetails.taskType === 'FILE_CONSOLIDATE') {
+      mockFiles.push({
+        taskFileId: 4,
+        fileName: 'Consolidated Report',
+        fileDescription: 'Final consolidated report',
+        isRequired: true,
+        allowedFileTypes: ['*.pdf'],
+        maxFileSize: '25MB',
+        status: taskDetails.consolidatedFile ? 'COMPLETED' : 'PENDING',
+        uploadedFiles: taskDetails.consolidatedFile ? [taskDetails.consolidatedFile] : []
+      });
+    }
+    
+    return mockFiles;
+  };
 
   const getTaskTypeIcon = (taskType: string) => {
     switch (taskType) {
@@ -873,10 +935,21 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
               )}
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="files">Files</TabsTrigger>
                   <TabsTrigger value="actions">Actions</TabsTrigger>
                   <TabsTrigger value="queries">Queries</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="files" className="space-y-4 mt-4">
+                  <TaskFileManager
+                    workflowTaskFiles={getWorkflowTaskFiles()}
+                    onDownload={handleDownload}
+                    onViewVersions={(taskFileId) => {
+                      console.log('View versions for task file:', taskFileId);
+                    }}
+                  />
+                </TabsContent>
 
                 <TabsContent value="actions" className="space-y-4 mt-4">
                   {taskDetails.taskType === 'FILE_UPLOAD' && renderFileUploadActions()}

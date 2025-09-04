@@ -355,6 +355,30 @@ export const mockTaskDetails: TaskDetails[] = [
         fileCommentary: 'January financial data uploaded',
         createdBy: 'alice',
         createdAt: new Date(Date.now() - 1800000).toISOString()
+      },
+      {
+        instanceFileId: 1,
+        version: 2,
+        fileName: 'financial_data_jan.xlsx',
+        filePath: '/uploads/financial_data_jan_v2.xlsx',
+        fileSize: 2150000,
+        actionType: 'UPDATE',
+        fileStatus: 'COMPLETED',
+        fileCommentary: 'Updated with corrected Q4 figures',
+        createdBy: 'alice',
+        createdAt: new Date(Date.now() - 900000).toISOString()
+      },
+      {
+        instanceFileId: 5,
+        version: 1,
+        fileName: 'budget_summary.pdf',
+        filePath: '/uploads/budget_summary.pdf',
+        fileSize: 1024000,
+        actionType: 'UPLOAD',
+        fileStatus: 'COMPLETED',
+        fileCommentary: 'Budget summary document',
+        createdBy: 'alice',
+        createdAt: new Date(Date.now() - 1200000).toISOString()
       }
     ],
     queries: [
