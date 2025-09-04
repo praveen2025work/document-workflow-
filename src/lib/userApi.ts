@@ -5,7 +5,11 @@ import { config } from './config';
 
 export const getUsers = async (params?: { page?: number; size?: number; isActive?: 'Y' | 'N' }): Promise<UserApiResponse> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log('Using mock users data for environment:', config.app.env);
     // Filter by isActive if provided
     let filteredUsers = mockUsers;
@@ -13,7 +17,7 @@ export const getUsers = async (params?: { page?: number; size?: number; isActive
       filteredUsers = mockUsers.filter(user => user.isActive === params.isActive);
     }
     return Promise.resolve({
-      users: filteredUsers,
+      content: filteredUsers,
       totalElements: filteredUsers.length,
       totalPages: 1,
       size: params?.size || 10,
@@ -27,7 +31,11 @@ export const getUsers = async (params?: { page?: number; size?: number; isActive
 
 export const searchUsers = async (criteria: UserSearchCriteria): Promise<UserApiResponse> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log('Using mock users search data for environment:', config.app.env);
     // Simple search implementation for mock data
     let filteredUsers = mockUsers;
@@ -36,16 +44,18 @@ export const searchUsers = async (criteria: UserSearchCriteria): Promise<UserApi
         user.username.toLowerCase().includes(criteria.username!.toLowerCase())
       );
     }
+    if (criteria.firstName) {
+      filteredUsers = filteredUsers.filter(user => 
+        user.firstName.toLowerCase().includes(criteria.firstName!.toLowerCase())
+      );
+    }
     if (criteria.email) {
       filteredUsers = filteredUsers.filter(user => 
         user.email.toLowerCase().includes(criteria.email!.toLowerCase())
       );
     }
-    if (criteria.isActive) {
-      filteredUsers = filteredUsers.filter(user => user.isActive === criteria.isActive);
-    }
     return Promise.resolve({
-      users: filteredUsers,
+      content: filteredUsers,
       totalElements: filteredUsers.length,
       totalPages: 1,
       size: 10,
@@ -59,7 +69,11 @@ export const searchUsers = async (criteria: UserSearchCriteria): Promise<UserApi
 
 export const createUser = async (user: NewUser): Promise<User> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log('Mock: Creating user in environment:', config.app.env);
     const newUser: User = {
       userId: Math.max(...mockUsers.map(u => u.userId)) + 1,
@@ -67,11 +81,10 @@ export const createUser = async (user: NewUser): Promise<User> => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      isActive: 'Y',
-      createdBy: 'mock@company.com',
+      isActive: user.isActive,
+      isAdmin: user.isAdmin,
+      createdBy: user.createdBy,
       createdOn: new Date().toISOString(),
-      updatedBy: 'mock@company.com',
-      updatedOn: new Date().toISOString(),
     };
     return Promise.resolve(newUser);
   }
@@ -82,7 +95,11 @@ export const createUser = async (user: NewUser): Promise<User> => {
 
 export const getUserById = async (userId: number): Promise<User> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log('Using mock user by ID data for environment:', config.app.env);
     const user = mockUsers.find(u => u.userId === userId);
     if (!user) {
@@ -97,7 +114,11 @@ export const getUserById = async (userId: number): Promise<User> => {
 
 export const updateUser = async (userId: number, user: UpdateUser): Promise<User> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log('Mock: Updating user in environment:', config.app.env);
     const existingUser = mockUsers.find(u => u.userId === userId);
     if (!existingUser) {
@@ -106,8 +127,6 @@ export const updateUser = async (userId: number, user: UpdateUser): Promise<User
     const updatedUser: User = {
       ...existingUser,
       ...user,
-      updatedBy: 'mock@company.com',
-      updatedOn: new Date().toISOString(),
     };
     return Promise.resolve(updatedUser);
   }
@@ -118,7 +137,11 @@ export const updateUser = async (userId: number, user: UpdateUser): Promise<User
 
 export const toggleUserStatus = async (userId: number, isActive: 'Y' | 'N'): Promise<void> => {
   // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
+  
+  if (shouldUseMock) {
     console.log(`Mock: Toggling user ${userId} status to ${isActive} in environment:`, config.app.env);
     return Promise.resolve();
   }

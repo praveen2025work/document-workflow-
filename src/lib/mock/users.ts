@@ -1,6 +1,6 @@
-import { PaginatedUsersResponse, WorkflowUserDto } from '@/types/user';
+import { User, UserApiResponse } from '@/types/user';
 
-export const mockUsers: WorkflowUserDto[] = [
+export const mockUsers: User[] = [
   {
     userId: 1,
     username: 'johndoe',
@@ -8,10 +8,9 @@ export const mockUsers: WorkflowUserDto[] = [
     lastName: 'Doe',
     email: 'john.doe@company.com',
     isActive: 'Y',
+    isAdmin: 'N',
     createdBy: 'admin@company.com',
     createdOn: new Date().toISOString(),
-    updatedBy: 'admin@company.com',
-    updatedOn: new Date().toISOString(),
   },
   {
     userId: 2,
@@ -20,10 +19,9 @@ export const mockUsers: WorkflowUserDto[] = [
     lastName: 'Smith',
     email: 'jane.smith@company.com',
     isActive: 'Y',
+    isAdmin: 'N',
     createdBy: 'admin@company.com',
     createdOn: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    updatedBy: 'admin@company.com',
-    updatedOn: new Date(Date.now() - 86400000).toISOString(),
   },
   {
     userId: 3,
@@ -32,10 +30,9 @@ export const mockUsers: WorkflowUserDto[] = [
     lastName: 'Jones',
     email: 'peter.jones@company.com',
     isActive: 'N',
+    isAdmin: 'N',
     createdBy: 'admin@company.com',
     createdOn: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-    updatedBy: 'admin@company.com',
-    updatedOn: new Date(Date.now() - 172800000).toISOString(),
   },
   {
     userId: 4,
@@ -44,14 +41,35 @@ export const mockUsers: WorkflowUserDto[] = [
     lastName: 'Wilson',
     email: 'sarah.wilson@company.com',
     isActive: 'Y',
+    isAdmin: 'Y',
     createdBy: 'hr@company.com',
     createdOn: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-    updatedBy: 'hr@company.com',
-    updatedOn: new Date(Date.now() - 259200000).toISOString(),
+  },
+  {
+    userId: 5,
+    username: 'alice',
+    firstName: 'Alice',
+    lastName: 'Johnson',
+    email: 'alice.johnson@company.com',
+    isActive: 'Y',
+    isAdmin: 'N',
+    createdBy: 'admin@company.com',
+    createdOn: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
+  },
+  {
+    userId: 6,
+    username: 'bob',
+    firstName: 'Bob',
+    lastName: 'Brown',
+    email: 'bob.brown@company.com',
+    isActive: 'Y',
+    isAdmin: 'N',
+    createdBy: 'admin@company.com',
+    createdOn: new Date(Date.now() - 432000000).toISOString(), // 5 days ago
   },
 ];
 
-export const mockPaginatedUsers: PaginatedUsersResponse = {
+export const mockPaginatedUsers: UserApiResponse = {
   content: mockUsers,
   totalElements: mockUsers.length,
   totalPages: 1,
