@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Calendar, CalendarApiResponse, NewCalendarWithDays, CalendarDay } from '@/types/calendar';
+import { Calendar, CalendarApiResponse, NewCalendarWithDays, CalendarDay, UpdateCalendarWithDays } from '@/types/calendar';
 import { mockCalendars, mockCalendarDays } from './mock/calendars';
 import { config } from './config';
 
@@ -60,6 +60,47 @@ export const createCalendarWithDays = async (calendarData: NewCalendarWithDays):
   }
   
   const response = await api.post('/calendar/with-days', calendarData);
+  return response.data;
+};
+
+export const updateCalendarWithDays = async (calendarData: UpdateCalendarWithDays): Promise<Calendar> => {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log(`Mock: Updating calendar with ID ${calendarData.calendarId}`);
+    const calendarIndex = mockCalendars.findIndex(c => c.calendarId === calendarData.calendarId);
+    if (calendarIndex === -1) {
+      throw new Error('Calendar not found');
+    }
+
+    const updatedCalendar: Calendar = {
+      ...mockCalendars[calendarIndex],
+      calendarName: calendarData.calendarName,
+      description: calendarData.description,
+      recurrence: calendarData.recurrence,
+      startDate: calendarData.startDate,
+      endDate: calendarData.endDate,
+      updatedBy: calendarData.updatedBy,
+      updatedAt: new Date().toISOString(),
+    };
+    mockCalendars[calendarIndex] = updatedCalendar;
+
+    // Remove old days for this calendar
+    const remainingDays = mockCalendarDays.filter(d => d.calendarId !== calendarData.calendarId);
+    
+    // Add new days
+    const newDays = calendarData.calendarDays.map((day, index) => ({
+      ...day,
+      calendarDayId: (mockCalendarDays.length > 0 ? Math.max(...mockCalendarDays.map(d => d.calendarDayId), 0) : 0) + index + 1,
+      calendarId: calendarData.calendarId,
+    }));
+    
+    // Update mockCalendarDays
+    mockCalendarDays.length = 0;
+    mockCalendarDays.push(...remainingDays, ...newDays);
+
+    return Promise.resolve(updatedCalendar);
+  }
+
+  const response = await api.put(`/calendar/with-days/${calendarData.calendarId}`, calendarData);
   return response.data;
 };
 

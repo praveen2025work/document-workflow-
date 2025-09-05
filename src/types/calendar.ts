@@ -16,6 +16,7 @@ export interface Calendar {
   startDate: string; // "YYYY-MM-DD"
   endDate: string; // "YYYY-MM-DD"
   recurrence: Recurrence;
+  isActive?: 'Y' | 'N';
   createdBy: string;
   createdAt: string; // "YYYY-MM-DDTHH:mm:ss"
   updatedBy?: string | null;
@@ -31,6 +32,11 @@ export interface NewCalendarWithDays {
   recurrence: Recurrence;
   createdBy: string;
   calendarDays: Omit<CalendarDay, 'calendarDayId' | 'calendarId'>[];
+}
+
+export interface UpdateCalendarWithDays extends Omit<NewCalendarWithDays, 'createdBy'> {
+  calendarId: number;
+  updatedBy: string;
 }
 
 export interface CalendarApiResponse {

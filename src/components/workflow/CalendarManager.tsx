@@ -31,11 +31,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Plus, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2, Pencil } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { getCalendars, createCalendarWithDays } from '@/lib/calendarApi';
-import { CalendarApiResponse, NewCalendarWithDays, Calendar as CalendarType, Recurrence, CalendarDay, DayType } from '@/types/calendar';
+import { getCalendars, createCalendarWithDays, updateCalendarWithDays, getCalendarDays } from '@/lib/calendarApi';
+import { CalendarApiResponse, NewCalendarWithDays, UpdateCalendarWithDays, Calendar as CalendarType, Recurrence, CalendarDay, DayType } from '@/types/calendar';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -45,7 +45,8 @@ const CalendarManager: React.FC = () => {
   const [calendarsResponse, setCalendarsResponse] = useState<CalendarApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+  const [isFormDialogOpen, setFormDialogOpen] = useState(false);
+  const [editingCalendar, setEditingCalendar] = useState<CalendarType | null>(null);
   const [newCalendar, setNewCalendar] = useState<Omit<NewCalendarWithDays, 'createdBy' | 'calendarDays'>>({
     calendarName: '',
     description: '',
@@ -113,40 +114,80 @@ const CalendarManager: React.FC = () => {
     setCalendarDays(calendarDays.filter((_, i) => i !== index));
   };
 
-  const handleCreate = async () => {
+  const handleEdit = async (calendar: CalendarType) => {
+    setEditingCalendar(calendar);
+    setNewCalendar({
+      calendarName: calendar.calendarName,
+      description: calendar.description || '',
+      startDate: calendar.startDate,
+      endDate: calendar.endDate,
+      recurrence: calendar.recurrence,
+    });
+    try {
+      const days = await getCalendarDays(calendar.calendarId);
+      setCalendarDays(days.map(({ calendarDayId, calendarId, ...rest }) => rest));
+    } catch (error) {
+      toast.error('Failed to fetch calendar days.');
+      console.error(error);
+      setCalendarDays([]);
+    }
+    setFormDialogOpen(true);
+  };
+
+  const handleSave = async () => {
     if (!newCalendar.calendarName) {
       toast.error('Calendar name is required.');
       return;
     }
     try {
-      const calendarData: NewCalendarWithDays = {
-        ...newCalendar,
-        createdBy: user?.email || 'system',
-        calendarDays: calendarDays,
-      };
-      await createCalendarWithDays(calendarData);
-      toast.success('Calendar created successfully.');
-      setAddDialogOpen(false);
-      setNewCalendar({
-        calendarName: '',
-        description: '',
-        startDate: format(new Date(), 'yyyy-MM-dd'),
-        endDate: format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-        recurrence: 'YEARLY',
-      });
-      setCalendarDays([]);
+      if (editingCalendar) {
+        const calendarData: UpdateCalendarWithDays = {
+          ...newCalendar,
+          calendarId: editingCalendar.calendarId,
+          updatedBy: user?.email || 'system',
+          calendarDays: calendarDays,
+        };
+        await updateCalendarWithDays(calendarData);
+        toast.success('Calendar updated successfully.');
+      } else {
+        const calendarData: NewCalendarWithDays = {
+          ...newCalendar,
+          createdBy: user?.email || 'system',
+          calendarDays: calendarDays,
+        };
+        await createCalendarWithDays(calendarData);
+        toast.success('Calendar created successfully.');
+      }
+      setFormDialogOpen(false);
       fetchCalendars();
     } catch (error) {
-      toast.error('Failed to create calendar.');
+      toast.error(`Failed to ${editingCalendar ? 'update' : 'create'} calendar.`);
       console.error(error);
     }
+  };
+
+  const resetForm = () => {
+    setEditingCalendar(null);
+    setNewCalendar({
+      calendarName: '',
+      description: '',
+      startDate: format(new Date(), 'yyyy-MM-dd'),
+      endDate: format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+      recurrence: 'YEARLY',
+    });
+    setCalendarDays([]);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Calendar Management</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
+        <Dialog open={isFormDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            resetForm();
+          }
+          setFormDialogOpen(open);
+        }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" /> Add Calendar
@@ -154,7 +195,7 @@ const CalendarManager: React.FC = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Add New Calendar</DialogTitle>
+              <DialogTitle>{editingCalendar ? 'Edit Calendar' : 'Add New Calendar'}</DialogTitle>
             </DialogHeader>
             <ScrollArea className="max-h-[70vh] p-4">
               <div className="space-y-4">
@@ -197,7 +238,7 @@ const CalendarManager: React.FC = () => {
                   </div>
                   <div className="col-span-1 md:col-span-2">
                     <Label htmlFor="recurrence">Recurrence</Label>
-                    <Select onValueChange={handleRecurrenceChange} defaultValue={newCalendar.recurrence}>
+                    <Select onValueChange={handleRecurrenceChange} value={newCalendar.recurrence}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select recurrence" />
                       </SelectTrigger>
@@ -264,7 +305,7 @@ const CalendarManager: React.FC = () => {
               </div>
             </ScrollArea>
             <DialogFooter>
-              <Button onClick={handleCreate}>Create Calendar</Button>
+              <Button onClick={handleSave}>{editingCalendar ? 'Save Changes' : 'Create Calendar'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -287,6 +328,7 @@ const CalendarManager: React.FC = () => {
                   <TableHead>Start Date</TableHead>
                   <TableHead>End Date</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -298,6 +340,11 @@ const CalendarManager: React.FC = () => {
                     <TableCell>{calendar.startDate ? format(new Date(calendar.startDate), "PPP") : 'N/A'}</TableCell>
                     <TableCell>{calendar.endDate ? format(new Date(calendar.endDate), "PPP") : 'N/A'}</TableCell>
                     <TableCell>{new Date(calendar.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(calendar)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
