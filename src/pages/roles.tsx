@@ -1,12 +1,12 @@
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Plus, Search } from 'lucide-react';
+import { Shield, Plus, Search, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import MainLayout from '@/components/MainLayout';
-import { getRoles, createRole } from '@/lib/roleApi';
+import { getRoles, createRole, updateRole } from '@/lib/roleApi';
 import {
   Table,
   TableBody,
@@ -34,16 +34,17 @@ const RolesPage: NextPage = () => {
   const [rolesResponse, setRolesResponse] = useState<RoleApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAddRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
-  const [newRoleName, setNewRoleName] = useState('');
-  const [newRoleIsActive, setNewRoleIsActive] = useState(true);
+  const [isFormOpen, setFormOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [roleName, setRoleName] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await getRoles({ page: 0, size: 10, isActive: 'Y' });
+      const response = await getRoles({ page: 0, size: 10 });
       setRolesResponse(response);
       setError(null);
     } catch (err) {
@@ -58,23 +59,49 @@ const RolesPage: NextPage = () => {
     fetchRoles();
   }, []);
 
-  const handleAddRole = async () => {
-    if (!newRoleName.trim() || !user) {
+  const handleOpenForm = (role: Role | null) => {
+    setEditingRole(role);
+    if (role) {
+      setRoleName(role.roleName);
+      setIsActive(role.isActive === 'Y');
+    } else {
+      setRoleName('');
+      setIsActive(true);
+    }
+    setFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setFormOpen(false);
+    setEditingRole(null);
+    setRoleName('');
+    setIsActive(true);
+  };
+
+  const handleSave = async () => {
+    if (!roleName.trim() || !user) {
       return;
     }
     try {
-      const roleToCreate: NewRole = {
-        roleName: newRoleName,
-        isActive: newRoleIsActive ? 'Y' : 'N',
-        createdBy: user.email,
-      };
-      await createRole(roleToCreate);
-      setAddRoleDialogOpen(false);
-      setNewRoleName('');
-      setNewRoleIsActive(true);
-      fetchRoles(); // Refetch roles to include the new one
+      if (editingRole) {
+        const roleToUpdate: Role = {
+          ...editingRole,
+          roleName,
+          isActive: isActive ? 'Y' : 'N',
+        };
+        await updateRole(roleToUpdate);
+      } else {
+        const roleToCreate: NewRole = {
+          roleName,
+          isActive: isActive ? 'Y' : 'N',
+          createdBy: user.email,
+        };
+        await createRole(roleToCreate);
+      }
+      handleCloseForm();
+      fetchRoles();
     } catch (error) {
-      console.error("Failed to create role:", error);
+      console.error("Failed to save role:", error);
     }
   };
 
@@ -83,49 +110,10 @@ const RolesPage: NextPage = () => {
   );
 
   const headerActions = (
-    <Dialog open={isAddRoleDialogOpen} onOpenChange={setAddRoleDialogOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Role
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Role</DialogTitle>
-          <DialogDescription>
-            Create a new role to assign to users and workflows.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="roleName" className="text-right">
-              Role Name
-            </Label>
-            <Input
-              id="roleName"
-              value={newRoleName}
-              onChange={(e) => setNewRoleName(e.target.value)}
-              className="col-span-3"
-              placeholder="e.g., REVIEWER"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="isActive" className="text-right">
-              Active
-            </Label>
-            <Switch
-              id="isActive"
-              checked={newRoleIsActive}
-              onCheckedChange={setNewRoleIsActive}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="submit" onClick={handleAddRole}>Create Role</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <Button size="sm" onClick={() => handleOpenForm(null)}>
+      <Plus className="mr-2 h-4 w-4" />
+      Add Role
+    </Button>
   );
 
   return (
@@ -142,7 +130,6 @@ const RolesPage: NextPage = () => {
           transition={{ duration: 0.5 }}
           className="space-y-6"
         >
-          {/* Search and Filters */}
           <Card className="glass">
             <CardHeader>
               <CardTitle className="text-foreground">Search Roles</CardTitle>
@@ -162,7 +149,6 @@ const RolesPage: NextPage = () => {
             </CardContent>
           </Card>
 
-          {/* Roles List */}
           <Card className="glass">
             <CardHeader>
               <CardTitle className="text-foreground">All Roles</CardTitle>
@@ -184,7 +170,7 @@ const RolesPage: NextPage = () => {
                     {searchQuery ? "No roles match your search." : "There are no roles configured in the system yet."}
                   </p>
                   {!searchQuery && (
-                    <Button onClick={() => setAddRoleDialogOpen(true)}>
+                    <Button onClick={() => handleOpenForm(null)}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add First Role
                     </Button>
@@ -199,6 +185,7 @@ const RolesPage: NextPage = () => {
                         <TableHead>Status</TableHead>
                         <TableHead>Created By</TableHead>
                         <TableHead>Created On</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -212,17 +199,62 @@ const RolesPage: NextPage = () => {
                           </TableCell>
                           <TableCell>{role.createdBy}</TableCell>
                           <TableCell>{new Date().toLocaleDateString()}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenForm(role)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
-                  {/* TODO: Add pagination controls for filtered results if necessary */}
                 </div>
               )}
             </CardContent>
           </Card>
         </motion.div>
       </div>
+
+      <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingRole ? 'Edit Role' : 'Add New Role'}</DialogTitle>
+            <DialogDescription>
+              {editingRole ? 'Update the details of this role.' : 'Create a new role to assign to users and workflows.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="roleName" className="text-right">
+                Role Name
+              </Label>
+              <Input
+                id="roleName"
+                value={roleName}
+                onChange={(e) => setRoleName(e.target.value)}
+                className="col-span-3"
+                placeholder="e.g., REVIEWER"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="isActive" className="text-right">
+                Active
+              </Label>
+              <Switch
+                id="isActive"
+                checked={isActive}
+                onCheckedChange={setIsActive}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseForm}>Cancel</Button>
+            <Button type="submit" onClick={handleSave}>
+              {editingRole ? 'Save Changes' : 'Create Role'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };

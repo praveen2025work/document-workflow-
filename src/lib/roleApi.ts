@@ -34,19 +34,31 @@ export const createRole = async (role: NewRole): Promise<Role> => {
   if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
     console.log('Mock: Creating role in environment:', config.app.env);
     const newRole: Role = {
-      roleId: Math.max(...mockRoles.map(r => r.roleId)) + 1,
+      roleId: Math.max(0, ...mockRoles.map(r => r.roleId)) + 1,
       roleName: role.roleName,
-      description: role.description,
-      isActive: 'Y',
-      createdBy: 'mock@company.com',
-      createdOn: new Date().toISOString(),
-      updatedBy: 'mock@company.com',
-      updatedOn: new Date().toISOString(),
+      isActive: role.isActive,
+      createdBy: role.createdBy,
     };
+    mockRoles.push(newRole);
     return Promise.resolve(newRole);
   }
   
   const response = await api.post('/roles', role);
+  return response.data;
+};
+
+export const updateRole = async (role: Role): Promise<Role> => {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log(`Mock: Updating role ${role.roleId} in environment:`, config.app.env);
+    const roleIndex = mockRoles.findIndex(r => r.roleId === role.roleId);
+    if (roleIndex === -1) {
+      throw new Error(`Role with ID ${role.roleId} not found`);
+    }
+    mockRoles[roleIndex] = { ...mockRoles[roleIndex], ...role };
+    return Promise.resolve(mockRoles[roleIndex]);
+  }
+  
+  const response = await api.put(`/roles/${role.roleId}`, role);
   return response.data;
 };
 
