@@ -10,6 +10,8 @@ export interface User {
   isAdmin: YesNo;
   createdBy: string;
   createdOn: string;
+  roles?: string[];
+  lastLogin?: string;
 }
 
 export interface UserApiResponse {

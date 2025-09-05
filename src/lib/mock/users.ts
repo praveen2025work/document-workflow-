@@ -11,6 +11,8 @@ export const mockUsers: User[] = [
     isAdmin: 'N',
     createdBy: 'admin@company.com',
     createdOn: new Date().toISOString(),
+    roles: ['User', 'Auditor'],
+    lastLogin: new Date().toISOString(),
   },
   {
     userId: 2,
@@ -21,7 +23,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+    createdOn: new Date(Date.now() - 86400000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 86400000).toISOString(),
   },
   {
     userId: 3,
@@ -32,7 +36,9 @@ export const mockUsers: User[] = [
     isActive: 'N',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+    createdOn: new Date(Date.now() - 172800000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 172800000).toISOString(),
   },
   {
     userId: 4,
@@ -43,7 +49,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'Y',
     createdBy: 'hr@company.com',
-    createdOn: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+    createdOn: new Date(Date.now() - 259200000).toISOString(),
+    roles: ['Admin', 'HR'],
+    lastLogin: new Date(Date.now() - 259200000).toISOString(),
   },
   {
     userId: 5,
@@ -54,7 +62,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
+    createdOn: new Date(Date.now() - 345600000).toISOString(),
+    roles: ['User', 'Support'],
+    lastLogin: new Date(Date.now() - 345600000).toISOString(),
   },
   {
     userId: 6,
@@ -65,7 +75,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 432000000).toISOString(), // 5 days ago
+    createdOn: new Date(Date.now() - 432000000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 432000000).toISOString(),
   },
   {
     userId: 7,
@@ -76,7 +88,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 518400000).toISOString(), // 6 days ago
+    createdOn: new Date(Date.now() - 518400000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 518400000).toISOString(),
   },
   {
     userId: 8,
@@ -87,7 +101,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'Y',
     createdBy: 'hr@company.com',
-    createdOn: new Date(Date.now() - 604800000).toISOString(), // 7 days ago
+    createdOn: new Date(Date.now() - 604800000).toISOString(),
+    roles: ['Admin'],
+    lastLogin: new Date(Date.now() - 604800000).toISOString(),
   },
   {
     userId: 9,
@@ -98,7 +114,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 691200000).toISOString(), // 8 days ago
+    createdOn: new Date(Date.now() - 691200000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 691200000).toISOString(),
   },
   {
     userId: 10,
@@ -109,7 +127,9 @@ export const mockUsers: User[] = [
     isActive: 'N',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 777600000).toISOString(), // 9 days ago
+    createdOn: new Date(Date.now() - 777600000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 777600000).toISOString(),
   },
   {
     userId: 11,
@@ -120,7 +140,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'N',
     createdBy: 'hr@company.com',
-    createdOn: new Date(Date.now() - 864000000).toISOString(), // 10 days ago
+    createdOn: new Date(Date.now() - 864000000).toISOString(),
+    roles: ['HR'],
+    lastLogin: new Date(Date.now() - 864000000).toISOString(),
   },
   {
     userId: 12,
@@ -131,7 +153,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 950400000).toISOString(), // 11 days ago
+    createdOn: new Date(Date.now() - 950400000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 950400000).toISOString(),
   },
   {
     userId: 13,
@@ -142,7 +166,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 1036800000).toISOString(), // 12 days ago
+    createdOn: new Date(Date.now() - 1036800000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 1036800000).toISOString(),
   },
   {
     userId: 14,
@@ -153,7 +179,9 @@ export const mockUsers: User[] = [
     isActive: 'N',
     isAdmin: 'N',
     createdBy: 'admin@company.com',
-    createdOn: new Date(Date.now() - 1123200000).toISOString(), // 13 days ago
+    createdOn: new Date(Date.now() - 1123200000).toISOString(),
+    roles: ['User'],
+    lastLogin: new Date(Date.now() - 1123200000).toISOString(),
   },
   {
     userId: 15,
@@ -164,7 +192,9 @@ export const mockUsers: User[] = [
     isActive: 'Y',
     isAdmin: 'Y',
     createdBy: 'hr@company.com',
-    createdOn: new Date(Date.now() - 1209600000).toISOString(), // 14 days ago
+    createdOn: new Date(Date.now() - 1209600000).toISOString(),
+    roles: ['Admin', 'HR'],
+    lastLogin: new Date(Date.now() - 1209600000).toISOString(),
   },
 ];
 

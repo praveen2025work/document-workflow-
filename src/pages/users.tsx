@@ -191,41 +191,23 @@ const UsersPage: NextPage = () => {
       title="Users"
       subtitle="Manage system users and their permissions"
       icon={Users}
-      headerActions={headerActions}
     >
-      <div className="flex-1 p-6 overflow-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-6"
-        >
-          {/* Search and Filters */}
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle className="text-foreground">Search Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by username or first name..."
-                    className="pl-10 glass border-border"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Users List */}
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle className="text-foreground">All Users</CardTitle>
-            </CardHeader>
-            <CardContent>
+      <div className="flex flex-col h-full">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex-1 relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by username or first name..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            {headerActions}
+          </div>
+          <Card>
+            <CardContent className="p-0">
               {loading ? (
                 <div className="text-center py-12">
                   <p>Loading users...</p>
@@ -241,10 +223,12 @@ const UsersPage: NextPage = () => {
                   <p className="text-muted-foreground mb-4">
                     There are no users configured in the system yet.
                   </p>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add First User
-                  </Button>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add First User
+                    </Button>
+                  </DialogTrigger>
                 </div>
               ) : (
                 <Table>
@@ -252,6 +236,8 @@ const UsersPage: NextPage = () => {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Roles</TableHead>
+                      <TableHead>Last Login</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created On</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -260,8 +246,20 @@ const UsersPage: NextPage = () => {
                   <TableBody>
                     {usersResponse.content.map((user: User) => (
                       <TableRow key={user.userId}>
-                        <TableCell className="font-medium">{`${user.firstName} ${user.lastName}`}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="font-medium">{`${user.firstName} ${user.lastName}`}</div>
+                          </div>
+                        </TableCell>
                         <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {user.roles?.map((role, index) => (
+                              <Badge key={index} variant="secondary">{role}</Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'N/A'}</TableCell>
                         <TableCell>
                           <Badge variant={user.isActive === 'Y' ? 'default' : 'destructive'}>
                             {user.isActive === 'Y' ? 'Active' : 'Inactive'}
@@ -269,20 +267,9 @@ const UsersPage: NextPage = () => {
                         </TableCell>
                         <TableCell>{new Date(user.createdOn).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button variant="ghost" size="icon" onClick={() => handleEditUser(user)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -291,9 +278,8 @@ const UsersPage: NextPage = () => {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
-      {/* Edit User Dialog */}
       <Dialog open={isEditUserDialogOpen} onOpenChange={setEditUserDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
