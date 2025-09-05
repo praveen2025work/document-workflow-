@@ -102,7 +102,12 @@ export const updateCalendarWithDays = async (calendarId: number, data: UpdateCal
 
     // Remove old days
     const newDayIds = data.calendarDays.map(d => d.calendarDayId).filter(id => id);
-    mockCalendarDays = mockCalendarDays.filter(d => d.calendarId !== calendarId || newDayIds.includes(d.calendarDayId));
+    for (let i = mockCalendarDays.length - 1; i >= 0; i--) {
+      const day = mockCalendarDays[i];
+      if (day.calendarId === calendarId && !newDayIds.includes(day.calendarDayId)) {
+        mockCalendarDays.splice(i, 1);
+      }
+    }
 
     let dayIdCounter = Math.max(0, ...mockCalendarDays.map(d => d.calendarDayId || 0));
     const updatedDays = data.calendarDays.map(day => {
@@ -132,7 +137,11 @@ export const deleteCalendar = async (calendarId: number): Promise<void> => {
     const index = mockCalendars.findIndex(c => c.calendarId === calendarId);
     if (index > -1) {
       mockCalendars.splice(index, 1);
-      mockCalendarDays = mockCalendarDays.filter(d => d.calendarId !== calendarId);
+      for (let i = mockCalendarDays.length - 1; i >= 0; i--) {
+        if (mockCalendarDays[i].calendarId === calendarId) {
+          mockCalendarDays.splice(i, 1);
+        }
+      }
     }
     return Promise.resolve();
   }
