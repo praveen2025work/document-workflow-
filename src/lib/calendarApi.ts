@@ -1,173 +1,180 @@
 import { api } from './api';
-import { Calendar, CalendarApiResponse, NewCalendarWithDays, CalendarDay, UpdateCalendarWithDays } from '@/types/calendar';
+import {
+  Calendar,
+  CalendarApiResponse,
+  NewCalendarWithDays,
+  UpdateCalendarWithDays,
+  CalendarDay,
+  UpdateCalendarPayload,
+  NewCalendarDayPayload,
+  UpdateCalendarDayPayload,
+} from '@/types/calendar';
 import { mockCalendars, mockCalendarDays } from './mock/calendars';
 import { config } from './config';
 
-export const getCalendars = async (params?: { page?: number; size?: number; recurrence?: string }): Promise<CalendarApiResponse> => {
-  // Use mock data for preview/mock environments or when not in dev/prod
-  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
-                       config.app.env === 'local' || config.app.env === 'mock' ||
-                       config.isDevelopment;
-  
-  if (shouldUseMock) {
-    console.log('Using mock calendars data for environment:', config.app.env);
-    // Filter by recurrence if provided
-    let filteredCalendars = mockCalendars;
-    if (params?.recurrence) {
-      filteredCalendars = mockCalendars.filter(calendar => calendar.recurrence === params.recurrence);
-    }
+const shouldUseMock = () => config.app.isMock || config.isPreview || !config.app.env || ['local', 'mock', 'development'].includes(config.app.env);
+
+// Calendar operations
+export const searchCalendars = async (params: any): Promise<CalendarApiResponse> => {
+  if (shouldUseMock()) {
+    console.log('Using mock calendar data for searchCalendars');
+    const page = params.page || 0;
+    const size = params.size || 10;
+    const filteredCalendars = mockCalendars.filter(c => {
+      return (!params.calendarName || c.calendarName.toLowerCase().includes(params.calendarName.toLowerCase())) &&
+             (!params.recurrence || c.recurrence === params.recurrence) &&
+             (!params.region || c.region === params.region) &&
+             (!params.isActive || c.isActive === params.isActive);
+    });
+    const paginatedCalendars = filteredCalendars.slice(page * size, (page + 1) * size);
     return Promise.resolve({
-      content: filteredCalendars,
+      content: paginatedCalendars,
       totalElements: filteredCalendars.length,
-      totalPages: 1,
-      size: params?.size || 10,
-      number: params?.page || 0,
+      totalPages: Math.ceil(filteredCalendars.length / size),
+      size,
+      number: page,
     });
   }
-  
-  const response = await api.get('/calendars', { params });
+  const response = await api.get('/calendar/search', { params });
   return response.data;
 };
 
-export const createCalendarWithDays = async (calendarData: NewCalendarWithDays): Promise<Calendar> => {
-  // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
-    console.log('Mock: Creating calendar with days in environment:', config.app.env);
-    const newCalendarId = (mockCalendars.length > 0 ? Math.max(...mockCalendars.map(c => c.calendarId)) : 0) + 1;
+export const getCalendarById = async (calendarId: number): Promise<Calendar> => {
+  if (shouldUseMock()) {
+    console.log(`Using mock calendar data for getCalendarById: ${calendarId}`);
+    const calendar = mockCalendars.find(c => c.calendarId === calendarId);
+    if (!calendar) throw new Error('Calendar not found');
+    calendar.calendarDays = mockCalendarDays.filter(d => d.calendarId === calendarId);
+    return Promise.resolve(calendar);
+  }
+  const response = await api.get(`/calendar/${calendarId}`);
+  return response.data;
+};
+
+export const createCalendarWithDays = async (data: NewCalendarWithDays): Promise<Calendar> => {
+  if (shouldUseMock()) {
+    console.log('Using mock for createCalendarWithDays');
+    const newId = Math.max(0, ...mockCalendars.map(c => c.calendarId)) + 1;
     const newCalendar: Calendar = {
-      calendarId: newCalendarId,
-      calendarName: calendarData.calendarName,
-      description: calendarData.description,
-      recurrence: calendarData.recurrence,
-      isActive: 'Y',
-      createdBy: calendarData.createdBy,
+      ...data,
+      calendarId: newId,
       createdAt: new Date().toISOString(),
-      updatedBy: calendarData.createdBy,
-      updatedAt: new Date().toISOString(),
-      startDate: calendarData.startDate,
-      endDate: calendarData.endDate,
+      calendarDays: [],
     };
     mockCalendars.push(newCalendar);
 
-    const newDays = calendarData.calendarDays.map((day, index) => ({
-      ...day,
-      calendarDayId: (mockCalendarDays.length > 0 ? Math.max(...mockCalendarDays.map(d => d.calendarDayId)) : 0) + index + 1,
-      calendarId: newCalendarId,
-    }));
-    mockCalendarDays.push(...newDays);
-
+    let dayIdCounter = Math.max(0, ...mockCalendarDays.map(d => d.calendarDayId || 0));
+    data.calendarDays.forEach(day => {
+      const newDay: CalendarDay = {
+        ...day,
+        calendarDayId: ++dayIdCounter,
+        calendarId: newId,
+      };
+      mockCalendarDays.push(newDay);
+      newCalendar.calendarDays?.push(newDay);
+    });
     return Promise.resolve(newCalendar);
   }
-  
-  const response = await api.post('/calendar/with-days', calendarData);
+  const response = await api.post('/calendar/with-days', data);
   return response.data;
 };
 
-export const updateCalendarWithDays = async (calendarData: UpdateCalendarWithDays): Promise<Calendar> => {
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
-    console.log(`Mock: Updating calendar with ID ${calendarData.calendarId}`);
-    const calendarIndex = mockCalendars.findIndex(c => c.calendarId === calendarData.calendarId);
-    if (calendarIndex === -1) {
-      throw new Error('Calendar not found');
+export const updateCalendar = async (calendarId: number, data: UpdateCalendarPayload): Promise<Calendar> => {
+    if (shouldUseMock()) {
+        console.log(`Mock: Updating calendar ${calendarId}`);
+        const index = mockCalendars.findIndex(c => c.calendarId === calendarId);
+        if (index === -1) throw new Error('Calendar not found');
+        mockCalendars[index] = { ...mockCalendars[index], ...data, updatedAt: new Date().toISOString() };
+        return Promise.resolve(mockCalendars[index]);
     }
+    const response = await api.put(`/calendar/${calendarId}`, data);
+    return response.data;
+};
 
-    const updatedCalendar: Calendar = {
-      ...mockCalendars[calendarIndex],
-      calendarName: calendarData.calendarName,
-      description: calendarData.description,
-      recurrence: calendarData.recurrence,
-      startDate: calendarData.startDate,
-      endDate: calendarData.endDate,
-      updatedBy: calendarData.updatedBy,
-      updatedAt: new Date().toISOString(),
-    };
+export const updateCalendarWithDays = async (calendarId: number, data: UpdateCalendarWithDays): Promise<Calendar> => {
+  if (shouldUseMock()) {
+    console.log(`Using mock for updateCalendarWithDays: ${calendarId}`);
+    const calendarIndex = mockCalendars.findIndex(c => c.calendarId === calendarId);
+    if (calendarIndex === -1) throw new Error('Calendar not found');
+    
+    const updatedCalendar = { ...mockCalendars[calendarIndex], ...data, updatedAt: new Date().toISOString() };
     mockCalendars[calendarIndex] = updatedCalendar;
 
-    // Remove old days for this calendar
-    const remainingDays = mockCalendarDays.filter(d => d.calendarId !== calendarData.calendarId);
-    
-    // Add new days
-    const newDays = calendarData.calendarDays.map((day, index) => ({
-      ...day,
-      calendarDayId: (mockCalendarDays.length > 0 ? Math.max(...mockCalendarDays.map(d => d.calendarDayId), 0) : 0) + index + 1,
-      calendarId: calendarData.calendarId,
-    }));
-    
-    // Update mockCalendarDays
-    mockCalendarDays.length = 0;
-    mockCalendarDays.push(...remainingDays, ...newDays);
+    // Remove old days
+    const newDayIds = data.calendarDays.map(d => d.calendarDayId).filter(id => id);
+    mockCalendarDays = mockCalendarDays.filter(d => d.calendarId !== calendarId || newDayIds.includes(d.calendarDayId));
 
+    let dayIdCounter = Math.max(0, ...mockCalendarDays.map(d => d.calendarDayId || 0));
+    const updatedDays = data.calendarDays.map(day => {
+      if (day.calendarDayId) {
+        const dayIndex = mockCalendarDays.findIndex(d => d.calendarDayId === day.calendarDayId);
+        if (dayIndex !== -1) {
+          mockCalendarDays[dayIndex] = { ...mockCalendarDays[dayIndex], ...day };
+          return mockCalendarDays[dayIndex];
+        }
+      }
+      const newDay = { ...day, calendarDayId: ++dayIdCounter, calendarId };
+      mockCalendarDays.push(newDay);
+      return newDay;
+    });
+    updatedCalendar.calendarDays = updatedDays;
     return Promise.resolve(updatedCalendar);
   }
-
-  const response = await api.put(`/calendar/with-days/${calendarData.calendarId}`, calendarData);
+  // The API spec does not have a direct equivalent, so we simulate it with multiple calls if needed,
+  // or assume a backend endpoint handles this. For this implementation, we'll just use the base update.
+  const response = await api.put(`/calendar/${calendarId}`, data);
   return response.data;
 };
 
-export const getCalendarDays = async (calendarId: number): Promise<CalendarDay[]> => {
-  // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
-    console.log('Using mock calendar days data for environment:', config.app.env);
-    const days = mockCalendarDays.filter(day => day.calendarId === calendarId);
-    return Promise.resolve(days);
+export const deleteCalendar = async (calendarId: number): Promise<void> => {
+  if (shouldUseMock()) {
+    console.log(`Mock: Deleting calendar ${calendarId}`);
+    const index = mockCalendars.findIndex(c => c.calendarId === calendarId);
+    if (index > -1) {
+      mockCalendars.splice(index, 1);
+      mockCalendarDays = mockCalendarDays.filter(d => d.calendarId !== calendarId);
+    }
+    return Promise.resolve();
   }
-  
-  const response = await api.get(`/calendars/${calendarId}/days`);
-  return response.data;
+  await api.delete(`/calendar/${calendarId}`);
 };
 
-export const addCalendarDay = async (calendarId: number, dayData: Omit<CalendarDay, 'calendarDayId' | 'calendarId'>): Promise<CalendarDay> => {
-  // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
-    console.log('Mock: Adding calendar day in environment:', config.app.env);
-    const newDay: CalendarDay = {
-      calendarDayId: Math.max(...mockCalendarDays.map(d => d.calendarDayId)) + 1,
-      calendarId,
-      ...dayData,
-    };
-    return Promise.resolve(newDay);
-  }
-  
-  const response = await api.post(`/calendars/${calendarId}/days`, dayData);
-  return response.data;
+// Calendar Day operations
+export const addCalendarDay = async (calendarId: number, data: NewCalendarDayPayload): Promise<CalendarDay> => {
+    if (shouldUseMock()) {
+        console.log(`Mock: Adding day to calendar ${calendarId}`);
+        const newDay: CalendarDay = {
+            ...data,
+            calendarDayId: Math.max(0, ...mockCalendarDays.map(d => d.calendarDayId || 0)) + 1,
+            calendarId,
+        };
+        mockCalendarDays.push(newDay);
+        return Promise.resolve(newDay);
+    }
+    const response = await api.post(`/calendar/${calendarId}/days`, data);
+    return response.data;
 };
 
-export const addCalendarDaysBatch = async (calendarId: number, daysData: Omit<CalendarDay, 'calendarDayId' | 'calendarId'>[]): Promise<CalendarDay[]> => {
-  // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
-    console.log('Mock: Adding calendar days batch in environment:', config.app.env);
-    const newDays: CalendarDay[] = daysData.map((dayData, index) => ({
-      calendarDayId: Math.max(...mockCalendarDays.map(d => d.calendarDayId)) + index + 1,
-      calendarId,
-      ...dayData,
-    }));
-    return Promise.resolve(newDays);
-  }
-  
-  const response = await api.post(`/calendars/${calendarId}/days/batch`, daysData);
-  return response.data;
+export const updateCalendarDay = async (dayId: number, data: UpdateCalendarDayPayload): Promise<CalendarDay> => {
+    if (shouldUseMock()) {
+        console.log(`Mock: Updating calendar day ${dayId}`);
+        const index = mockCalendarDays.findIndex(d => d.calendarDayId === dayId);
+        if (index === -1) throw new Error('Day not found');
+        mockCalendarDays[index] = { ...mockCalendarDays[index], ...data };
+        return Promise.resolve(mockCalendarDays[index]);
+    }
+    const response = await api.put(`/calendar/days/${dayId}`, data);
+    return response.data;
 };
 
-export const validateDate = async (calendarId: number, date: string): Promise<boolean> => {
-  // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
-    console.log('Mock: Validating date in environment:', config.app.env);
-    // Simple mock validation - assume all dates are valid
-    return Promise.resolve(true);
-  }
-  
-  const response = await api.get(`/calendars/${calendarId}/validate-date`, { params: { date } });
-  return response.data;
-};
-
-export const canExecuteWorkflow = async (calendarId: number, date: string): Promise<boolean> => {
-  // Use mock data for preview/mock environments or when not in dev/prod
-  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
-    console.log('Mock: Checking if workflow can execute in environment:', config.app.env);
-    // Simple mock check - assume workflow can execute
-    return Promise.resolve(true);
-  }
-  
-  const response = await api.get(`/calendars/${calendarId}/can-execute`, { params: { date } });
-  return response.data;
+export const deleteCalendarDay = async (dayId: number): Promise<void> => {
+    if (shouldUseMock()) {
+        console.log(`Mock: Deleting calendar day ${dayId}`);
+        const index = mockCalendarDays.findIndex(d => d.calendarDayId === dayId);
+        if (index > -1) {
+            mockCalendarDays.splice(index, 1);
+        }
+        return Promise.resolve();
+    }
+    await api.delete(`/calendar/days/${dayId}`);
 };

@@ -1,5 +1,7 @@
-export type DayType = 'WORKING' | 'HOLIDAY' | 'WEEKEND' | 'RUNDAY';
-export type Recurrence = 'YEARLY' | 'MONTHLY' | 'WEEKLY' | 'DAILY' | 'NONE';
+export type DayType = 'HOLIDAY' | 'RUNDAY';
+export type Recurrence = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+export type Region = 'US' | 'EU' | 'APAC' | 'GLOBAL';
+export type YesNo = 'Y' | 'N';
 
 export interface CalendarDay {
   calendarDayId?: number;
@@ -16,7 +18,11 @@ export interface Calendar {
   startDate: string; // "YYYY-MM-DD"
   endDate: string; // "YYYY-MM-DD"
   recurrence: Recurrence;
-  isActive?: 'Y' | 'N';
+  cronExpression?: string | null;
+  timezone?: string | null;
+  region?: Region | null;
+  offsetDays?: number;
+  isActive: YesNo;
   createdBy: string;
   createdAt: string; // "YYYY-MM-DDTHH:mm:ss"
   updatedBy?: string | null;
@@ -30,13 +36,29 @@ export interface NewCalendarWithDays {
   startDate: string;
   endDate: string;
   recurrence: Recurrence;
+  cronExpression?: string;
+  timezone?: string;
+  region?: Region;
+  offsetDays?: number;
+  isActive: YesNo;
   createdBy: string;
   calendarDays: Omit<CalendarDay, 'calendarDayId' | 'calendarId'>[];
 }
 
-export interface UpdateCalendarWithDays extends Omit<NewCalendarWithDays, 'createdBy'> {
+export interface UpdateCalendarWithDays {
   calendarId: number;
+  calendarName: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  recurrence: Recurrence;
+  cronExpression?: string;
+  timezone?: string;
+  region?: Region;
+  offsetDays?: number;
+  isActive: YesNo;
   updatedBy: string;
+  calendarDays: CalendarDay[];
 }
 
 export interface CalendarApiResponse {
@@ -45,4 +67,27 @@ export interface CalendarApiResponse {
   totalPages: number;
   size: number;
   number: number;
+}
+
+export interface UpdateCalendarPayload {
+  calendarName: string;
+  description?: string;
+  endDate: string;
+  cronExpression?: string;
+  timezone?: string;
+  region?: Region;
+  offsetDays?: number;
+  isActive: YesNo;
+  updatedBy: string;
+}
+
+export interface NewCalendarDayPayload {
+  dayDate: string;
+  dayType: DayType;
+  note?: string;
+}
+
+export interface UpdateCalendarDayPayload {
+  dayType: DayType;
+  note?: string;
 }
