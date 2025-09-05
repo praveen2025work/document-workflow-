@@ -1193,7 +1193,7 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
       }`}>
         {/* Modern Header (Not part of scroll) */}
         <div className="border-b border-border bg-gradient-to-r from-background to-muted/20 p-4">
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1 min-w-0">
               {taskDetails && (
                 <div className="p-2 rounded-lg bg-background border shadow-sm">
@@ -1220,33 +1220,31 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
           </div>
 
           {/* Task Information Grid */}
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Type:</span>
-                <span className="font-medium">
-                  {taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Assigned:</span>
-                <span className="font-medium">
-                  {taskDetails?.assignedToUsername || 'alice'}
-                </span>
+          <div className="grid grid-cols-3 gap-4 my-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">Type</p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="font-semibold">{taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}</p>
               </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <div className={`w-2 h-2 rounded-full ${dueDateInfo.priorityDot}`} />
-                <span className={`font-medium ${dueDateInfo.colorClass}`}>
-                  {dueDateInfo.formattedDate}
-                </span>
+            <div>
+              <p className="text-muted-foreground">Assigned</p>
+              <div className="flex items-center gap-2 mt-1">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <p className="font-semibold">{taskDetails?.assignedToUsername || 'alice'}</p>
               </div>
-              {dueDateInfo.priorityLabel === 'Overdue' && (
-                <div className="text-xs text-red-500 font-medium">
-                  {dueDateInfo.priorityLabel}
+            </div>
+            <div>
+              <p className="text-muted-foreground">Due date</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className={`font-semibold ${dueDateInfo.colorClass}`}>{dueDateInfo.formattedDate}</p>
+                  {dueDateInfo.priorityLabel === 'Overdue' && (
+                    <p className="text-xs text-red-500 font-medium -mt-1">{dueDateInfo.priorityLabel}</p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
