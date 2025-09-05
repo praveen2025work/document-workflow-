@@ -31,14 +31,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { getCalendars, createCalendarWithDays } from '@/lib/calendarApi';
-import { CalendarApiResponse, NewCalendarWithDays, Calendar as CalendarType, Recurrence, CalendarDay } from '@/types/calendar';
+import { CalendarApiResponse, NewCalendarWithDays, Calendar as CalendarType, Recurrence, CalendarDay, DayType } from '@/types/calendar';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const CalendarManager: React.FC = () => {
   const [calendarsResponse, setCalendarsResponse] = useState<CalendarApiResponse | null>(null);
@@ -50,9 +51,14 @@ const CalendarManager: React.FC = () => {
     description: '',
     startDate: format(new Date(), 'yyyy-MM-dd'),
     endDate: format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-    recurrence: 'WEEKLY',
+    recurrence: 'YEARLY',
   });
   const [calendarDays, setCalendarDays] = useState<Omit<CalendarDay, 'calendarDayId' | 'calendarId'>[]>([]);
+  const [newDay, setNewDay] = useState<{ dayDate: string; dayType: DayType; note: string }>({
+    dayDate: format(new Date(), 'yyyy-MM-dd'),
+    dayType: 'HOLIDAY',
+    note: '',
+  });
   const { user } = useUser();
 
   const fetchCalendars = async () => {
@@ -90,6 +96,23 @@ const CalendarManager: React.FC = () => {
     setNewCalendar((prev) => ({ ...prev, recurrence: value }));
   };
 
+  const handleAddDay = () => {
+    if (!newDay.dayDate || !newDay.note) {
+      toast.error('Please provide a date and note for the calendar day.');
+      return;
+    }
+    setCalendarDays([...calendarDays, newDay]);
+    setNewDay({
+      dayDate: format(new Date(), 'yyyy-MM-dd'),
+      dayType: 'HOLIDAY',
+      note: '',
+    });
+  };
+
+  const handleRemoveDay = (index: number) => {
+    setCalendarDays(calendarDays.filter((_, i) => i !== index));
+  };
+
   const handleCreate = async () => {
     if (!newCalendar.calendarName) {
       toast.error('Calendar name is required.');
@@ -109,7 +132,7 @@ const CalendarManager: React.FC = () => {
         description: '',
         startDate: format(new Date(), 'yyyy-MM-dd'),
         endDate: format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-        recurrence: 'WEEKLY',
+        recurrence: 'YEARLY',
       });
       setCalendarDays([]);
       fetchCalendars();
@@ -129,86 +152,119 @@ const CalendarManager: React.FC = () => {
               <Plus className="mr-2 h-4 w-4" /> Add Calendar
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Calendar</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="calendarName" className="text-right">Name</Label>
-                <Input id="calendarName" value={newCalendar.calendarName} onChange={handleInputChange} className="col-span-3" />
+            <ScrollArea className="max-h-[70vh] p-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="calendarName">Name</Label>
+                    <Input id="calendarName" value={newCalendar.calendarName} onChange={handleInputChange} />
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Input id="description" value={newCalendar.description || ''} onChange={handleInputChange} />
+                  </div>
+                  <div>
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !newCalendar.startDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newCalendar.startDate ? format(new Date(newCalendar.startDate), "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={newCalendar.startDate ? new Date(newCalendar.startDate) : undefined} onSelect={(date) => handleDateChange(date, 'startDate')} initialFocus />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label htmlFor="endDate">End Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !newCalendar.endDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newCalendar.endDate ? format(new Date(newCalendar.endDate), "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={newCalendar.endDate ? new Date(newCalendar.endDate) : undefined} onSelect={(date) => handleDateChange(date, 'endDate')} initialFocus />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="col-span-1 md:col-span-2">
+                    <Label htmlFor="recurrence">Recurrence</Label>
+                    <Select onValueChange={handleRecurrenceChange} defaultValue={newCalendar.recurrence}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select recurrence" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="YEARLY">Yearly</SelectItem>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
+                        <SelectItem value="WEEKLY">Weekly</SelectItem>
+                        <SelectItem value="DAILY">Daily</SelectItem>
+                        <SelectItem value="NONE">None</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-4 border-t">
+                  <h3 className="text-lg font-semibold">Calendar Days (Holidays, etc.)</h3>
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <Label>Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !newDay.dayDate && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {newDay.dayDate ? format(new Date(newDay.dayDate), "PPP") : <span>Pick a date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar mode="single" selected={newDay.dayDate ? new Date(newDay.dayDate) : undefined} onSelect={(date) => setNewDay(prev => ({ ...prev, dayDate: date ? format(date, 'yyyy-MM-dd') : '' }))} initialFocus />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="flex-1">
+                      <Label>Note</Label>
+                      <Input value={newDay.note} onChange={(e) => setNewDay(prev => ({ ...prev, note: e.target.value }))} placeholder="e.g., New Year's Day" />
+                    </div>
+                    <div>
+                      <Label>Type</Label>
+                      <Select value={newDay.dayType} onValueChange={(value: DayType) => setNewDay(prev => ({ ...prev, dayType: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="HOLIDAY">Holiday</SelectItem>
+                          <SelectItem value="RUNDAY">Run Day</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={handleAddDay} size="sm"><Plus className="h-4 w-4" /></Button>
+                  </div>
+                  <div className="space-y-2">
+                    {calendarDays.map((day, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                        <div>
+                          <p className="font-medium">{day.note}</p>
+                          <p className="text-sm text-muted-foreground">{format(new Date(day.dayDate), "PPP")} - {day.dayType}</p>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => handleRemoveDay(index)}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">Description</Label>
-                <Input id="description" value={newCalendar.description || ''} onChange={handleInputChange} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="startDate" className="text-right">Start Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "col-span-3 justify-start text-left font-normal",
-                        !newCalendar.startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {newCalendar.startDate ? format(new Date(newCalendar.startDate), "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={newCalendar.startDate ? new Date(newCalendar.startDate) : undefined}
-                      onSelect={(date) => handleDateChange(date, 'startDate')}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="endDate" className="text-right">End Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "col-span-3 justify-start text-left font-normal",
-                        !newCalendar.endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {newCalendar.endDate ? format(new Date(newCalendar.endDate), "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={newCalendar.endDate ? new Date(newCalendar.endDate) : undefined}
-                      onSelect={(date) => handleDateChange(date, 'endDate')}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="recurrence" className="text-right">Recurrence</Label>
-                <Select onValueChange={handleRecurrenceChange} defaultValue={newCalendar.recurrence}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select recurrence" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="YEARLY">Yearly</SelectItem>
-                    <SelectItem value="MONTHLY">Monthly</SelectItem>
-                    <SelectItem value="WEEKLY">Weekly</SelectItem>
-                    <SelectItem value="DAILY">Daily</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            </ScrollArea>
             <DialogFooter>
-              <Button onClick={handleCreate}>Create</Button>
+              <Button onClick={handleCreate}>Create Calendar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -227,8 +283,10 @@ const CalendarManager: React.FC = () => {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Recurrence</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -236,8 +294,10 @@ const CalendarManager: React.FC = () => {
                   <TableRow key={calendar.calendarId}>
                     <TableCell>{calendar.calendarName}</TableCell>
                     <TableCell>{calendar.description}</TableCell>
+                    <TableCell>{calendar.recurrence}</TableCell>
+                    <TableCell>{calendar.startDate ? format(new Date(calendar.startDate), "PPP") : 'N/A'}</TableCell>
+                    <TableCell>{calendar.endDate ? format(new Date(calendar.endDate), "PPP") : 'N/A'}</TableCell>
                     <TableCell>{new Date(calendar.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>Active</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

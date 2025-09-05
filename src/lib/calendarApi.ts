@@ -33,17 +33,29 @@ export const createCalendarWithDays = async (calendarData: NewCalendarWithDays):
   // Use mock data for preview/mock environments or when not in dev/prod
   if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
     console.log('Mock: Creating calendar with days in environment:', config.app.env);
+    const newCalendarId = (mockCalendars.length > 0 ? Math.max(...mockCalendars.map(c => c.calendarId)) : 0) + 1;
     const newCalendar: Calendar = {
-      calendarId: Math.max(...mockCalendars.map(c => c.calendarId)) + 1,
+      calendarId: newCalendarId,
       calendarName: calendarData.calendarName,
       description: calendarData.description,
       recurrence: calendarData.recurrence,
       isActive: 'Y',
-      createdBy: 'mock@company.com',
-      createdOn: new Date().toISOString(),
-      updatedBy: 'mock@company.com',
-      updatedOn: new Date().toISOString(),
+      createdBy: calendarData.createdBy,
+      createdAt: new Date().toISOString(),
+      updatedBy: calendarData.createdBy,
+      updatedAt: new Date().toISOString(),
+      startDate: calendarData.startDate,
+      endDate: calendarData.endDate,
     };
+    mockCalendars.push(newCalendar);
+
+    const newDays = calendarData.calendarDays.map((day, index) => ({
+      ...day,
+      calendarDayId: (mockCalendarDays.length > 0 ? Math.max(...mockCalendarDays.map(d => d.calendarDayId)) : 0) + index + 1,
+      calendarId: newCalendarId,
+    }));
+    mockCalendarDays.push(...newDays);
+
     return Promise.resolve(newCalendar);
   }
   
