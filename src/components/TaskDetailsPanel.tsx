@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { 
@@ -29,6 +30,7 @@ import {
   History,
   ChevronDown,
   ChevronRight,
+  ChevronsUpDown,
   Files,
   Paperclip,
   Send,
@@ -1186,168 +1188,174 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   return (
     <div className="h-full flex bg-background border-l border-border">
       {/* Main Content Panel */}
-      <div className={`flex flex-col transition-all duration-300 ${
+      <div className={`flex flex-col h-full transition-all duration-300 ${
         showQueryChat && selectedQuery ? 'w-2/5' : 'w-full'
       }`}>
-        {/* Modern Header */}
-        <div className="border-b border-border bg-gradient-to-r from-background to-muted/20">
-          <div className="p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                {taskDetails && (
-                  <div className="p-2 rounded-lg bg-background border shadow-sm">
-                    {getTaskTypeIcon(taskDetails.taskType)}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className={`font-semibold truncate ${showQueryChat ? 'text-sm' : 'text-lg'}`}>
-                      {task.taskName}
-                    </h3>
-                    <Badge variant="outline" className="text-xs h-6 px-2 shrink-0">
-                      {taskDetails?.status || task.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground truncate mb-2">
-                    {taskDetails?.workflowName || 'Loading...'}
-                  </p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 ml-2 h-8 w-8 p-0">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Task Information Grid */}
-            <div className="grid grid-cols-2 gap-4 mb-3">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Type:</span>
-                  <span className="font-medium">
-                    {taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Assigned:</span>
-                  <span className="font-medium">
-                    {taskDetails?.assignedToUsername || 'alice'}
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className={`w-2 h-2 rounded-full ${dueDateInfo.priorityDot}`} />
-                  <span className={`font-medium ${dueDateInfo.colorClass}`}>
-                    {dueDateInfo.formattedDate}
-                  </span>
-                </div>
-                {dueDateInfo.priorityLabel === 'Overdue' && (
-                  <div className="text-xs text-red-500 font-medium">
-                    {dueDateInfo.priorityLabel}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Mark as Complete Toggle - Only show for IN_PROGRESS tasks */}
-            {taskDetails?.status === 'IN_PROGRESS' && (
-              <div className="flex items-center justify-between p-3 bg-background border rounded-lg shadow-sm">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="font-medium text-sm">Mark as Complete</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {taskDetails.taskType === 'DECISION' 
-                      ? 'Complete this decision task without selecting a specific outcome'
-                      : 'Complete this task and move to the next step'
-                    }
-                  </p>
-                </div>
-                <Switch
-                  checked={false}
-                  onCheckedChange={handleCompleteTask}
-                  disabled={isLoading}
-                  className="ml-3"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden">
-          {isLoading && !taskDetails ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : taskDetails ? (
-            <div className="h-full">
-              {taskDetails.taskConfiguration.fileDescription && !showQueryChat && (
-                <div className="p-4 pb-0">
-                  <Label>Description</Label>
-                  <p className="text-sm text-muted-foreground mt-1">{taskDetails.taskConfiguration.fileDescription}</p>
+        {/* Modern Header (Not part of scroll) */}
+        <div className="border-b border-border bg-gradient-to-r from-background to-muted/20 p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              {taskDetails && (
+                <div className="p-2 rounded-lg bg-background border shadow-sm">
+                  {getTaskTypeIcon(taskDetails.taskType)}
                 </div>
               )}
-
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                <div className="px-4 pt-4">
-                  <TabsList className={`grid w-full grid-cols-2 ${showQueryChat ? 'h-8' : 'h-10'}`}>
-                    <TabsTrigger value="files" className={`${showQueryChat ? 'text-xs px-2' : ''}`}>
-                      {showQueryChat ? 'Files' : 'Files & Actions'}
-                    </TabsTrigger>
-                    <TabsTrigger value="queries" className={`${showQueryChat ? 'text-xs px-2' : ''}`}>
-                      Queries
-                    </TabsTrigger>
-                  </TabsList>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className={`font-semibold truncate ${showQueryChat ? 'text-sm' : 'text-lg'}`}>
+                    {task.taskName}
+                  </h3>
+                  <Badge variant="outline" className="text-xs h-6 px-2 shrink-0">
+                    {taskDetails?.status || task.status}
+                  </Badge>
                 </div>
+                <p className="text-sm text-muted-foreground truncate mb-2">
+                  {taskDetails?.workflowName || 'Loading...'}
+                </p>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 ml-2 h-8 w-8 p-0">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
 
-                <TabsContent value="files" className="flex-1 mt-4 px-4 pb-4 overflow-hidden">
-                  <ScrollArea className="h-full">
-                  <TaskFileManager
-                    workflowTaskFiles={getWorkflowTaskFiles()}
-                    taskDetails={taskDetails}
-                    onDownload={handleDownload}
-                    onFileUpload={handleFileUpload}
-                    onFileUpdate={handleFileUpdate}
-                    onConsolidation={handleConsolidation}
-                    onCompleteTask={handleCompleteTask}
-                    selectedFiles={selectedFiles}
-                    setSelectedFiles={setSelectedFiles}
-                    fileCommentary={fileCommentary}
-                    setFileCommentary={setFileCommentary}
-                    selectedSourceFiles={selectedSourceFiles}
-                    setSelectedSourceFiles={setSelectedSourceFiles}
-                    updateFiles={updateFiles}
-                    setUpdateFiles={setUpdateFiles}
-                    consolidationFiles={consolidationFiles}
-                    setConsolidationFiles={setConsolidationFiles}
-                    outputFileName={outputFileName}
-                    setOutputFileName={setOutputFileName}
-                    decisionOutcome={decisionOutcome}
-                    setDecisionOutcome={setDecisionOutcome}
-                    decisionComments={decisionComments}
-                    setDecisionComments={setDecisionComments}
-                    isLoading={isLoading}
-                    onViewVersions={(taskFileId) => {
-                      console.log('View versions for task file:', taskFileId);
-                    }}
+          {/* Task Information Grid */}
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Type:</span>
+                <span className="font-medium">
+                  {taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Assigned:</span>
+                <span className="font-medium">
+                  {taskDetails?.assignedToUsername || 'alice'}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <div className={`w-2 h-2 rounded-full ${dueDateInfo.priorityDot}`} />
+                <span className={`font-medium ${dueDateInfo.colorClass}`}>
+                  {dueDateInfo.formattedDate}
+                </span>
+              </div>
+              {dueDateInfo.priorityLabel === 'Overdue' && (
+                <div className="text-xs text-red-500 font-medium">
+                  {dueDateInfo.priorityLabel}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mark as Complete Toggle - Only show for IN_PROGRESS tasks */}
+          {taskDetails?.status === 'IN_PROGRESS' && (
+            <Collapsible className="border rounded-lg shadow-sm bg-background">
+              <div className="flex items-center justify-between p-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="font-medium text-sm">Mark as Complete</span>
+                </div>
+                <div className="flex items-center">
+                  <Switch
+                    checked={false}
+                    onCheckedChange={handleCompleteTask}
+                    disabled={isLoading}
+                    className="ml-3"
                   />
-                  </ScrollArea>
-                </TabsContent>
-
-                <TabsContent value="queries" className="flex-1 mt-4 px-4 pb-4 overflow-hidden">
-                  <ScrollArea className="h-full">
-                    {renderQuerySection()}
-                  </ScrollArea>
-                </TabsContent>
-              </Tabs>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Failed to load task details</p>
-            </div>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-8 h-8 p-0 ml-2">
+                      <ChevronsUpDown className="h-4 w-4" />
+                      <span className="sr-only">Toggle description</span>
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+              </div>
+              <CollapsibleContent className="px-3 pb-3">
+                <p className="text-xs text-muted-foreground">
+                  {taskDetails.taskType === 'DECISION' 
+                    ? 'Complete this decision task without selecting a specific outcome.'
+                    : 'Complete this task and move to the next step.'
+                  }
+                </p>
+              </CollapsibleContent>
+            </Collapsible>
           )}
+        </div>
+
+        {/* Content (Scrollable) */}
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-4">
+              {isLoading && !taskDetails ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : taskDetails ? (
+                <div>
+                  {taskDetails.taskConfiguration.fileDescription && !showQueryChat && (
+                    <div className="pb-4">
+                      <Label>Description</Label>
+                      <p className="text-sm text-muted-foreground mt-1">{taskDetails.taskConfiguration.fileDescription}</p>
+                    </div>
+                  )}
+
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className={`grid w-full grid-cols-2 ${showQueryChat ? 'h-8' : 'h-10'}`}>
+                      <TabsTrigger value="files" className={`${showQueryChat ? 'text-xs px-2' : ''}`}>
+                        {showQueryChat ? 'Files' : 'Files & Actions'}
+                      </TabsTrigger>
+                      <TabsTrigger value="queries" className={`${showQueryChat ? 'text-xs px-2' : ''}`}>
+                        Queries
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="files" className="mt-4">
+                      <TaskFileManager
+                        workflowTaskFiles={getWorkflowTaskFiles()}
+                        taskDetails={taskDetails}
+                        onDownload={handleDownload}
+                        onFileUpload={handleFileUpload}
+                        onFileUpdate={handleFileUpdate}
+                        onConsolidation={handleConsolidation}
+                        onCompleteTask={handleCompleteTask}
+                        selectedFiles={selectedFiles}
+                        setSelectedFiles={setSelectedFiles}
+                        fileCommentary={fileCommentary}
+                        setFileCommentary={setFileCommentary}
+                        selectedSourceFiles={selectedSourceFiles}
+                        setSelectedSourceFiles={setSelectedSourceFiles}
+                        updateFiles={updateFiles}
+                        setUpdateFiles={setUpdateFiles}
+                        consolidationFiles={consolidationFiles}
+                        setConsolidationFiles={setConsolidationFiles}
+                        outputFileName={outputFileName}
+                        setOutputFileName={setOutputFileName}
+                        decisionOutcome={decisionOutcome}
+                        setDecisionOutcome={setDecisionOutcome}
+                        decisionComments={decisionComments}
+                        setDecisionComments={setDecisionComments}
+                        isLoading={isLoading}
+                        onViewVersions={(taskFileId) => {
+                          console.log('View versions for task file:', taskFileId);
+                        }}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="queries" className="mt-4">
+                      {renderQuerySection()}
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Failed to load task details</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
         </div>
       </div>
 
