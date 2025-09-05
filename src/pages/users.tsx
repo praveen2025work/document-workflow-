@@ -236,7 +236,6 @@ const UsersPage: NextPage = () => {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
-                      <TableHead>Roles</TableHead>
                       <TableHead>Last Login</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created On</TableHead>
@@ -252,13 +251,6 @@ const UsersPage: NextPage = () => {
                           </div>
                         </TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {user.roles?.map((role, index) => (
-                              <Badge key={index} variant="secondary">{role}</Badge>
-                            ))}
-                          </div>
-                        </TableCell>
                         <TableCell>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'N/A'}</TableCell>
                         <TableCell>
                           <Badge variant={user.isActive === 'Y' ? 'default' : 'destructive'}>
