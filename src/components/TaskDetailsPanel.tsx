@@ -1238,23 +1238,18 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
                 {dueDateInfo.priorityLabel}
               </Badge>
             )}
-          </div>
-
-          {/* Mark as Complete Toggle - Only show for IN_PROGRESS tasks */}
-          {taskDetails?.status === 'IN_PROGRESS' && (
-            <div className="border rounded-lg bg-background p-2 flex items-center justify-between mt-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <Label htmlFor="mark-as-complete-switch" className="font-medium text-sm cursor-pointer">Mark as Complete</Label>
-                </div>
+            {taskDetails?.status === 'IN_PROGRESS' && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="mark-as-complete-switch" className="font-medium cursor-pointer">Complete</Label>
                 <Switch
                   id="mark-as-complete-switch"
                   checked={false}
                   onCheckedChange={handleCompleteTask}
                   disabled={isLoading}
                 />
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content (Scrollable) */}
