@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 import LeftNavigation from '@/components/LeftNavigation';
 import MainHeader from '@/components/MainHeader';
 
@@ -17,14 +18,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   headerActions,
   children
 }) => {
+  const router = useRouter();
   const [isNavCollapsed, setIsNavCollapsed] = useState(true);
 
   const toggleNavCollapse = () => {
     setIsNavCollapsed(!isNavCollapsed);
   };
 
+  // Check if current page is canvas-workflow
+  const isCanvasWorkflow = router.pathname === '/canvas-workflow';
+
   return (
-    <div className="flex h-screen w-full bg-background relative z-20">
+    <div className={`flex h-screen w-full relative z-20 ${isCanvasWorkflow ? 'bg-background' : 'bg-secondary/30'}`}>
       {/* Left Navigation */}
       <LeftNavigation 
         isCollapsed={isNavCollapsed}
@@ -43,7 +48,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         </MainHeader>
         
         {/* Page Content */}
-        <main className="flex-1 overflow-auto">
+        <main className={`flex-1 overflow-auto ${isCanvasWorkflow ? '' : 'bg-gradient-to-br from-secondary/20 to-muted/40'}`}>
           {children}
         </main>
       </div>
