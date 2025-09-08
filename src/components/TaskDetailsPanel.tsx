@@ -1196,21 +1196,7 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
         <div className="border-b border-border bg-background p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              {taskDetails && (
-                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
-                  {getTaskTypeIcon(taskDetails.taskType)}
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-base truncate">
-                    {task.taskName}
-                  </h3>
-                </div>
-                <p className="text-sm text-muted-foreground truncate">
-                  {taskDetails?.workflowName || 'Loading...'}
-                </p>
-              </div>
+              <h3 className="font-semibold text-base">Task Details</h3>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0 ml-2 h-8 w-8">
               <X className="h-4 w-4" />
