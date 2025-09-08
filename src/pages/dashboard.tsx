@@ -692,9 +692,9 @@ const DashboardPage: NextPage = () => {
       icon={LayoutDashboard}
       headerActions={headerActions}
     >
-      <div className="flex h-full">
+      <div className="flex h-full min-h-0">
         {/* Main Content */}
-        <div className={`transition-all duration-300 ${isTaskPanelOpen ? 'w-[25%]' : 'w-full'}`}>
+        <div className={`transition-all duration-300 ${isTaskPanelOpen ? 'w-[25%]' : 'w-full'} min-h-0`}>
           <div className="p-6 h-full overflow-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -779,7 +779,7 @@ const DashboardPage: NextPage = () => {
                 </div>
               )}
 
-              <Tabs defaultValue="active" className="w-full h-full">
+              <Tabs defaultValue="active" className="w-full flex flex-col min-h-0">
                 <TabsList className={`grid w-full grid-cols-3 glass ${isTaskPanelOpen ? 'mb-2' : ''}`}>
                   <TabsTrigger value="active" className="flex items-center gap-2">
                     <Play className="h-4 w-4" />
@@ -795,49 +795,49 @@ const DashboardPage: NextPage = () => {
                   </TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="active" className="h-full">
-                  <Card className="glass h-full">
+                <TabsContent value="active" className="flex-1 min-h-0">
+                  <Card className="glass h-full flex flex-col">
                     {!isTaskPanelOpen && (
-                      <CardHeader>
+                      <CardHeader className="flex-shrink-0">
                         <CardTitle className="text-foreground flex items-center gap-2">
                           <AlertCircle className="h-5 w-5" />
                           Active Tasks
                         </CardTitle>
                       </CardHeader>
                     )}
-                    <CardContent className={isTaskPanelOpen ? 'p-2' : ''}>
+                    <CardContent className={`flex-1 min-h-0 overflow-auto ${isTaskPanelOpen ? 'p-2' : ''}`}>
                       {renderActiveTasksTable()}
                     </CardContent>
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="completed" className="h-full">
-                  <Card className="glass h-full">
+                <TabsContent value="completed" className="flex-1 min-h-0">
+                  <Card className="glass h-full flex flex-col">
                     {!isTaskPanelOpen && (
-                      <CardHeader>
+                      <CardHeader className="flex-shrink-0">
                         <CardTitle className="text-foreground flex items-center gap-2">
                           <CheckCircle className="h-5 w-5" />
                           Completed Tasks
                         </CardTitle>
                       </CardHeader>
                     )}
-                    <CardContent className={isTaskPanelOpen ? 'p-2' : ''}>
+                    <CardContent className={`flex-1 min-h-0 overflow-auto ${isTaskPanelOpen ? 'p-2' : ''}`}>
                       {renderCompletedTasksTable()}
                     </CardContent>
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="upcoming" className="h-full">
-                  <Card className="glass h-full">
+                <TabsContent value="upcoming" className="flex-1 min-h-0">
+                  <Card className="glass h-full flex flex-col">
                     {!isTaskPanelOpen && (
-                      <CardHeader>
+                      <CardHeader className="flex-shrink-0">
                         <CardTitle className="text-foreground flex items-center gap-2">
                           <Clock className="h-5 w-5" />
                           Upcoming Tasks
                         </CardTitle>
                       </CardHeader>
                     )}
-                    <CardContent className={isTaskPanelOpen ? 'p-2' : ''}>
+                    <CardContent className={`flex-1 min-h-0 overflow-auto ${isTaskPanelOpen ? 'p-2' : ''}`}>
                       {renderUpcomingTasksTable()}
                     </CardContent>
                   </Card>

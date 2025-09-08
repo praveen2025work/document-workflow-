@@ -29,7 +29,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   const isCanvasWorkflow = router.pathname === '/canvas-workflow';
 
   return (
-    <div className={`flex h-screen w-full relative z-20 ${isCanvasWorkflow ? 'bg-background' : 'bg-secondary/30'}`}>
+    <div className={`flex h-screen w-full relative z-20 ${isCanvasWorkflow ? 'bg-background' : 'bg-slate-50 dark:bg-slate-900'}`}>
       {/* Left Navigation */}
       <LeftNavigation 
         isCollapsed={isNavCollapsed}
@@ -37,7 +37,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       />
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Header */}
         <MainHeader 
           title={title}
@@ -48,7 +48,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         </MainHeader>
         
         {/* Page Content */}
-        <main className={`flex-1 overflow-auto ${isCanvasWorkflow ? '' : 'bg-gradient-to-br from-secondary/20 to-muted/40'}`}>
+        <main className={`flex-1 min-h-0 ${isCanvasWorkflow ? '' : 'bg-white dark:bg-slate-800'}`}>
           {children}
         </main>
       </div>
