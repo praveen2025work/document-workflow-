@@ -282,43 +282,46 @@ const DashboardPage: NextPage = () => {
       <div className="space-y-4">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-border/50">
-              <TableHead className="w-[200px]">Workflow</TableHead>
-              <TableHead className="w-[250px]">Task Details</TableHead>
-              <TableHead className="w-[150px]">Status</TableHead>
-              <TableHead className="w-[200px]">Due Date & Priority</TableHead>
-              <TableHead className="w-[150px]">Actions</TableHead>
+            <TableRow className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-primary/10">
+              <TableHead className="w-[250px] font-semibold">Task Name</TableHead>
+              <TableHead className="w-[200px] font-semibold">Workflow</TableHead>
+              <TableHead className="w-[120px] font-semibold">Status</TableHead>
+              <TableHead className="w-[150px] font-semibold">Due Date</TableHead>
+              <TableHead className="w-[120px] font-semibold">Priority</TableHead>
+              <TableHead className="w-[150px] font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {allActiveTasks.map((task) => {
+            {allActiveTasks.map((task, index) => {
               return (
                 <TableRow 
                   key={`active-${task.instanceTaskId}`}
-                  className={`hover:bg-muted/50 transition-colors ${
+                  className={`hover:bg-muted/30 transition-all duration-200 ${
                     task.isAssigned ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
-                  }`}
+                  } ${index % 2 === 0 ? 'bg-background' : 'bg-muted/5'}`}
                 >
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-1 h-8 rounded-full ${task.isAssigned ? 'bg-blue-500' : 'bg-gray-300'}`} />
-                      <div>
-                        <div className="font-semibold text-sm">
-                          {task.workflowName || 'Unknown Workflow'}
+                    <div className="flex items-center gap-3">
+                      {getTaskTypeIcon((task as any).taskType)}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-foreground truncate">
+                          {task.taskName}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          ID: {task.instanceId || 'N/A'}
+                        <div className="text-xs text-muted-foreground truncate">
+                          {formatTaskType((task as any).taskType)}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getTaskTypeIcon((task as any).taskType)}
-                      <div>
-                        <div className="font-medium text-sm">{task.taskName}</div>
+                      <div className={`w-1 h-6 rounded-full ${task.isAssigned ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm text-muted-foreground truncate">
+                          {task.workflowName || 'Unknown Workflow'}
+                        </div>
                         <div className="text-xs text-muted-foreground">
-                          {(task as any).taskType || 'General Task'}
+                          ID: {task.instanceId || 'N/A'}
                         </div>
                       </div>
                     </div>
@@ -335,18 +338,18 @@ const DashboardPage: NextPage = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
-                        <div className="text-sm">
-                          <div className={getDueDateWithPriority(task.dueDate).colorClass}>
-                            {getDueDateWithPriority(task.dueDate).formattedDate}
-                          </div>
-                        </div>
+                    <div className="text-sm">
+                      <div className={getDueDateWithPriority(task.dueDate).colorClass}>
+                        {getDueDateWithPriority(task.dueDate).formattedDate}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
+                      <span className="text-xs font-medium">
                         {getDueDateWithPriority(task.dueDate).priorityLabel}
-                      </div>
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -356,7 +359,7 @@ const DashboardPage: NextPage = () => {
                           <Button
                             size="sm"
                             onClick={() => handleAssignTask(task)}
-                            className="h-7 px-2 text-xs"
+                            className="h-7 px-2 text-xs hover:bg-primary/90 transition-colors"
                           >
                             <Check className="h-3 w-3 mr-1" />
                             Assign
@@ -365,7 +368,7 @@ const DashboardPage: NextPage = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleRejectTask(task.instanceTaskId)}
-                            className="h-7 px-2 text-xs"
+                            className="h-7 px-2 text-xs hover:bg-destructive hover:text-destructive-foreground transition-colors"
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -377,7 +380,7 @@ const DashboardPage: NextPage = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleOpenTaskDetails(task)}
-                            className="h-7 px-2 text-xs"
+                            className="h-7 px-2 text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
                           >
                             <Eye className="h-3 w-3 mr-1" />
                             Details
@@ -440,41 +443,46 @@ const DashboardPage: NextPage = () => {
       <div className="space-y-4">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-border/50">
-              <TableHead className="w-[200px]">Workflow</TableHead>
-              <TableHead className="w-[250px]">Task Details</TableHead>
-              <TableHead className="w-[150px]">Status</TableHead>
-              <TableHead className="w-[200px]">Due Date & Priority</TableHead>
-              <TableHead className="w-[150px]">Actions</TableHead>
+            <TableRow className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-primary/10">
+              <TableHead className="w-[250px] font-semibold">Task Name</TableHead>
+              <TableHead className="w-[200px] font-semibold">Workflow</TableHead>
+              <TableHead className="w-[120px] font-semibold">Status</TableHead>
+              <TableHead className="w-[150px] font-semibold">Due Date</TableHead>
+              <TableHead className="w-[120px] font-semibold">Priority</TableHead>
+              <TableHead className="w-[150px] font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {completedTasks.map((task) => {
+            {completedTasks.map((task, index) => {
               return (
                 <TableRow 
                   key={`completed-${task.instanceTaskId}`}
-                  className="hover:bg-muted/50 transition-colors bg-green-50/30 dark:bg-green-950/10"
+                  className={`hover:bg-muted/30 transition-all duration-200 bg-green-50/30 dark:bg-green-950/10 ${
+                    index % 2 === 0 ? 'bg-background' : 'bg-muted/5'
+                  }`}
                 >
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1 h-8 rounded-full bg-green-500" />
-                      <div>
-                        <div className="font-semibold text-sm">
-                          {task.workflowName || 'Unknown Workflow'}
+                    <div className="flex items-center gap-3">
+                      {getTaskTypeIcon((task as any).taskType)}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-foreground truncate">
+                          {task.taskName}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          ID: {task.instanceId || 'N/A'}
+                        <div className="text-xs text-muted-foreground truncate">
+                          {formatTaskType((task as any).taskType)}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getTaskTypeIcon((task as any).taskType)}
-                      <div>
-                        <div className="font-medium text-sm">{task.taskName}</div>
+                      <div className="w-1 h-6 rounded-full bg-green-500" />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm text-muted-foreground truncate">
+                          {task.workflowName || 'Unknown Workflow'}
+                        </div>
                         <div className="text-xs text-muted-foreground">
-                          {(task as any).taskType || 'General Task'}
+                          ID: {task.instanceId || 'N/A'}
                         </div>
                       </div>
                     </div>
@@ -489,18 +497,18 @@ const DashboardPage: NextPage = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
-                        <div className="text-sm">
-                          <div className={getDueDateWithPriority(task.dueDate).colorClass}>
-                            {getDueDateWithPriority(task.dueDate).formattedDate}
-                          </div>
-                        </div>
+                    <div className="text-sm">
+                      <div className={getDueDateWithPriority(task.dueDate).colorClass}>
+                        {getDueDateWithPriority(task.dueDate).formattedDate}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
+                      <span className="text-xs font-medium">
                         {getDueDateWithPriority(task.dueDate).priorityLabel}
-                      </div>
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -508,7 +516,7 @@ const DashboardPage: NextPage = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleOpenTaskDetails(task)}
-                      className="h-7 px-2 text-xs"
+                      className="h-7 px-2 text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
                     >
                       <Eye className="h-3 w-3 mr-1" />
                       Details
@@ -568,41 +576,46 @@ const DashboardPage: NextPage = () => {
       <div className="space-y-4">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-border/50">
-              <TableHead className="w-[200px]">Workflow</TableHead>
-              <TableHead className="w-[250px]">Task Details</TableHead>
-              <TableHead className="w-[150px]">Status</TableHead>
-              <TableHead className="w-[200px]">Due Date & Priority</TableHead>
-              <TableHead className="w-[150px]">Actions</TableHead>
+            <TableRow className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-primary/10">
+              <TableHead className="w-[250px] font-semibold">Task Name</TableHead>
+              <TableHead className="w-[200px] font-semibold">Workflow</TableHead>
+              <TableHead className="w-[120px] font-semibold">Status</TableHead>
+              <TableHead className="w-[150px] font-semibold">Due Date</TableHead>
+              <TableHead className="w-[120px] font-semibold">Priority</TableHead>
+              <TableHead className="w-[150px] font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {upcomingTasks.map((task) => {
+            {upcomingTasks.map((task, index) => {
               return (
                 <TableRow 
                   key={`upcoming-${task.instanceTaskId}`}
-                  className="hover:bg-muted/50 transition-colors bg-gray-50/30 dark:bg-gray-950/10"
+                  className={`hover:bg-muted/30 transition-all duration-200 bg-gray-50/30 dark:bg-gray-950/10 ${
+                    index % 2 === 0 ? 'bg-background' : 'bg-muted/5'
+                  }`}
                 >
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1 h-8 rounded-full bg-gray-400" />
-                      <div>
-                        <div className="font-semibold text-sm">
-                          {task.workflowName || 'Unknown Workflow'}
+                    <div className="flex items-center gap-3">
+                      {getTaskTypeIcon((task as any).taskType)}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-foreground truncate">
+                          {task.taskName}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          ID: {task.instanceId || 'N/A'}
+                        <div className="text-xs text-muted-foreground truncate">
+                          {formatTaskType((task as any).taskType)}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getTaskTypeIcon((task as any).taskType)}
-                      <div>
-                        <div className="font-medium text-sm">{task.taskName}</div>
+                      <div className="w-1 h-6 rounded-full bg-gray-400" />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm text-muted-foreground truncate">
+                          {task.workflowName || 'Unknown Workflow'}
+                        </div>
                         <div className="text-xs text-muted-foreground">
-                          {(task as any).taskType || 'General Task'}
+                          ID: {task.instanceId || 'N/A'}
                         </div>
                       </div>
                     </div>
@@ -617,18 +630,18 @@ const DashboardPage: NextPage = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
-                        <div className="text-sm">
-                          <div className={getDueDateWithPriority(task.dueDate).colorClass}>
-                            {getDueDateWithPriority(task.dueDate).formattedDate}
-                          </div>
-                        </div>
+                    <div className="text-sm">
+                      <div className={getDueDateWithPriority(task.dueDate).colorClass}>
+                        {getDueDateWithPriority(task.dueDate).formattedDate}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${getDueDateWithPriority(task.dueDate).priorityDot}`} />
+                      <span className="text-xs font-medium">
                         {getDueDateWithPriority(task.dueDate).priorityLabel}
-                      </div>
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -636,7 +649,7 @@ const DashboardPage: NextPage = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleOpenTaskDetails(task)}
-                      className="h-7 px-2 text-xs"
+                      className="h-7 px-2 text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
                     >
                       <Eye className="h-3 w-3 mr-1" />
                       Details
