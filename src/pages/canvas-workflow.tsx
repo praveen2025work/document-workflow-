@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Play, Upload, Download, Settings, Sparkles, Workflow as WorkflowIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReactFlow, {
   Controls,
   useNodesState,
@@ -31,6 +32,7 @@ import {
   createWorkflow,
   getWorkflowById,
   updateWorkflow,
+  searchWorkflows,
 } from '@/lib/workflowApi';
 import { startWorkflowWithCalendar, startWorkflowWithoutCalendar } from '@/lib/executionApi';
 import { useUser } from '@/context/UserContext';
@@ -64,6 +66,8 @@ const initialNodes: Node<NodeData>[] = [
 const CanvasWorkflowPage: NextPage = () => {
   const { user } = useUser();
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
+  const [allWorkflows, setAllWorkflows] = useState<Workflow[]>([]);
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>('1');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -71,106 +75,85 @@ const CanvasWorkflowPage: NextPage = () => {
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
 
-  useEffect(() => {
-    // Load a default workflow or a specific one via query param
-    const loadWorkflow = async () => {
-      try {
-        // Load the comprehensive mock workflow by default
-        const wf = await getWorkflowById(1);
-        setWorkflow(wf);
-        if (wf.tasks) {
-          const flowNodes = wf.tasks.map((task, index) => ({
-            id: task.taskId.toString(),
-            type: task.taskType === 'DECISION' ? 'decision' : 'action',
-            position: { x: 250 + index * 200, y: 200 + (index % 2) * 100 },
-            data: {
-              description: task.name,
-              taskType: task.taskType,
-              ...task
-            } as NodeData,
-          }));
-          setNodes([...initialNodes, ...flowNodes]);
+  const loadWorkflow = useCallback(async (workflowId: string | number) => {
+    try {
+      const wf = await getWorkflowById(Number(workflowId));
+      setWorkflow(wf);
+      if (wf.tasks) {
+        const flowNodes = wf.tasks.map((task, index) => ({
+          id: task.taskId.toString(),
+          type: task.taskType === 'DECISION' ? 'decision' : 'action',
+          position: { x: 250 + index * 200, y: 200 + (index % 2) * 100 },
+          data: {
+            description: task.name,
+            taskType: task.taskType,
+            ...task
+          } as NodeData,
+        }));
+        setNodes([...initialNodes, ...flowNodes]);
+        
+        const newEdges: any[] = [];
+        wf.tasks.forEach((task, index) => {
+          if (index === 0) {
+            newEdges.push({ id: `start-${task.taskId}`, source: 'start', target: task.taskId.toString(), type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
+          }
           
-          // Create connections between tasks based on sequence order and decision outcomes
-          const newEdges: any[] = [];
-          wf.tasks.forEach((task, index) => {
-            if (index === 0) {
-              // Connect start to first task
+          if (task.decisionOutcomes && task.decisionOutcomes.length > 0) {
+            task.decisionOutcomes.forEach((outcome, outcomeIndex) => {
               newEdges.push({
-                id: `start-${task.taskId}`,
-                source: 'start',
-                target: task.taskId.toString(),
-                type: 'default',
-                style: { stroke: '#3b82f6', strokeWidth: 2 }
-              });
-            }
-            
-            if (task.decisionOutcomes && task.decisionOutcomes.length > 0) {
-              // Connect decision outcomes
-              task.decisionOutcomes.forEach((outcome, outcomeIndex) => {
-                newEdges.push({
-                  id: `${task.taskId}-${outcome.nextTaskId}-${outcomeIndex}`,
-                  source: task.taskId.toString(),
-                  target: outcome.nextTaskId.toString(),
-                  type: outcome.outcomeName === 'REJECT' ? 'goBack' : 'default',
-                  style: outcome.outcomeName === 'REJECT' 
-                    ? { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '8,4' }
-                    : { stroke: '#3b82f6', strokeWidth: 2 },
-                  label: outcome.outcomeName
-                });
-              });
-            } else if (index < wf.tasks.length - 1) {
-              // Connect to next task in sequence
-              const nextTask = wf.tasks[index + 1];
-              newEdges.push({
-                id: `${task.taskId}-${nextTask.taskId}`,
+                id: `${task.taskId}-${outcome.nextTaskId}-${outcomeIndex}`,
                 source: task.taskId.toString(),
-                target: nextTask.taskId.toString(),
-                type: 'default',
-                style: { stroke: '#3b82f6', strokeWidth: 2 }
+                target: outcome.nextTaskId.toString(),
+                type: outcome.outcomeName === 'REJECT' ? 'goBack' : 'default',
+                style: outcome.outcomeName === 'REJECT' 
+                  ? { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '8,4' }
+                  : { stroke: '#3b82f6', strokeWidth: 2 },
+                label: outcome.outcomeName
               });
-            }
-            
-            if (index === wf.tasks.length - 1) {
-              // Connect last task to end
-              newEdges.push({
-                id: `${task.taskId}-end`,
-                source: task.taskId.toString(),
-                target: 'end',
-                type: 'default',
-                style: { stroke: '#3b82f6', strokeWidth: 2 }
-              });
-            }
-          });
+            });
+          } else if (index < wf.tasks.length - 1) {
+            const nextTask = wf.tasks[index + 1];
+            newEdges.push({ id: `${task.taskId}-${nextTask.taskId}`, source: task.taskId.toString(), target: nextTask.taskId.toString(), type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
+          }
           
-          setEdges(newEdges);
-        }
-      } catch (error) {
-        console.error("Failed to load workflow", error);
-        // Don't show error toast, just continue with empty workflow
-        // Set a default workflow structure for demo
-        setWorkflow({
-          workflowId: 0,
-          name: 'Custom Workflow',
-          description: 'New workflow from canvas',
-          reminderBeforeDueMins: 60,
-          minutesAfterDue: 30,
-          escalationAfterMins: 120,
-          dueInMins: 1440,
-          isActive: 'Y',
-          calendarId: null,
-          createdBy: 'canvas-user@example.com',
-          createdOn: new Date().toISOString(),
-          updatedBy: null,
-          updatedOn: null,
-          tasks: [],
-          workflowRoles: [],
-          parameters: []
+          if (index === wf.tasks.length - 1) {
+            newEdges.push({ id: `${task.taskId}-end`, source: task.taskId.toString(), target: 'end', type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
+          }
         });
+        
+        setEdges(newEdges);
+      }
+      toast.success(`Loaded workflow: ${wf.name}`);
+    } catch (error) {
+      console.error("Failed to load workflow", error);
+      toast.error("Failed to load workflow.");
+      setWorkflow({
+        workflowId: 0, name: 'Custom Workflow', description: 'New workflow from canvas',
+        reminderBeforeDueMins: 60, minutesAfterDue: 30, escalationAfterMins: 120, dueInMins: 1440,
+        isActive: 'Y', calendarId: null, createdBy: 'canvas-user@example.com', createdOn: new Date().toISOString(),
+        updatedBy: null, updatedOn: null, tasks: [], workflowRoles: [], parameters: []
+      });
+    }
+  }, [setNodes, setEdges]);
+
+  useEffect(() => {
+    const fetchAllWorkflows = async () => {
+      try {
+        const workflows = await searchWorkflows({});
+        setAllWorkflows(workflows);
+      } catch (error) {
+        console.error("Failed to fetch workflows", error);
+        toast.error("Could not load workflow list.");
       }
     };
-    loadWorkflow(); // Load the workflow by default to show comprehensive example
-  }, [setNodes, setEdges]);
+    fetchAllWorkflows();
+  }, []);
+
+  useEffect(() => {
+    if (selectedWorkflowId) {
+      loadWorkflow(selectedWorkflowId);
+    }
+  }, [selectedWorkflowId, loadWorkflow]);
 
   const onConnect = useCallback((params: ReactFlowConnection | Edge) => {
     const newEdge = { ...params, type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } };
@@ -363,7 +346,18 @@ const CanvasWorkflowPage: NextPage = () => {
 
   const headerActions = (
     <>
-      {workflow?.name && <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" />{workflow.name}</Badge>}
+      <Select value={selectedWorkflowId} onValueChange={setSelectedWorkflowId}>
+        <SelectTrigger className="w-[280px] h-9">
+          <SelectValue placeholder="Select a workflow..." />
+        </SelectTrigger>
+        <SelectContent>
+          {allWorkflows.map((wf) => (
+            <SelectItem key={wf.workflowId} value={wf.workflowId.toString()}>
+              {wf.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Button onClick={handleCreateNew} variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" />New</Button>
       <Button onClick={handleDeploy} variant="default" size="sm" disabled={isDeploying} className="bg-success text-success-foreground hover:bg-success/90">
         {isDeploying ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />Deploying...</> : <><Play className="mr-2 h-4 w-4" />Deploy</>}
