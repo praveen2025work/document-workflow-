@@ -782,15 +782,15 @@ const DashboardPage: NextPage = () => {
               <Tabs defaultValue="active" className="w-full h-full">
                 <TabsList className={`grid w-full grid-cols-3 glass ${isTaskPanelOpen ? 'mb-2' : ''}`}>
                   <TabsTrigger value="active" className="flex items-center gap-2">
-                    {!isTaskPanelOpen && <Play className="h-4 w-4" />}
+                    <Play className="h-4 w-4" />
                     {isTaskPanelOpen ? `${stats.active}` : `Active (${stats.active})`}
                   </TabsTrigger>
                   <TabsTrigger value="completed" className="flex items-center gap-2">
-                    {!isTaskPanelOpen && <CheckCircle className="h-4 w-4" />}
+                    <CheckCircle className="h-4 w-4" />
                     {isTaskPanelOpen ? `${stats.completed}` : `Completed (${stats.completed})`}
                   </TabsTrigger>
                   <TabsTrigger value="upcoming" className="flex items-center gap-2">
-                    {!isTaskPanelOpen && <Clock className="h-4 w-4" />}
+                    <Clock className="h-4 w-4" />
                     {isTaskPanelOpen ? `${stats.upcoming}` : `Upcoming (${stats.upcoming})`}
                   </TabsTrigger>
                 </TabsList>
