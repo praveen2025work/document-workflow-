@@ -1219,67 +1219,41 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
             </Button>
           </div>
 
-          {/* Task Information Grid */}
-          <div className="grid grid-cols-3 gap-4 my-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Type</p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="font-semibold">{taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}</p>
-              </div>
+          {/* Task Information */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 my-4 text-xs">
+            <div className="flex items-center gap-1">
+              <p className="text-muted-foreground">Type:</p>
+              <p className="font-semibold">{taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}</p>
             </div>
-            <div>
-              <p className="text-muted-foreground">Assigned</p>
-              <div className="flex items-center gap-2 mt-1">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <p className="font-semibold">{taskDetails?.assignedToUsername || 'alice'}</p>
-              </div>
+            <div className="flex items-center gap-1">
+              <User className="h-3 w-3 text-muted-foreground" />
+              <p className="font-semibold">{taskDetails?.assignedToUsername || 'alice'}</p>
             </div>
-            <div>
-              <p className="text-muted-foreground">Due date</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className={`font-semibold ${dueDateInfo.colorClass}`}>{dueDateInfo.formattedDate}</p>
-                  {dueDateInfo.priorityLabel === 'Overdue' && (
-                    <p className="text-xs text-red-500 font-medium -mt-1">{dueDateInfo.priorityLabel}</p>
-                  )}
-                </div>
-              </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3 text-muted-foreground" />
+              <p className={`font-semibold ${dueDateInfo.colorClass}`}>{dueDateInfo.formattedDate}</p>
             </div>
+            {dueDateInfo.priorityLabel === 'Overdue' && (
+              <Badge variant="destructive" className="text-xs h-5 px-1.5">
+                {dueDateInfo.priorityLabel}
+              </Badge>
+            )}
           </div>
 
           {/* Mark as Complete Toggle - Only show for IN_PROGRESS tasks */}
           {taskDetails?.status === 'IN_PROGRESS' && (
-            <Collapsible className="border rounded-lg shadow-sm bg-background">
-              <div className="flex items-center justify-between p-3">
+            <div className="border rounded-lg bg-background p-2 flex items-center justify-between mt-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="font-medium text-sm">Mark as Complete</span>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <Label htmlFor="mark-as-complete-switch" className="font-medium text-sm cursor-pointer">Mark as Complete</Label>
                 </div>
-                <div className="flex items-center">
-                  <Switch
-                    checked={false}
-                    onCheckedChange={handleCompleteTask}
-                    disabled={isLoading}
-                    className="ml-3"
-                  />
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-8 h-8 p-0 ml-2">
-                      <ChevronsUpDown className="h-4 w-4" />
-                      <span className="sr-only">Toggle description</span>
-                    </Button>
-                  </CollapsibleTrigger>
-                </div>
-              </div>
-              <CollapsibleContent className="px-3 pb-3">
-                <p className="text-xs text-muted-foreground">
-                  {taskDetails.taskType === 'DECISION' 
-                    ? 'Complete this decision task without selecting a specific outcome.'
-                    : 'Complete this task and move to the next step.'
-                  }
-                </p>
-              </CollapsibleContent>
-            </Collapsible>
+                <Switch
+                  id="mark-as-complete-switch"
+                  checked={false}
+                  onCheckedChange={handleCompleteTask}
+                  disabled={isLoading}
+                />
+            </div>
           )}
         </div>
 
