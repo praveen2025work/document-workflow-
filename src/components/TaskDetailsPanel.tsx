@@ -34,7 +34,8 @@ import {
   Files,
   Paperclip,
   Send,
-  ArrowLeft
+  ArrowLeft,
+  Info
 } from 'lucide-react';
 import { 
   getTaskDetails, 
@@ -336,17 +337,17 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   const getTaskTypeIcon = (taskType: string) => {
     switch (taskType) {
       case 'FILE_UPLOAD':
-        return <Upload className="h-5 w-5 text-blue-500" />;
+        return <Upload className="h-5 w-5" />;
       case 'FILE_UPDATE':
-        return <FileText className="h-5 w-5 text-purple-500" />;
+        return <FileText className="h-5 w-5" />;
       case 'FILE_CONSOLIDATE':
-        return <Target className="h-5 w-5 text-green-600" />;
+        return <Target className="h-5 w-5" />;
       case 'FILE_DOWNLOAD':
-        return <Download className="h-5 w-5 text-orange-500" />;
+        return <Download className="h-5 w-5" />;
       case 'DECISION':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className="h-5 w-5" />;
       default:
-        return <FileText className="h-5 w-5 text-gray-500" />;
+        return <FileText className="h-5 w-5" />;
     }
   };
 
@@ -1186,50 +1187,47 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   const dueDateInfo = getDueDateInfo(task.dueDate);
 
   return (
-    <div className="h-full flex bg-background border-l border-border">
+    <div className="h-full flex bg-muted/20 border-l border-border">
       {/* Main Content Panel */}
       <div className={`flex flex-col h-full transition-all duration-300 ${
         showQueryChat && selectedQuery ? 'w-2/5' : 'w-full'
       }`}>
         {/* Modern Header (Not part of scroll) */}
-        <div className="border-b border-border bg-gradient-to-r from-background to-muted/20 p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3 flex-1 min-w-0">
+        <div className="border-b border-border bg-background p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               {taskDetails && (
-                <div className="p-2 rounded-lg bg-background border shadow-sm">
+                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
                   {getTaskTypeIcon(taskDetails.taskType)}
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className={`font-semibold truncate ${showQueryChat ? 'text-sm' : 'text-lg'}`}>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-base truncate">
                     {task.taskName}
                   </h3>
-                  <Badge variant="outline" className="text-xs h-6 px-2 shrink-0">
-                    {taskDetails?.status || task.status}
-                  </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground truncate mb-2">
+                <p className="text-sm text-muted-foreground truncate">
                   {taskDetails?.workflowName || 'Loading...'}
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0 ml-2 h-8 w-8 p-0">
+            <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0 ml-2 h-8 w-8">
               <X className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Task Information */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 my-4 text-xs">
-            <div className="flex items-center gap-1">
-              <p className="text-muted-foreground">Type:</p>
-              <p className="font-semibold">{taskDetails?.taskType.replace('_', ' ') || 'FILE UPLOAD'}</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-xs">
+            <div className="flex items-center gap-1.5 p-1.5 bg-muted rounded-md">
+              <Info className="h-3 w-3 text-muted-foreground" />
+              <p className="font-semibold">{taskDetails?.status.replace('_', ' ') || task.status}</p>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5 p-1.5 bg-muted rounded-md">
               <User className="h-3 w-3 text-muted-foreground" />
               <p className="font-semibold">{taskDetails?.assignedToUsername || 'alice'}</p>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5 p-1.5 bg-muted rounded-md">
               <Calendar className="h-3 w-3 text-muted-foreground" />
               <p className={`font-semibold ${dueDateInfo.colorClass}`}>{dueDateInfo.formattedDate}</p>
             </div>
@@ -1239,7 +1237,7 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
               </Badge>
             )}
             {taskDetails?.status === 'IN_PROGRESS' && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-auto">
                 <Label htmlFor="mark-as-complete-switch" className="font-medium cursor-pointer">Complete</Label>
                 <Switch
                   id="mark-as-complete-switch"

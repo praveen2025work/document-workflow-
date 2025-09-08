@@ -210,6 +210,16 @@ const DashboardPage: NextPage = () => {
     }
   };
 
+  const formatTaskType = (taskType?: string) => {
+    if (!taskType) return 'General Task';
+    return taskType
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   const renderActiveTasksTable = () => {
     if (isLoading || isAssignableTasksLoading) {
       return <p className="text-muted-foreground p-4">Loading active tasks...</p>;
@@ -252,9 +262,9 @@ const DashboardPage: NextPage = () => {
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className={`w-1 h-6 rounded-full ${task.isAssigned ? 'bg-blue-500' : 'bg-gray-300'}`} />
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-xs truncate">{task.taskName}</div>
+                    <div className="font-medium text-xs truncate">{formatTaskType((task as any).taskType)}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {task.workflowName || 'Unknown Workflow'}
+                      {task.taskName}
                     </div>
                   </div>
                 </div>
@@ -412,9 +422,9 @@ const DashboardPage: NextPage = () => {
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="w-1 h-6 rounded-full bg-green-500" />
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-xs truncate">{task.taskName}</div>
+                    <div className="font-medium text-xs truncate">{formatTaskType((task as any).taskType)}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {task.workflowName || 'Unknown Workflow'}
+                      {task.taskName}
                     </div>
                   </div>
                 </div>
@@ -540,9 +550,9 @@ const DashboardPage: NextPage = () => {
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="w-1 h-6 rounded-full bg-gray-400" />
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-xs truncate">{task.taskName}</div>
+                    <div className="font-medium text-xs truncate">{formatTaskType((task as any).taskType)}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {task.workflowName || 'Unknown Workflow'}
+                      {task.taskName}
                     </div>
                   </div>
                 </div>
