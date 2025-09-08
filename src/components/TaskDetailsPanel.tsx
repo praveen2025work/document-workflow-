@@ -1186,53 +1186,109 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
 
   const dueDateInfo = getDueDateInfo(task.dueDate);
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'IN_PROGRESS':
+        return <Play className="h-4 w-4 text-blue-500" />;
+      case 'COMPLETED':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'NOT_STARTED':
+        return <Clock className="h-4 w-4 text-gray-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-orange-500" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'IN_PROGRESS':
+        return 'border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20';
+      case 'COMPLETED':
+        return 'border-l-green-500 bg-green-50/50 dark:bg-green-950/20';
+      case 'NOT_STARTED':
+        return 'border-l-gray-500 bg-gray-50/50 dark:bg-gray-950/20';
+      default:
+        return 'border-l-orange-500 bg-orange-50/50 dark:bg-orange-950/20';
+    }
+  };
+
   return (
     <div className="h-full flex bg-muted/20 border-l border-border">
       {/* Main Content Panel */}
       <div className={`flex flex-col h-full transition-all duration-300 ${
         showQueryChat && selectedQuery ? 'w-2/5' : 'w-full'
       }`}>
-        {/* Modern Header (Not part of scroll) */}
-        <div className="border-b border-border bg-background p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <h3 className="font-semibold text-base">Task Details</h3>
-            </div>
-            <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0 ml-2 h-8 w-8">
+        {/* Ribbon-style Header */}
+        <div className="border-b border-border bg-background">
+          {/* Title Bar */}
+          <div className="flex items-center justify-between p-4 pb-2">
+            <h3 className="font-semibold text-base">Task Details</h3>
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Task Information */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-xs">
-            <div className="flex items-center gap-1.5 p-1.5 bg-muted rounded-md">
-              <Info className="h-3 w-3 text-muted-foreground" />
-              <p className="font-semibold">{taskDetails?.status.replace('_', ' ') || task.status}</p>
-            </div>
-            <div className="flex items-center gap-1.5 p-1.5 bg-muted rounded-md">
-              <User className="h-3 w-3 text-muted-foreground" />
-              <p className="font-semibold">{taskDetails?.assignedToUsername || 'alice'}</p>
-            </div>
-            <div className="flex items-center gap-1.5 p-1.5 bg-muted rounded-md">
-              <Calendar className="h-3 w-3 text-muted-foreground" />
-              <p className={`font-semibold ${dueDateInfo.colorClass}`}>{dueDateInfo.formattedDate}</p>
-            </div>
-            {dueDateInfo.priorityLabel === 'Overdue' && (
-              <Badge variant="destructive" className="text-xs h-5 px-1.5">
-                {dueDateInfo.priorityLabel}
-              </Badge>
-            )}
-            {taskDetails?.status === 'IN_PROGRESS' && (
-              <div className="flex items-center gap-2 ml-auto">
-                <Label htmlFor="mark-as-complete-switch" className="font-medium cursor-pointer">Complete</Label>
-                <Switch
-                  id="mark-as-complete-switch"
-                  checked={false}
-                  onCheckedChange={handleCompleteTask}
-                  disabled={isLoading}
-                />
+          {/* Ribbon with Task Information */}
+          <div className={`mx-4 mb-4 p-4 rounded-lg border-l-4 ${getStatusColor(taskDetails?.status || task.status)}`}>
+            <div className="flex items-center justify-between gap-4">
+              {/* Status Section */}
+              <div className="flex items-center gap-2">
+                {getStatusIcon(taskDetails?.status || task.status)}
+                <div>
+                  <p className="font-semibold text-sm">
+                    {(taskDetails?.status || task.status).replace('_', ' ')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Status</p>
+                </div>
               </div>
-            )}
+
+              {/* Assigned User Section */}
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="font-semibold text-sm">
+                    {taskDetails?.assignedToUsername || task.assignedToUsername || 'alice'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Assigned to</p>
+                </div>
+              </div>
+
+              {/* Due Date Section */}
+              <div className="flex items-center gap-2">
+                <Calendar className={`h-4 w-4 ${dueDateInfo.colorClass.replace('text-', 'text-')}`} />
+                <div>
+                  <p className={`font-semibold text-sm ${dueDateInfo.colorClass}`}>
+                    {dueDateInfo.formattedDate}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Due by</p>
+                </div>
+              </div>
+
+              {/* Mark as Complete Section */}
+              {(taskDetails?.status === 'IN_PROGRESS' || task.status === 'IN_PROGRESS') && (
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="mark-as-complete-switch"
+                    checked={false}
+                    onCheckedChange={handleCompleteTask}
+                    disabled={isLoading}
+                  />
+                  <div>
+                    <Label htmlFor="mark-as-complete-switch" className="font-semibold text-sm cursor-pointer">
+                      Complete
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Mark as done</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Priority Badge for Overdue */}
+              {dueDateInfo.priorityLabel === 'Overdue' && (
+                <Badge variant="destructive" className="text-xs">
+                  {dueDateInfo.priorityLabel}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
