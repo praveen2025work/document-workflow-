@@ -35,7 +35,8 @@ import {
   Paperclip,
   Send,
   ArrowLeft,
-  Info
+  Info,
+  Play
 } from 'lucide-react';
 import { 
   getTaskDetails, 
