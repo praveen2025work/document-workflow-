@@ -1,12 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: 'export',
+  trailingSlash: true,
   reactStrictMode: true,
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
     domains: ["assets.co.dev", "images.unsplash.com"],
+    unoptimized: true,
   },
   webpack: (config, context) => {
     config.optimization.minimize = process.env.NEXT_PUBLIC_CO_DEV_ENV !== "preview";
