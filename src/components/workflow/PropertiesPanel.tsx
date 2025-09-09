@@ -1216,7 +1216,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="absolute right-0 top-0 h-full w-96 bg-background border-l z-30 flex flex-col"
+          className="absolute right-0 top-0 h-full w-[40rem] bg-background border-l z-30 flex flex-col"
         >
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-lg font-semibold capitalize flex items-center">
@@ -1233,10 +1233,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
           
           <div className="flex-1 overflow-hidden">
             <Tabs defaultValue="basic" className="h-full flex flex-col">
-              <TabsList className="grid w-full grid-cols-3 mx-4 mt-4">
+              <TabsList className="grid w-full grid-cols-2 mx-4 mt-4">
                 <TabsTrigger value="basic">Basic</TabsTrigger>
                 <TabsTrigger value="specific">Specific</TabsTrigger>
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
               </TabsList>
               
               <div className="flex-1 overflow-y-auto p-4">
@@ -1246,10 +1245,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                 
                 <TabsContent value="specific" className="mt-0">
                   {renderTaskSpecificContent()}
-                </TabsContent>
-                
-                <TabsContent value="advanced" className="mt-0">
-                  {renderAdvancedProperties()}
                 </TabsContent>
               </div>
             </Tabs>
