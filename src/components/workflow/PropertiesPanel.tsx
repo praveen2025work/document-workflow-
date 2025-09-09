@@ -499,26 +499,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
   const renderFileUploadProperties = () => (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Label>Allow New Files?</Label>
-        <Switch 
-          checked={formData.allowNewFiles === 'Y'} 
-          onCheckedChange={c => handleInputChange('allowNewFiles', c ? 'Y' : 'N' as YesNo)} 
-        />
-      </div>
-
-      <div>
-        <Label>File Selection Mode</Label>
-        <Select value={formData.fileSelectionMode || 'USER_SELECT'} onValueChange={(v: FileSelectionMode) => handleInputChange('fileSelectionMode', v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="USER_SELECT">User Select</SelectItem>
-            <SelectItem value="ALL_FILES">All Files</SelectItem>
-            <SelectItem value="AUTO_SELECT">Auto Select</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label>Files to Upload</Label>
@@ -805,17 +785,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
               <SelectContent>
                 <SelectItem value="MANUAL">Manual</SelectItem>
                 <SelectItem value="AUTOMATIC">Automatic</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>File Selection Strategy</Label>
-            <Select value={formData.fileSelectionStrategy || 'USER_SELECT'} onValueChange={(v) => handleInputChange('fileSelectionStrategy', v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USER_SELECT">User Select</SelectItem>
-                <SelectItem value="ALL_FILES">All Files</SelectItem>
-                <SelectItem value="AUTO_SELECT">Auto Select</SelectItem>
               </SelectContent>
             </Select>
           </div>
