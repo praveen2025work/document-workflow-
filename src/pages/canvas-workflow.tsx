@@ -1,8 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, Settings, Sparkles, Workflow as WorkflowIcon } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, Settings, Sparkles, Workflow as WorkflowIcon, FileUp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import ReactFlow, {
   Controls,
   useNodesState,
@@ -29,6 +31,7 @@ import {
   Workflow,
   CreateWorkflowDto,
   TaskType,
+  ComprehensiveWorkflowDto,
   createWorkflow,
   getWorkflowById,
   updateWorkflow,
@@ -76,6 +79,9 @@ const CanvasWorkflowPage: NextPage = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [jsonInput, setJsonInput] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
   const loadWorkflow = useCallback(async (workflowId: string | number) => {
     try {
@@ -211,6 +217,159 @@ const CanvasWorkflowPage: NextPage = () => {
     toast.success('New workflow canvas cleared!');
   };
 
+  const handleImportFromJson = async () => {
+    if (!jsonInput.trim()) {
+      toast.error('Please enter JSON data to import.');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const workflowData: ComprehensiveWorkflowDto = JSON.parse(jsonInput);
+      
+      // Validate the JSON structure
+      if (!workflowData.name || !workflowData.tasks || !Array.isArray(workflowData.tasks)) {
+        toast.error('Invalid JSON structure. Please ensure it contains name and tasks array.');
+        return;
+      }
+
+      // Create the comprehensive workflow
+      const createdWorkflow = await createComprehensiveWorkflow(workflowData);
+      
+      // Convert the created workflow to canvas nodes and edges
+      const taskNodes: Node<NodeData>[] = [];
+      const newEdges: Edge[] = [];
+      
+      // Create nodes for each task
+      createdWorkflow.tasks?.forEach((task, index) => {
+        const nodeType = task.taskType === 'DECISION' ? 'decision' : 'action';
+        const xPosition = 250 + (index % 4) * 200; // Arrange in rows of 4
+        const yPosition = 150 + Math.floor(index / 4) * 150;
+        
+        taskNodes.push({
+          id: task.taskId.toString(),
+          type: nodeType,
+          position: { x: xPosition, y: yPosition },
+          data: {
+            description: task.name,
+            taskType: task.taskType,
+            taskDescription: task.taskDescription,
+            roleId: task.roleId,
+            expectedCompletion: task.expectedCompletion,
+            escalationRules: task.escalationRules,
+            fileRetentionDays: task.fileRetentionDays,
+            taskFiles: task.taskFiles,
+            decisionOutcomes: task.decisionOutcomes,
+            consolidationMode: task.consolidationMode,
+            fileSelectionStrategy: task.fileSelectionStrategy,
+            maxFileSelections: task.maxFileSelections,
+            minFileSelections: task.minFileSelections,
+            isDecisionTask: task.isDecisionTask,
+            decisionType: task.decisionType,
+            decisionRequiresApproval: task.decisionRequiresApproval,
+            decisionApprovalRoleId: task.decisionApprovalRoleId,
+            revisionStrategy: task.revisionStrategy,
+            taskPriority: task.taskPriority,
+            autoEscalationEnabled: task.autoEscalationEnabled,
+            notificationRequired: task.notificationRequired,
+            ...task
+          } as NodeData,
+        });
+      });
+
+      // Create edges based on task sequences and decision outcomes
+      createdWorkflow.tasks?.forEach((task, index) => {
+        const taskId = task.taskId.toString();
+        
+        // Connect start to first task
+        if (index === 0) {
+          newEdges.push({
+            id: `start-${taskId}`,
+            source: 'start',
+            target: taskId,
+            type: 'default',
+            style: { stroke: '#3b82f6', strokeWidth: 2 }
+          });
+        }
+
+        // Handle decision outcomes
+        if (task.decisionOutcomes && task.decisionOutcomes.length > 0) {
+          task.decisionOutcomes.forEach((outcome, outcomeIndex) => {
+            if (outcome.nextTaskId) {
+              const isRejectEdge = outcome.outcomeName.toLowerCase().includes('resubmit') || 
+                                 outcome.outcomeName.toLowerCase().includes('reject') ||
+                                 outcome.targetTaskSequence !== null && outcome.targetTaskSequence < task.taskSequence!;
+              
+              newEdges.push({
+                id: `${taskId}-${outcome.nextTaskId}-${outcomeIndex}`,
+                source: taskId,
+                target: outcome.nextTaskId.toString(),
+                type: isRejectEdge ? 'goBack' : 'default',
+                style: isRejectEdge 
+                  ? { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '8,4' }
+                  : { stroke: '#3b82f6', strokeWidth: 2 },
+                label: outcome.outcomeName
+              });
+            } else if (outcome.outcomeName.toLowerCase().includes('approve') || 
+                      outcome.outcomeName.toLowerCase().includes('complete')) {
+              // Connect to end node for approval/completion outcomes
+              newEdges.push({
+                id: `${taskId}-end-${outcomeIndex}`,
+                source: taskId,
+                target: 'end',
+                type: 'default',
+                style: { stroke: '#22c55e', strokeWidth: 2 },
+                label: outcome.outcomeName
+              });
+            }
+          });
+        } else {
+          // Connect sequential tasks
+          const nextTask = createdWorkflow.tasks?.[index + 1];
+          if (nextTask) {
+            newEdges.push({
+              id: `${taskId}-${nextTask.taskId}`,
+              source: taskId,
+              target: nextTask.taskId.toString(),
+              type: 'default',
+              style: { stroke: '#3b82f6', strokeWidth: 2 }
+            });
+          } else {
+            // Connect last task to end
+            newEdges.push({
+              id: `${taskId}-end`,
+              source: taskId,
+              target: 'end',
+              type: 'default',
+              style: { stroke: '#3b82f6', strokeWidth: 2 }
+            });
+          }
+        }
+      });
+
+      // Update the canvas
+      setNodes([...initialNodes, ...taskNodes]);
+      setEdges(newEdges);
+      setWorkflow(createdWorkflow);
+      
+      // Close dialog and clear input
+      setIsImportDialogOpen(false);
+      setJsonInput('');
+      
+      toast.success(`Successfully imported workflow: ${createdWorkflow.name}`);
+      
+    } catch (error) {
+      console.error('Failed to import workflow from JSON:', error);
+      if (error instanceof SyntaxError) {
+        toast.error('Invalid JSON format. Please check your JSON syntax.');
+      } else {
+        toast.error('Failed to import workflow. Please check the JSON structure.');
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const handleDeploy = async () => {
     if (!validateWorkflow() || !workflow || !user) return;
 
@@ -335,6 +494,48 @@ const CanvasWorkflowPage: NextPage = () => {
         </SelectContent>
       </Select>
       <Button onClick={handleCreateNew} variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" />New</Button>
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm"><FileUp className="mr-2 h-4 w-4" />Import JSON</Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Import Workflow from JSON</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="json-input" className="text-sm font-medium">
+                Paste your comprehensive workflow JSON here:
+              </label>
+              <Textarea
+                id="json-input"
+                placeholder="Paste your JSON workflow definition here..."
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                className="min-h-[400px] font-mono text-sm"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleImportFromJson} disabled={isImporting}>
+                {isImporting ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <FileUp className="mr-2 h-4 w-4" />
+                    Import Workflow
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Button onClick={handleDeploy} variant="default" size="sm" disabled={isDeploying} className="bg-success text-success-foreground hover:bg-success/90">
         {isDeploying ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />Deploying...</> : <><Play className="mr-2 h-4 w-4" />Deploy</>}
       </Button>
