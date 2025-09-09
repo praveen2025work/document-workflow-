@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Workflow, WorkflowRole } from '@/types/workflow';
 import { WorkflowRoleDto as Role } from '@/types/role';
 import { WorkflowUserDto as User } from '@/types/user';
@@ -27,11 +28,14 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
   const [calendars, setCalendars] = useState<Calendar[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [configuredRoleIds, setConfiguredRoleIds] = useState<number[]>([]);
   
   useEffect(() => {
     setLocalSettings(settings || {});
     if (isOpen) {
       fetchInitialData();
+      const roleIdsFromSettings = (settings?.workflowRoles || []).map(wr => wr.roleId);
+      setConfiguredRoleIds([...new Set(roleIdsFromSettings)]);
     }
   }, [settings, isOpen]);
 
@@ -52,32 +56,26 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
   };
 
   const handleAddRole = (roleId: number) => {
-    const role = roles.find(r => r.roleId === roleId);
-    if (!role) return;
-
-    const newWorkflowRole: WorkflowRole = {
-      roleId: role.roleId,
-      userId: 0, // Placeholder, user needs to be assigned
-      isActive: 'Y',
-      roleName: role.name,
-    };
-
-    const updatedRoles = [...(localSettings.workflowRoles || []), newWorkflowRole];
-    setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
+    if (!configuredRoleIds.includes(roleId)) {
+        setConfiguredRoleIds([...configuredRoleIds, roleId]);
+    }
   };
 
   const handleRemoveRole = (roleId: number) => {
-    const updatedRoles = (localSettings.workflowRoles || []).filter(r => r.roleId !== roleId);
+    setConfiguredRoleIds(configuredRoleIds.filter(id => id !== roleId));
+    const updatedRoles = (localSettings.workflowRoles || []).filter(wr => wr.roleId !== roleId);
     setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
   };
 
-  const handleAssignUserToRole = (roleId: number, userId: number) => {
-    const user = users.find(u => u.userId === userId);
-    if (!user) return;
-
-    const updatedRoles = (localSettings.workflowRoles || []).map(r => 
-      r.roleId === roleId ? { ...r, userId: user.userId, userName: user.name } : r
-    );
+  const handleUserAssignmentChange = (roleId: number, userId: number, isAssigned: boolean) => {
+    let updatedRoles = [...(localSettings.workflowRoles || [])];
+    if (isAssigned) {
+        if (!updatedRoles.some(wr => wr.roleId === roleId && wr.userId === userId)) {
+            updatedRoles.push({ roleId, userId, isActive: 'Y' });
+        }
+    } else {
+        updatedRoles = updatedRoles.filter(wr => !(wr.roleId === roleId && wr.userId === userId));
+    }
     setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
   };
 
@@ -138,18 +136,34 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
                 rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Calendar</Label>
-              <Select
-                value={localSettings.calendarId?.toString() || undefined}
-                onValueChange={(val) => handleChange('calendarId', val === 'none' ? null : +val)}
-              >
-                <SelectTrigger><SelectValue placeholder="Select Calendar (Optional)" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Calendar</SelectItem>
-                  {calendars.map(c => <SelectItem key={c.calendarId} value={c.calendarId.toString()}>{c.calendarName}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Trigger Type</Label>
+                <Select
+                  value={localSettings.triggerType || 'MANUAL'}
+                  onValueChange={(val) => handleChange('triggerType', val)}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select Trigger Type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MANUAL">Manual</SelectItem>
+                    <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                    <SelectItem value="EVENT_BASED">Event Based</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Calendar</Label>
+                <Select
+                  value={localSettings.calendarId?.toString() || undefined}
+                  onValueChange={(val) => handleChange('calendarId', val === 'none' ? null : +val)}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select Calendar (Optional)" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Calendar</SelectItem>
+                    {calendars.map(c => <SelectItem key={c.calendarId} value={c.calendarId.toString()}>{c.calendarName}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -207,35 +221,52 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
                 <SelectTrigger><SelectValue placeholder="Select a role to add" /></SelectTrigger>
                 <SelectContent>
                   {roles
-                    .filter(r => !(localSettings.workflowRoles || []).some(wr => wr.roleId === r.roleId))
+                    .filter(r => !configuredRoleIds.includes(r.roleId))
                     .map(r => <SelectItem key={r.roleId} value={r.roleId.toString()}>{r.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              {(localSettings.workflowRoles || []).map(wr => (
-                <div key={wr.roleId} className="p-3 border rounded-md bg-muted/20">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">{roles.find(r => r.roleId === wr.roleId)?.name || `Role ID: ${wr.roleId}`}</span>
-                    <Button variant="destructive" size="icon" onClick={() => handleRemoveRole(wr.roleId)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+              {configuredRoleIds.map(roleId => {
+                const role = roles.find(r => r.roleId === roleId);
+                if (!role) return null;
+                
+                const assignedUsers = (localSettings.workflowRoles || []).filter(wr => wr.roleId === roleId);
+
+                return (
+                  <div key={roleId} className="p-3 border rounded-md bg-muted/20">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">{role.name}</span>
+                      <Button variant="destructive" size="icon" onClick={() => handleRemoveRole(roleId)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="mt-2">
+                      <Label>Assigned Users</Label>
+                      <div className="max-h-40 overflow-y-auto border rounded-md p-2 mt-1 space-y-1">
+                        {users.map(user => {
+                          const isAssigned = assignedUsers.some(au => au.userId === user.userId);
+                          return (
+                            <div key={user.userId} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`user-${roleId}-${user.userId}`}
+                                checked={isAssigned}
+                                onCheckedChange={(checked) => {
+                                  handleUserAssignmentChange(roleId, user.userId, checked as boolean);
+                                }}
+                              />
+                              <label htmlFor={`user-${roleId}-${user.userId}`} className="text-sm">
+                                {user.name} ({user.email})
+                              </label>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-2">
-                    <Label>Assigned User</Label>
-                    <Select
-                      value={wr.userId?.toString() || undefined}
-                      onValueChange={(val) => handleAssignUserToRole(wr.roleId, +val)}
-                    >
-                      <SelectTrigger><SelectValue placeholder="Assign a user" /></SelectTrigger>
-                      <SelectContent>
-                        {users.map(u => <SelectItem key={u.userId} value={u.userId.toString()}>{u.name} ({u.email})</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 

@@ -556,12 +556,48 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                   value={file.fileDescription || ''} 
                   onChange={e => handleFileChange(index, 'fileDescription', e.target.value)} 
                 />
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Required File?</Label>
-                  <Switch 
-                    checked={file.isRequired === 'Y'} 
-                    onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
-                  />
+                <Input 
+                  placeholder="File Type Regex (e.g., *.xlsx)" 
+                  value={file.fileTypeRegex || ''} 
+                  onChange={e => handleFileChange(index, 'fileTypeRegex', e.target.value)} 
+                  className="mt-2"
+                />
+                <Textarea 
+                  placeholder="File Commentary" 
+                  value={file.fileCommentary || ''} 
+                  onChange={e => handleFileChange(index, 'fileCommentary', e.target.value)} 
+                  rows={2}
+                  className="mt-2"
+                />
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Required File?</Label>
+                    <Switch 
+                      checked={file.isRequired === 'Y'} 
+                      onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Keep Versions?</Label>
+                    <Switch 
+                      checked={file.keepFileVersions === 'Y'} 
+                      onCheckedChange={c => handleFileChange(index, 'keepFileVersions', c ? 'Y' : 'N' as YesNo)} 
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Keep History?</Label>
+                    <Switch 
+                      checked={file.keepFileHistory === 'Y'} 
+                      onCheckedChange={c => handleFileChange(index, 'keepFileHistory', c ? 'Y' : 'N' as YesNo)} 
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Retain for Period?</Label>
+                    <Switch 
+                      checked={file.retainForCurrentPeriod === 'Y'} 
+                      onCheckedChange={c => handleFileChange(index, 'retainForCurrentPeriod', c ? 'Y' : 'N' as YesNo)} 
+                    />
+                  </div>
                 </div>
               </div>
             </Card>
@@ -653,17 +689,45 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                               </Badge>
                             </div>
                           </div>
-                          <div className="ml-8">
-                            <Input 
-                              placeholder="New file name (leave empty to keep original)" 
-                              className="text-xs"
-                              value={selectedFile?.fileName !== file.fileName ? selectedFile?.fileName || '' : ''}
-                              onChange={(e) => 
-                                handleFileSelection(file, taskFiles.taskId, true, e.target.value || file.fileName)
-                              }
-                              disabled={!isSelected}
-                            />
-                          </div>
+                          {isSelected && (
+                            <div className="ml-8 mt-2 space-y-2 p-2 border rounded-md">
+                               <Input 
+                                placeholder="New file name (leave empty to keep original)" 
+                                className="text-xs"
+                                value={selectedFile?.fileName !== file.fileName ? selectedFile?.fileName || '' : ''}
+                                onChange={(e) => 
+                                  handleFileSelection(file, taskFiles.taskId, true, e.target.value || file.fileName)
+                                }
+                              />
+                              <Input 
+                                placeholder="File Type Regex" 
+                                value={selectedFile?.fileTypeRegex || ''} 
+                                onChange={e => handleFileChange(selectedFiles.findIndex(f => f.sourceFileKey === fileKey), 'fileTypeRegex', e.target.value)} 
+                                className="text-xs"
+                              />
+                              <Textarea 
+                                placeholder="File Commentary" 
+                                value={selectedFile?.fileCommentary || ''} 
+                                onChange={e => handleFileChange(selectedFiles.findIndex(f => f.sourceFileKey === fileKey), 'fileCommentary', e.target.value)} 
+                                rows={2}
+                                className="text-xs"
+                              />
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs">Required?</Label>
+                                <Switch 
+                                  checked={selectedFile?.isRequired === 'Y'} 
+                                  onCheckedChange={c => handleFileChange(selectedFiles.findIndex(f => f.sourceFileKey === fileKey), 'isRequired', c ? 'Y' : 'N' as YesNo)} 
+                                />
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs">Keep Versions?</Label>
+                                <Switch 
+                                  checked={selectedFile?.keepFileVersions === 'Y'} 
+                                  onCheckedChange={c => handleFileChange(selectedFiles.findIndex(f => f.sourceFileKey === fileKey), 'keepFileVersions', c ? 'Y' : 'N' as YesNo)} 
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -731,6 +795,51 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
             onChange={(e) => handleInputChange('outputFileName', e.target.value)} 
             placeholder="e.g., consolidated_report.xlsx"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Consolidation Mode</Label>
+            <Select value={formData.consolidationMode || 'MANUAL'} onValueChange={(v) => handleInputChange('consolidationMode', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="MANUAL">Manual</SelectItem>
+                <SelectItem value="AUTOMATIC">Automatic</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>File Selection Strategy</Label>
+            <Select value={formData.fileSelectionStrategy || 'USER_SELECT'} onValueChange={(v) => handleInputChange('fileSelectionStrategy', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USER_SELECT">User Select</SelectItem>
+                <SelectItem value="ALL_FILES">All Files</SelectItem>
+                <SelectItem value="AUTO_SELECT">Auto Select</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Min Selections</Label>
+            <Input 
+              type="number"
+              value={formData.minFileSelections || ''} 
+              onChange={(e) => handleInputChange('minFileSelections', +e.target.value)} 
+              placeholder="e.g., 3"
+            />
+          </div>
+          <div>
+            <Label>Max Selections</Label>
+            <Input 
+              type="number"
+              value={formData.maxFileSelections || ''} 
+              onChange={(e) => handleInputChange('maxFileSelections', +e.target.value)} 
+              placeholder="e.g., 5"
+            />
+          </div>
         </div>
 
         <div>
@@ -825,16 +934,55 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
 
     return (
       <div className="space-y-4">
-        <div>
-          <Label>Decision Type</Label>
-          <Select value={formData.decisionType || 'APPROVAL'} onValueChange={(v) => handleInputChange('decisionType', v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="APPROVAL">Approval</SelectItem>
-              <SelectItem value="CHOICE">Choice</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Decision Type</Label>
+            <Select value={formData.decisionType || 'APPROVAL'} onValueChange={(v) => handleInputChange('decisionType', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="APPROVAL">Approval</SelectItem>
+                <SelectItem value="CHOICE">Choice</SelectItem>
+                <SelectItem value="MULTI_CHOICE">Multi Choice</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Revision Strategy</Label>
+            <Select value={formData.revisionStrategy || 'SELECTIVE'} onValueChange={(v) => handleInputChange('revisionStrategy', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SELECTIVE">Selective</SelectItem>
+                <SelectItem value="REPLACE">Replace</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
+        <div className="flex items-center justify-between">
+          <Label>Requires Approval?</Label>
+          <Switch
+            checked={formData.decisionRequiresApproval === 'Y'}
+            onCheckedChange={c => handleInputChange('decisionRequiresApproval', c ? 'Y' : 'N' as YesNo)}
+          />
+        </div>
+
+        {formData.decisionRequiresApproval === 'Y' && (
+          <div>
+            <Label>Approval Role</Label>
+            <Select value={formData.decisionApprovalRoleId?.toString() || undefined} onValueChange={(v) => handleInputChange('decisionApprovalRoleId', +v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select an approval role" />
+              </SelectTrigger>
+              <SelectContent>
+                {roles.map(r => (
+                  <SelectItem key={r.roleId} value={r.roleId.toString()}>
+                    {r.roleName || `Role ID ${r.roleId}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div>
           <Label>Decision Criteria (JSON)</Label>
@@ -897,7 +1045,68 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
                     value={outcome.outcomeName} 
                     onChange={e => handleDecisionOutcomeChange(index, 'outcomeName', e.target.value)} 
                   />
-                  <div>
+                  <Textarea
+                    placeholder="Revision Conditions"
+                    value={outcome.revisionConditions || ''}
+                    onChange={e => handleDecisionOutcomeChange(index, 'revisionConditions', e.target.value)}
+                    rows={2}
+                    className="mt-2"
+                  />
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Revision Type</Label>
+                      <Select
+                        value={outcome.revisionType || 'SINGLE'}
+                        onValueChange={(v) => handleDecisionOutcomeChange(index, 'revisionType', v)}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="SINGLE">Single</SelectItem>
+                          <SelectItem value="MULTIPLE">Multiple</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Revision Strategy</Label>
+                      <Select
+                        value={outcome.revisionStrategy || 'REPLACE'}
+                        onValueChange={(v) => handleDecisionOutcomeChange(index, 'revisionStrategy', v)}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="REPLACE">Replace</SelectItem>
+                          <SelectItem value="REVISE">Revise</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Revision Priority</Label>
+                      <Input
+                        type="number"
+                        placeholder="Priority"
+                        value={outcome.revisionPriority || ''}
+                        onChange={e => handleDecisionOutcomeChange(index, 'revisionPriority', +e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Revise Tasks (IDs)</Label>
+                      <Input
+                        placeholder="e.g. 1,2"
+                        value={(outcome.revisionTaskSequences || []).join(',')}
+                        onChange={e => handleDecisionOutcomeChange(index, 'revisionTaskSequences', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <Label className="text-sm">Auto-escalate?</Label>
+                    <Switch
+                      checked={outcome.autoEscalate === 'Y'}
+                      onCheckedChange={c => handleDecisionOutcomeChange(index, 'autoEscalate', c ? 'Y' : 'N' as YesNo)}
+                    />
+                  </div>
+                  <div className="mt-2">
                     <Label className="text-xs text-muted-foreground">Next Task</Label>
                     <Select 
                       value={outcome.nextTaskId && outcome.nextTaskId > 0 ? outcome.nextTaskId.toString() : undefined} 
@@ -937,6 +1146,48 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
             ))
           )}
         </div>
+
+        <div className="space-y-2 mt-4 border-t pt-4">
+          <div className="flex items-center justify-between">
+            <Label>Associated Files</Label>
+            <Button onClick={addFile} variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-2" />Add File
+            </Button>
+          </div>
+          {(formData.taskFiles || []).map((file, index) => (
+            <Card key={index} className="p-3">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm font-medium flex items-center">
+                    <File className="h-4 w-4 mr-2" />
+                    File #{index + 1}
+                  </Label>
+                  <Button size="sm" variant="outline" onClick={() => removeFile(index)} className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Input 
+                  placeholder="File name (e.g., document.pdf)" 
+                  value={file.fileName || ''} 
+                  onChange={e => handleFileChange(index, 'fileName', e.target.value)} 
+                />
+                <Input 
+                  placeholder="File description (optional)" 
+                  value={file.fileDescription || ''} 
+                  onChange={e => handleFileChange(index, 'fileDescription', e.target.value)} 
+                />
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Required File?</Label>
+                  <Switch 
+                    checked={file.isRequired === 'Y'} 
+                    onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
+                  />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
       </div>
     );
   };
