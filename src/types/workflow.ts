@@ -122,14 +122,18 @@ export interface WorkflowTaskFile {
   sourceTaskId?: string;
 }
 
+export interface WorkflowRoleUser {
+  userId: number;
+  userName?: string;
+}
+
 export interface WorkflowRole {
   id?: number;
   workflowId?: number;
   roleId: number;
-  userId: number;
+  users: WorkflowRoleUser[];
   isActive: YesNo;
   roleName?: string;
-  userName?: string;
 }
 
 export interface WorkflowParameter {
@@ -172,7 +176,7 @@ export interface CreateWorkflowDto {
   calendarId: number | null;
   createdBy: string;
   tasks: Omit<WorkflowTask, 'taskId' | 'workflowId'>[];
-  workflowRoles: Omit<WorkflowRole, 'id' | 'workflowId' | 'roleName' | 'userName'>[];
+  workflowRoles: Omit<WorkflowRole, 'id' | 'workflowId' | 'roleName' | 'users'> & { users: { userId: number }[] }[];
   parameters: Omit<WorkflowParameter, 'paramId' | 'workflowId' | 'createdBy' | 'createdOn'>[];
 }
 
@@ -194,7 +198,7 @@ export type UpdateTaskDto = Partial<Omit<CreateTaskDto, 'roleId' | 'sequenceOrde
 
 export interface AddRoleDto {
   roleId: number;
-  userId: number;
+  userIds: number[];
   isActive: YesNo;
 }
 
@@ -281,7 +285,7 @@ export interface ComprehensiveWorkflowDto {
 
 export interface ComprehensiveWorkflowRole {
   roleId: number;
-  userId: number;
+  userIds: number[];
   isActive: YesNo;
 }
 

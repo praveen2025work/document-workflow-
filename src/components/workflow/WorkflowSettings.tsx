@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Workflow, WorkflowRole } from '@/types/workflow';
+import { Workflow, WorkflowRole, WorkflowRoleUser } from '@/types/workflow';
+import MultiSelect from '@/components/ui/multi-select';
 import { WorkflowRoleDto as Role } from '@/types/role';
 import { WorkflowUserDto as User } from '@/types/user';
 import { CalendarDto as Calendar } from '@/types/calendar';
@@ -67,15 +67,27 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
     setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
   };
 
-  const handleUserAssignmentChange = (roleId: number, userId: number, isAssigned: boolean) => {
-    let updatedRoles = [...(localSettings.workflowRoles || [])];
-    if (isAssigned) {
-        if (!updatedRoles.some(wr => wr.roleId === roleId && wr.userId === userId)) {
-            updatedRoles.push({ roleId, userId, isActive: 'Y' });
-        }
+  const handleUserAssignmentChange = (roleId: number, userIds: string[]) => {
+    const updatedUsers = userIds.map(uid => ({ userId: parseInt(uid, 10) }));
+    
+    let existingRole = (localSettings.workflowRoles || []).find(wr => wr.roleId === roleId);
+    
+    let updatedRoles: WorkflowRole[];
+
+    if (existingRole) {
+        updatedRoles = (localSettings.workflowRoles || []).map(wr => 
+            wr.roleId === roleId ? { ...wr, users: updatedUsers } : wr
+        );
     } else {
-        updatedRoles = updatedRoles.filter(wr => !(wr.roleId === roleId && wr.userId === userId));
+        const newRole: WorkflowRole = {
+            roleId,
+            users: updatedUsers,
+            isActive: 'Y',
+            roleName: roles.find(r => r.roleId === roleId)?.name || ''
+        };
+        updatedRoles = [...(localSettings.workflowRoles || []), newRole];
     }
+
     setLocalSettings({ ...localSettings, workflowRoles: updatedRoles });
   };
 
@@ -227,42 +239,36 @@ const WorkflowSettings: React.FC<WorkflowSettingsProps> = ({ isOpen, onClose, on
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               {configuredRoleIds.map(roleId => {
                 const role = roles.find(r => r.roleId === roleId);
                 if (!role) return null;
                 
-                const assignedUsers = (localSettings.workflowRoles || []).filter(wr => wr.roleId === roleId);
+                const assignedUsersForRole = (localSettings.workflowRoles || []).find(wr => wr.roleId === roleId)?.users || [];
+                const selectedUserIds = assignedUsersForRole.map(u => u.userId.toString());
 
                 return (
-                  <div key={roleId} className="p-3 border rounded-md bg-muted/20">
+                  <div key={roleId} className="p-4 border rounded-lg bg-muted/30 space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">{role.name}</span>
-                      <Button variant="destructive" size="icon" onClick={() => handleRemoveRole(roleId)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <h4 className="font-semibold text-md">{role.name}</h4>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleRemoveRole(roleId)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Remove Role</TooltipContent>
+                      </Tooltip>
                     </div>
-                    <div className="mt-2">
-                      <Label>Assigned Users</Label>
-                      <div className="max-h-40 overflow-y-auto border rounded-md p-2 mt-1 space-y-1">
-                        {users.map(user => {
-                          const isAssigned = assignedUsers.some(au => au.userId === user.userId);
-                          return (
-                            <div key={user.userId} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`user-${roleId}-${user.userId}`}
-                                checked={isAssigned}
-                                onCheckedChange={(checked) => {
-                                  handleUserAssignmentChange(roleId, user.userId, checked as boolean);
-                                }}
-                              />
-                              <label htmlFor={`user-${roleId}-${user.userId}`} className="text-sm">
-                                {user.name} ({user.email})
-                              </label>
-                            </div>
-                          )
-                        })}
-                      </div>
+                    <div>
+                      <Label className="text-sm text-muted-foreground">Assigned Users</Label>
+                      <MultiSelect
+                        options={users.map(u => ({ value: u.userId.toString(), label: `${u.name} (${u.email})` }))}
+                        selected={selectedUserIds}
+                        onChange={(selectedIds) => handleUserAssignmentChange(roleId, selectedIds)}
+                        placeholder="Select users..."
+                        className="mt-1"
+                      />
                     </div>
                   </div>
                 )

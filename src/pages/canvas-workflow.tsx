@@ -84,21 +84,127 @@ const CanvasWorkflowPage: NextPage = () => {
   const [isImporting, setIsImporting] = useState(false);
 
   const convertWorkflowToCanvas = (wf: Workflow) => {
-    const taskNodes: Node<NodeData>[] = (wf.tasks || []).map((task, index) => ({
-        id: task.taskId.toString(),
-        type: task.taskType === 'DECISION' ? 'decision' : 'action',
-        position: { x: 250 + ((task.sequenceOrder || index) % 4) * 250, y: 150 + Math.floor((task.sequenceOrder || index) / 4) * 200 },
-        data: {
-            description: task.name,
-            taskType: task.taskType,
-            ...task
-        } as NodeData,
+    const tasks = wf.tasks || [];
+    const baseInitialNodes = [
+      { ...initialNodes[0], position: { ...initialNodes[0].position, y: 200 } },
+      { ...initialNodes[1], position: { ...initialNodes[1].position, y: 200 } },
+    ];
+
+    if (tasks.length === 0) {
+      return { nodes: baseInitialNodes, edges: [] };
+    }
+
+    // --- Layout Calculation using Topological Sort ---
+    const taskMap = new Map(tasks.map(t => [t.taskId, t]));
+    const sequenceMap = new Map(tasks.map(t => [t.taskSequence, t]));
+    
+    const adj = new Map<number, number[]>();
+    const inDegree = new Map<number, number>();
+
+    tasks.forEach(task => {
+      adj.set(task.taskId, []);
+      inDegree.set(task.taskId, 0);
+    });
+
+    // Build a temporary graph for layout, ignoring back-edges
+    tasks.forEach(task => {
+      const addForwardEdge = (from: number, to: number) => {
+        if (!adj.get(from)?.includes(to)) {
+            adj.get(from)?.push(to);
+            inDegree.set(to, (inDegree.get(to) || 0) + 1);
+        }
+      };
+
+      // Children from parentTaskSequences
+      const children = tasks.filter(t => t.parentTaskSequences?.includes(task.taskSequence!));
+      children.forEach(child => {
+        if (child.taskSequence > task.taskSequence) {
+          addForwardEdge(task.taskId, child.taskId);
+        }
+      });
+
+      // Children from decision outcomes
+      if (task.taskType === 'DECISION' && task.decisionOutcomes) {
+        task.decisionOutcomes.forEach(outcome => {
+          if (outcome.nextTaskId) {
+            const target = taskMap.get(outcome.nextTaskId);
+            const isGoBack = (outcome.outcomeName.toLowerCase().includes('resubmit') || outcome.outcomeName.toLowerCase().includes('reject')) || (target && task.taskSequence && target.taskSequence < task.taskSequence);
+            if (target && !isGoBack) {
+              addForwardEdge(task.taskId, target.taskId);
+            }
+          }
+        });
+      }
+    });
+
+    const queue: number[] = [];
+    tasks.forEach(task => {
+      if (inDegree.get(task.taskId) === 0) {
+        queue.push(task.taskId);
+      }
+    });
+
+    const levels = new Map<number, number[]>();
+    let level = 0;
+    while (queue.length > 0) {
+      const levelSize = queue.length;
+      levels.set(level, []);
+      for (let i = 0; i < levelSize; i++) {
+        const u = queue.shift()!;
+        levels.get(level)!.push(u);
+        
+        adj.get(u)?.forEach(v => {
+          inDegree.set(v, (inDegree.get(v) || 1) - 1);
+          if (inDegree.get(v) === 0) {
+            queue.push(v);
+          }
+        });
+      }
+      level++;
+    }
+
+    // Position nodes
+    const nodePositions = new Map<string, { x: number; y: number }>();
+    const xSpacing = 275;
+    const ySpacing = 175;
+    const startX = 250;
+
+    let maxLevel = 0;
+    levels.forEach((levelTasks, lvl) => {
+      maxLevel = Math.max(maxLevel, lvl);
+      const yOffset = -(levelTasks.length - 1) * ySpacing / 2;
+      levelTasks.forEach((taskId, index) => {
+        nodePositions.set(taskId.toString(), {
+          x: startX + lvl * xSpacing,
+          y: yOffset + index * ySpacing,
+        });
+      });
+    });
+    
+    let cycleIndex = 0;
+    tasks.forEach(task => {
+        if(!nodePositions.has(task.taskId.toString())) {
+            const fallbackLevel = Math.max(maxLevel + 1, task.sequenceOrder || 0);
+            nodePositions.set(task.taskId.toString(), {
+                x: startX + fallbackLevel * xSpacing,
+                y: 400 + cycleIndex * ySpacing
+            });
+            cycleIndex++;
+        }
+    });
+
+    const taskNodes: Node<NodeData>[] = tasks.map((task) => ({
+      id: task.taskId.toString(),
+      type: task.taskType === 'DECISION' ? 'decision' : 'action',
+      position: nodePositions.get(task.taskId.toString()) || { x: 250, y: 150 },
+      data: { description: task.name, taskType: task.taskType, ...task } as NodeData,
     }));
 
+    // --- Edge Creation (same as original) ---
     const newEdges: Edge[] = [];
-    const allTaskIds = (wf.tasks || []).map(t => t.taskId);
+    const allTaskIds = tasks.map(t => t.taskId);
 
-    (wf.tasks || []).forEach(task => {
+    tasks.forEach(task => {
         const taskIdStr = task.taskId.toString();
 
         if (!task.parentTaskSequences || task.parentTaskSequences.length === 0) {
@@ -147,8 +253,21 @@ const CanvasWorkflowPage: NextPage = () => {
             }
         }
     });
+    
+    const yPositions = Array.from(nodePositions.values()).map(p => p.y);
+    const minY = yPositions.length > 0 ? Math.min(...yPositions) : 200;
+    const maxY = yPositions.length > 0 ? Math.max(...yPositions) : 200;
+    const avgY = (minY + maxY) / 2;
 
-    return { nodes: [...initialNodes, ...taskNodes], edges: newEdges };
+    const endNodeX = startX + (maxLevel + 1) * xSpacing;
+
+    const finalNodes = [
+        { ...initialNodes[0], position: { x: 50, y: avgY } },
+        { ...initialNodes[1], position: { x: endNodeX, y: avgY } },
+        ...taskNodes
+    ];
+
+    return { nodes: finalNodes, edges: newEdges };
   };
 
   const loadWorkflow = useCallback(async (workflowId: string | number) => {

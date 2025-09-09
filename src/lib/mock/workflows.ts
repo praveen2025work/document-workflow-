@@ -17,11 +17,9 @@ export const mockWorkflows: Workflow[] = [
     updatedBy: null,
     updatedOn: null,
     workflowRoles: [
-      { id: 1, workflowId: 1, roleId: 1, userId: 1, isActive: 'Y', roleName: 'Uploader', userName: 'User One' },
-      { id: 2, workflowId: 1, roleId: 1, userId: 2, isActive: 'Y', roleName: 'Uploader', userName: 'User Two' },
-      { id: 3, workflowId: 1, roleId: 2, userId: 3, isActive: 'Y', roleName: 'Reviewer', userName: 'User Three' },
-      { id: 4, workflowId: 1, roleId: 2, userId: 4, isActive: 'Y', roleName: 'Reviewer', userName: 'User Four' },
-      { id: 5, workflowId: 1, roleId: 3, userId: 5, isActive: 'Y', roleName: 'Approver', userName: 'User Five' },
+      { id: 1, workflowId: 1, roleId: 1, isActive: 'Y', roleName: 'Uploader', users: [{ userId: 1, userName: 'User One' }, { userId: 2, userName: 'User Two' }] },
+      { id: 2, workflowId: 1, roleId: 2, isActive: 'Y', roleName: 'Reviewer', users: [{ userId: 3, userName: 'User Three' }, { userId: 4, userName: 'User Four' }] },
+      { id: 3, workflowId: 1, roleId: 3, isActive: 'Y', roleName: 'Approver', users: [{ userId: 5, userName: 'User Five' }] },
     ],
     tasks: [
       {
@@ -178,10 +176,10 @@ export const mockWorkflows: Workflow[] = [
     updatedBy: null,
     updatedOn: null,
     workflowRoles: [
-      { id: 15, workflowId: 2, roleId: 1, userId: 101, isActive: 'Y', roleName: 'Data Analyst', userName: 'John Smith' },
-      { id: 16, workflowId: 2, roleId: 2, userId: 102, isActive: 'Y', roleName: 'Senior Analyst', userName: 'Jane Doe' },
-      { id: 17, workflowId: 2, roleId: 3, userId: 103, isActive: 'Y', roleName: 'Manager', userName: 'Bob Johnson' },
-      { id: 18, workflowId: 2, roleId: 4, userId: 104, isActive: 'Y', roleName: 'Director', userName: 'Alice Brown' },
+      { id: 15, workflowId: 2, roleId: 1, isActive: 'Y', roleName: 'Data Analyst', users: [{ userId: 101, userName: 'John Smith' }] },
+      { id: 16, workflowId: 2, roleId: 2, isActive: 'Y', roleName: 'Senior Analyst', users: [{ userId: 102, userName: 'Jane Doe' }] },
+      { id: 17, workflowId: 2, roleId: 3, isActive: 'Y', roleName: 'Manager', users: [{ userId: 103, userName: 'Bob Johnson' }] },
+      { id: 18, workflowId: 2, roleId: 4, isActive: 'Y', roleName: 'Director', users: [{ userId: 104, userName: 'Alice Brown' }] },
     ],
     tasks: [
       {
@@ -362,8 +360,8 @@ export const mockWorkflows: Workflow[] = [
     updatedBy: null,
     updatedOn: null,
     workflowRoles: [
-      { id: 19, workflowId: 3, roleId: 5, userId: 105, isActive: 'Y', roleName: 'Auditor', userName: 'Charlie Wilson' },
-      { id: 20, workflowId: 3, roleId: 6, userId: 106, isActive: 'Y', roleName: 'Audit Manager', userName: 'Diana Davis' },
+      { id: 19, workflowId: 3, roleId: 5, isActive: 'Y', roleName: 'Auditor', users: [{ userId: 105, userName: 'Charlie Wilson' }] },
+      { id: 20, workflowId: 3, roleId: 6, isActive: 'Y', roleName: 'Audit Manager', users: [{ userId: 106, userName: 'Diana Davis' }] },
     ],
     tasks: [
       {
