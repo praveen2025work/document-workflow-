@@ -947,6 +947,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
         return renderFileUploadProperties();
       case 'FILE_UPDATE':
         return renderFileUpdateProperties();
+      case 'CONSOLIDATE_FILES':
       case 'CONSOLIDATE_FILE':
         return renderConsolidateProperties();
       case 'DECISION':
@@ -970,7 +971,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
             <h2 className="text-lg font-semibold capitalize flex items-center">
               {selectedNode.data.taskType === 'FILE_UPLOAD' && <Upload className="h-5 w-5 mr-2" />}
               {selectedNode.data.taskType === 'FILE_UPDATE' && <FileText className="h-5 w-5 mr-2" />}
-              {selectedNode.data.taskType === 'CONSOLIDATE_FILE' && <FolderOpen className="h-5 w-5 mr-2" />}
+              {(selectedNode.data.taskType === 'CONSOLIDATE_FILES' || selectedNode.data.taskType === 'CONSOLIDATE_FILE') && <FolderOpen className="h-5 w-5 mr-2" />}
               {selectedNode.data.taskType === 'DECISION' && <Settings2 className="h-5 w-5 mr-2" />}
               {selectedNode.data.taskType?.replace('_', ' ')} Properties
             </h2>

@@ -14,6 +14,7 @@ import {
   ApiWorkflow,
   ApiWorkflowApiResponse,
   NewApiWorkflow,
+  ComprehensiveWorkflowDto,
 } from '@/types/workflow';
 import {
   mockWorkflows,
@@ -294,4 +295,257 @@ export const deleteWorkflow = async (workflowId: number): Promise<DeleteWorkflow
   }
   const response = await api.delete<DeleteWorkflowResponse>(`/workflows/${workflowId}`);
   return response.data;
+};
+
+// 11. Create Comprehensive Workflow
+export const createComprehensiveWorkflow = async (workflowData: ComprehensiveWorkflowDto): Promise<Workflow> => {
+  if (config.app.isMock || !config.app.env || config.app.env === 'local' || config.app.env === 'mock') {
+    console.log('Mock: Creating comprehensive workflow in environment:', config.app.env);
+    
+    // Generate unique IDs for the workflow and its components
+    const newWorkflowId = Math.max(...mockWorkflows.map(w => w.workflowId)) + 1;
+    let taskIdCounter = Math.max(...mockWorkflows.flatMap(w => w.tasks?.map(t => t.taskId) || []), 0) + 1;
+    let fileIdCounter = Math.max(...mockWorkflows.flatMap(w => w.tasks?.flatMap(t => t.taskFiles?.map(f => f.fileId || 0) || []) || []), 0) + 1;
+    
+    // Transform comprehensive tasks to standard workflow tasks
+    const transformedTasks: WorkflowTask[] = workflowData.tasks.map((task) => {
+      const taskId = taskIdCounter++;
+      
+      // Transform task files
+      const transformedFiles = task.taskFiles?.map((file) => ({
+        fileId: fileIdCounter++,
+        taskId: taskId,
+        fileSequence: file.fileSequence,
+        fileName: file.fileName,
+        fileTypeRegex: file.fileTypeRegex,
+        isRequired: file.isRequired,
+        fileDescription: file.fileDescription,
+        fileStatus: file.fileStatus,
+        actionType: file.actionType,
+        keepFileVersions: file.keepFileVersions,
+        keepFileHistory: file.keepFileHistory,
+        retainForCurrentPeriod: file.retainForCurrentPeriod,
+        updateOfFileSequence: file.updateOfFileSequence,
+        consolidatedFrom: file.consolidatedFrom,
+        fromTaskSequence: file.fromTaskSequence,
+        fileCommentary: file.fileCommentary,
+        dependencies: file.dependencies,
+      })) || [];
+      
+      // Transform decision outcomes
+      const transformedOutcomes = task.decisionOutcomes?.map((outcome) => ({
+        outcomeName: outcome.outcomeName,
+        targetTaskSequence: outcome.targetTaskSequence,
+        nextTaskId: outcome.targetTaskSequence || 0, // Will be resolved later
+        revisionType: outcome.revisionType,
+        revisionTaskSequences: outcome.revisionTaskSequences,
+        revisionStrategy: outcome.revisionStrategy,
+        revisionPriority: outcome.revisionPriority,
+        revisionConditions: outcome.revisionConditions,
+        autoEscalate: outcome.autoEscalate,
+        createdBy: outcome.createdBy,
+      })) || [];
+      
+      return {
+        taskId: taskId,
+        workflowId: newWorkflowId,
+        taskSequence: task.taskSequence,
+        name: task.name,
+        taskType: task.taskType,
+        roleId: task.roleId,
+        expectedCompletion: task.expectedCompletion,
+        sequenceOrder: task.sequenceOrder,
+        escalationRules: task.escalationRules,
+        parentTaskSequences: task.parentTaskSequences,
+        canBeRevisited: 'Y',
+        maxRevisits: 3,
+        fileSelectionMode: task.fileSelectionStrategy || 'USER_SELECT',
+        taskDescription: task.taskDescription,
+        isDecisionTask: task.isDecisionTask,
+        decisionType: task.decisionType,
+        decisionRequiresApproval: task.decisionRequiresApproval,
+        decisionApprovalRoleId: task.decisionApprovalRoleId,
+        revisionStrategy: task.revisionStrategy,
+        taskPriority: task.taskPriority || 'MEDIUM',
+        autoEscalationEnabled: task.autoEscalationEnabled || 'N',
+        notificationRequired: task.notificationRequired || 'N',
+        allowNewFiles: 'Y',
+        fileRetentionDays: task.fileRetentionDays,
+        consolidationMode: task.consolidationMode,
+        fileSelectionStrategy: task.fileSelectionStrategy,
+        maxFileSelections: task.maxFileSelections,
+        minFileSelections: task.minFileSelections,
+        decisionOutcomes: transformedOutcomes,
+        taskFiles: transformedFiles,
+        roleName: `Role ${task.roleId}`,
+        completed: false,
+        pending: true,
+        inProgress: false,
+        rejected: false,
+        decisionTask: task.taskType === 'DECISION',
+      };
+    });
+    
+    // Resolve decision outcome nextTaskId references
+    transformedTasks.forEach((task) => {
+      if (task.decisionOutcomes) {
+        task.decisionOutcomes.forEach((outcome) => {
+          if (outcome.targetTaskSequence) {
+            const targetTask = transformedTasks.find(t => t.taskSequence === outcome.targetTaskSequence);
+            if (targetTask) {
+              outcome.nextTaskId = targetTask.taskId;
+              outcome.nextTaskName = targetTask.name;
+            }
+          }
+        });
+      }
+    });
+    
+    // Transform workflow roles
+    const transformedRoles: WorkflowRole[] = workflowData.workflowRoles.map((role, index) => ({
+      id: Math.floor(Math.random() * 1000) + 200 * (index + 1),
+      workflowId: newWorkflowId,
+      roleId: role.roleId,
+      userId: role.userId,
+      isActive: role.isActive,
+      roleName: `Role ${role.roleId}`,
+      userName: `User ${role.userId}`,
+    }));
+    
+    // Create the comprehensive workflow
+    const newWorkflow: Workflow = {
+      workflowId: newWorkflowId,
+      name: workflowData.name,
+      description: workflowData.description,
+      triggerType: workflowData.triggerType,
+      reminderBeforeDueMins: workflowData.reminderBeforeDueMins,
+      minutesAfterDue: workflowData.minutesAfterDue,
+      escalationAfterMins: workflowData.escalationAfterMins,
+      dueInMins: 1440, // Default to 24 hours
+      isActive: workflowData.isActive,
+      calendarId: null,
+      createdBy: workflowData.createdBy,
+      createdOn: new Date().toISOString(),
+      updatedBy: null,
+      updatedOn: null,
+      workflowRoles: transformedRoles,
+      tasks: transformedTasks,
+      parameters: [],
+    };
+    
+    // Add to mock data
+    mockWorkflows.push(newWorkflow);
+    mockPaginatedWorkflows.content.push(newWorkflow);
+    mockPaginatedWorkflows.totalElements++;
+    
+    console.log('Created comprehensive workflow:', newWorkflow);
+    return Promise.resolve(newWorkflow);
+  }
+  
+  // For real API calls
+  const response = await api.post<Workflow>('/workflows/comprehensive', workflowData);
+  return response.data;
+};
+
+// Helper function to convert canvas workflow to comprehensive format
+export const convertCanvasToComprehensive = (
+  workflowName: string,
+  workflowDescription: string,
+  nodes: any[],
+  edges: any[],
+  roles: any[],
+  createdBy: string
+): ComprehensiveWorkflowDto => {
+  // Filter out start and end nodes
+  const taskNodes = nodes.filter(node => !['start', 'end'].includes(node.id));
+  
+  // Convert nodes to comprehensive tasks
+  const tasks: any[] = taskNodes.map((node, index) => {
+    const taskSequence = index + 1;
+    
+    // Determine parent task sequences from edges
+    const parentEdges = edges.filter(edge => edge.target === node.id && !['start'].includes(edge.source));
+    const parentTaskSequences = parentEdges.map(edge => {
+      const parentNode = taskNodes.find(n => n.id === edge.source);
+      return parentNode ? taskNodes.indexOf(parentNode) + 1 : 0;
+    }).filter(seq => seq > 0);
+    
+    // Convert task files
+    const taskFiles = node.data.taskFiles?.map((file: any, fileIndex: number) => ({
+      fileSequence: fileIndex + 1,
+      fileName: file.fileName || `file_${fileIndex + 1}`,
+      fileTypeRegex: file.fileTypeRegex || '*.*',
+      actionType: node.data.taskType === 'FILE_UPLOAD' ? 'UPLOAD' : 
+                  node.data.taskType === 'FILE_UPDATE' ? 'UPDATE' : 
+                  node.data.taskType === 'CONSOLIDATE_FILES' ? 'CONSOLIDATE' : 'UPLOAD',
+      fileDescription: file.fileDescription || '',
+      isRequired: file.isRequired || 'Y',
+      fileStatus: 'PENDING',
+      keepFileVersions: 'Y',
+      keepFileHistory: 'Y',
+      retainForCurrentPeriod: 'Y',
+      fileCommentary: file.fileDescription || '',
+      updateOfFileSequence: file.updateOfFileSequence,
+      consolidatedFrom: file.consolidatedFrom,
+      fromTaskSequence: file.fromTaskSequence,
+      dependencies: file.dependencies || [],
+    })) || [];
+    
+    // Convert decision outcomes
+    const decisionOutcomes = node.data.decisionOutcomes?.map((outcome: any) => ({
+      outcomeName: outcome.outcomeName,
+      targetTaskSequence: outcome.targetTaskSequence || null,
+      revisionType: 'SINGLE',
+      revisionTaskSequences: outcome.revisionTaskSequences || [],
+      revisionStrategy: 'REPLACE',
+      revisionPriority: 1,
+      revisionConditions: outcome.revisionConditions || '',
+      autoEscalate: 'N',
+      createdBy: createdBy,
+    })) || [];
+    
+    return {
+      taskSequence: taskSequence,
+      name: node.data.description || node.data.name || `Task ${taskSequence}`,
+      taskDescription: node.data.taskDescription || node.data.description || '',
+      taskType: node.data.taskType,
+      roleId: node.data.roleId || 1,
+      sequenceOrder: taskSequence,
+      expectedCompletion: node.data.expectedCompletion || 60,
+      escalationRules: node.data.escalationRules || 'Default escalation',
+      fileRetentionDays: node.data.fileRetentionDays || 30,
+      parentTaskSequences: parentTaskSequences.length > 0 ? parentTaskSequences : undefined,
+      consolidationMode: node.data.consolidationMode,
+      fileSelectionStrategy: node.data.fileSelectionMode,
+      maxFileSelections: node.data.maxFileSelections,
+      minFileSelections: node.data.minFileSelections,
+      isDecisionTask: node.data.taskType === 'DECISION' ? 'Y' : 'N',
+      decisionType: node.data.decisionType,
+      decisionRequiresApproval: node.data.decisionRequiresApproval,
+      decisionApprovalRoleId: node.data.decisionApprovalRoleId,
+      revisionStrategy: node.data.revisionStrategy,
+      taskPriority: node.data.taskPriority || 'MEDIUM',
+      autoEscalationEnabled: node.data.autoEscalationEnabled || 'N',
+      notificationRequired: node.data.notificationRequired || 'N',
+      taskFiles: taskFiles.length > 0 ? taskFiles : undefined,
+      decisionOutcomes: decisionOutcomes.length > 0 ? decisionOutcomes : undefined,
+    };
+  });
+  
+  return {
+    name: workflowName,
+    description: workflowDescription,
+    triggerType: 'MANUAL',
+    reminderBeforeDueMins: 30,
+    minutesAfterDue: 15,
+    escalationAfterMins: 60,
+    isActive: 'Y',
+    createdBy: createdBy,
+    workflowRoles: roles.map(role => ({
+      roleId: role.roleId,
+      userId: role.userId,
+      isActive: role.isActive,
+    })),
+    tasks: tasks,
+  };
 };

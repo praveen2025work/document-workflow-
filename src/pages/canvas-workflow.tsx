@@ -33,6 +33,8 @@ import {
   getWorkflowById,
   updateWorkflow,
   searchWorkflows,
+  createComprehensiveWorkflow,
+  convertCanvasToComprehensive,
 } from '@/lib/workflowApi';
 import { startWorkflowWithCalendar, startWorkflowWithoutCalendar } from '@/lib/executionApi';
 import { useUser } from '@/context/UserContext';
@@ -139,8 +141,8 @@ const CanvasWorkflowPage: NextPage = () => {
   useEffect(() => {
     const fetchAllWorkflows = async () => {
       try {
-        const workflows = await searchWorkflows({});
-        setAllWorkflows(workflows);
+        const response = await searchWorkflows('', 'Y', 0, 50);
+        setAllWorkflows(response.content);
       } catch (error) {
         console.error("Failed to fetch workflows", error);
         toast.error("Could not load workflow list.");
@@ -213,52 +215,26 @@ const CanvasWorkflowPage: NextPage = () => {
     if (!validateWorkflow() || !workflow || !user) return;
 
     setIsDeploying(true);
-    toast.info('Deploying workflow...');
+    toast.info('Creating comprehensive workflow...');
 
     try {
-      // First, ensure the workflow definition is saved
+      // First, ensure the workflow definition is saved using comprehensive format
       let savedWorkflow = workflow;
       if (workflow.workflowId === 0) { // Assuming 0 is for a new workflow
-        const tasksToCreate = nodes
-          .filter(n => n.type !== 'start' && n.type !== 'end')
-          .map((node, index) => {
-            const { data } = node;
-            return {
-              name: data.description || 'Unnamed Task',
-              taskType: (data.taskType || 'FILE_UPLOAD') as TaskType,
-              roleId: data.roleId || 1,
-              sequenceOrder: index + 1,
-              expectedCompletion: data.expectedCompletion || 60,
-              escalationRules: data.escalationRules || "Default escalation",
-              canBeRevisited: data.canBeRevisited || 'N',
-              maxRevisits: data.maxRevisits || 0,
-              fileSelectionMode: data.fileSelectionMode || 'USER_SELECT',
-              taskDescription: data.taskDescription || data.description || '',
-              taskPriority: data.taskPriority || 'MEDIUM',
-              autoEscalationEnabled: data.autoEscalationEnabled || 'N',
-              notificationRequired: data.notificationRequired || 'N',
-              allowNewFiles: data.allowNewFiles || 'Y',
-              fileRetentionDays: data.fileRetentionDays || 30,
-            };
-          });
+        // Convert canvas workflow to comprehensive format
+        const comprehensiveWorkflow = convertCanvasToComprehensive(
+          workflow.name,
+          workflow.description || 'New workflow from canvas.',
+          nodes,
+          edges,
+          workflow.workflowRoles || [],
+          user.email
+        );
 
-        const createPayload: CreateWorkflowDto = {
-          name: workflow.name,
-          description: workflow.description || 'New workflow from canvas.',
-          reminderBeforeDueMins: workflow.reminderBeforeDueMins || 60,
-          minutesAfterDue: workflow.minutesAfterDue || 30,
-          escalationAfterMins: workflow.escalationAfterMins || 120,
-          dueInMins: workflow.dueInMins || 1440,
-          isActive: 'Y',
-          calendarId: workflow.calendarId || null,
-          createdBy: user.email,
-          tasks: tasksToCreate,
-          workflowRoles: workflow.workflowRoles || [],
-          parameters: workflow.parameters || [],
-        };
-        savedWorkflow = await createWorkflow(createPayload);
+        // Create the comprehensive workflow
+        savedWorkflow = await createComprehensiveWorkflow(comprehensiveWorkflow);
         setWorkflow(savedWorkflow);
-        toast.success(`Workflow "${savedWorkflow.name}" definition saved!`);
+        toast.success(`Comprehensive workflow "${savedWorkflow.name}" created successfully!`);
       }
 
       // Now, start the workflow instance
@@ -282,7 +258,7 @@ const CanvasWorkflowPage: NextPage = () => {
       toast.success('Workflow instance started successfully!');
 
     } catch (error) {
-      console.error('Failed to deploy workflow', error);
+      console.error('Failed to deploy comprehensive workflow', error);
       toast.error('Failed to deploy workflow. Check console for details.');
     } finally {
       setIsDeploying(false);
@@ -397,7 +373,7 @@ const CanvasWorkflowPage: NextPage = () => {
             <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_UPLOAD')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Upload className="h-6 w-6 text-cyan-600" /></motion.div></TooltipTrigger><TooltipContent side="right">File Upload</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_DOWNLOAD')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Download className="h-6 w-6 text-teal-700" /></motion.div></TooltipTrigger><TooltipContent side="right">File Download</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_UPDATE')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><UpdateIcon className="h-6 w-6 text-purple-700" /></motion.div></TooltipTrigger><TooltipContent side="right">File Update</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'CONSOLIDATE_FILE')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><ConsolidateIcon className="h-6 w-6 text-green-700" /></motion.div></TooltipTrigger><TooltipContent side="right">Consolidate Files</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'CONSOLIDATE_FILES')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><ConsolidateIcon className="h-6 w-6 text-green-700" /></motion.div></TooltipTrigger><TooltipContent side="right">Consolidate Files</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('decision', 'DECISION')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><DecisionIcon className="h-6 w-6 text-blue-700" /></motion.div></TooltipTrigger><TooltipContent side="right">Decision</TooltipContent></Tooltip>
             <div className="my-2 h-px w-full bg-border" />
             <Tooltip><TooltipTrigger asChild><motion.div onClick={() => setIsSettingsOpen(true)} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:bg-muted/20 group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Settings className="h-6 w-6 text-muted-foreground group-hover:text-foreground" /></motion.div></TooltipTrigger><TooltipContent side="right">Workflow Settings</TooltipContent></Tooltip>
