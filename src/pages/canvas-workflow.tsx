@@ -64,8 +64,8 @@ const GoBackEdge: React.FC<EdgeProps> = ({ id, sourceX, sourceY, targetX, target
 };
 
 const initialNodes: Node<NodeData>[] = [
-  { id: 'start', type: 'start', position: { x: 100, y: 200 }, data: { description: 'Workflow Start' } },
-  { id: 'end', type: 'end', position: { x: 700, y: 200 }, data: { description: 'Workflow End' } },
+  { id: 'start', type: 'start', position: { x: 50, y: 400 }, data: { description: 'Workflow Start' } },
+  { id: 'end', type: 'end', position: { x: 1200, y: 400 }, data: { description: 'Workflow End' } },
 ];
 
 const CanvasWorkflowPage: NextPage = () => {
@@ -83,54 +83,81 @@ const CanvasWorkflowPage: NextPage = () => {
   const [jsonInput, setJsonInput] = useState('');
   const [isImporting, setIsImporting] = useState(false);
 
+  const convertWorkflowToCanvas = (wf: Workflow) => {
+    const taskNodes: Node<NodeData>[] = (wf.tasks || []).map((task, index) => ({
+        id: task.taskId.toString(),
+        type: task.taskType === 'DECISION' ? 'decision' : 'action',
+        position: { x: 250 + ((task.sequenceOrder || index) % 4) * 250, y: 150 + Math.floor((task.sequenceOrder || index) / 4) * 200 },
+        data: {
+            description: task.name,
+            taskType: task.taskType,
+            ...task
+        } as NodeData,
+    }));
+
+    const newEdges: Edge[] = [];
+    const allTaskIds = (wf.tasks || []).map(t => t.taskId);
+
+    (wf.tasks || []).forEach(task => {
+        const taskIdStr = task.taskId.toString();
+
+        if (!task.parentTaskSequences || task.parentTaskSequences.length === 0) {
+            newEdges.push({ id: `start-${taskIdStr}`, source: 'start', target: taskIdStr, type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
+        } else {
+            task.parentTaskSequences.forEach(parentSeq => {
+                const parentTask = wf.tasks.find(t => t.taskSequence === parentSeq);
+                if (parentTask) {
+                    const edgeId = `${parentTask.taskId.toString()}-${taskIdStr}`;
+                    if (!newEdges.some(e => e.id === edgeId)) {
+                        newEdges.push({ id: edgeId, source: parentTask.taskId.toString(), target: taskIdStr, type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
+                    }
+                }
+            });
+        }
+
+        if (task.decisionOutcomes && task.decisionOutcomes.length > 0) {
+            task.decisionOutcomes.forEach((outcome, outcomeIndex) => {
+                if (outcome.nextTaskId && allTaskIds.includes(outcome.nextTaskId)) {
+                    const targetTask = wf.tasks.find(t => t.taskId === outcome.nextTaskId);
+                    const isGoBack = (outcome.outcomeName.toLowerCase().includes('resubmit') || outcome.outcomeName.toLowerCase().includes('reject')) || (targetTask && task.taskSequence && targetTask.taskSequence < task.taskSequence);
+                    
+                    newEdges.push({
+                        id: `${taskIdStr}-${outcome.nextTaskId}-${outcomeIndex}`,
+                        source: taskIdStr,
+                        target: outcome.nextTaskId.toString(),
+                        type: isGoBack ? 'goBack' : 'default',
+                        style: isGoBack ? { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '8,4' } : { stroke: '#3b82f6', strokeWidth: 2 },
+                        label: outcome.outcomeName
+                    });
+                } else {
+                    newEdges.push({
+                        id: `${taskIdStr}-end-${outcomeIndex}`,
+                        source: taskIdStr,
+                        target: 'end',
+                        type: 'default',
+                        style: { stroke: '#22c55e', strokeWidth: 2 },
+                        label: outcome.outcomeName
+                    });
+                }
+            });
+        } else {
+            const isParent = (wf.tasks || []).some(childTask => childTask.parentTaskSequences?.includes(task.taskSequence!));
+            if (!isParent) {
+                newEdges.push({ id: `${taskIdStr}-end`, source: taskIdStr, target: 'end', type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
+            }
+        }
+    });
+
+    return { nodes: [...initialNodes, ...taskNodes], edges: newEdges };
+  };
+
   const loadWorkflow = useCallback(async (workflowId: string | number) => {
     try {
       const wf = await getWorkflowById(Number(workflowId));
       setWorkflow(wf);
-      if (wf.tasks) {
-        const flowNodes = wf.tasks.map((task, index) => ({
-          id: task.taskId.toString(),
-          type: task.taskType === 'DECISION' ? 'decision' : 'action',
-          position: { x: 250 + index * 200, y: 200 + (index % 2) * 100 },
-          data: {
-            description: task.name,
-            taskType: task.taskType,
-            ...task
-          } as NodeData,
-        }));
-        setNodes([...initialNodes, ...flowNodes]);
-        
-        const newEdges: any[] = [];
-        wf.tasks.forEach((task, index) => {
-          if (index === 0) {
-            newEdges.push({ id: `start-${task.taskId}`, source: 'start', target: task.taskId.toString(), type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
-          }
-          
-          if (task.decisionOutcomes && task.decisionOutcomes.length > 0) {
-            task.decisionOutcomes.forEach((outcome, outcomeIndex) => {
-              newEdges.push({
-                id: `${task.taskId}-${outcome.nextTaskId}-${outcomeIndex}`,
-                source: task.taskId.toString(),
-                target: outcome.nextTaskId.toString(),
-                type: outcome.outcomeName === 'REJECT' ? 'goBack' : 'default',
-                style: outcome.outcomeName === 'REJECT' 
-                  ? { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '8,4' }
-                  : { stroke: '#3b82f6', strokeWidth: 2 },
-                label: outcome.outcomeName
-              });
-            });
-          } else if (index < wf.tasks.length - 1) {
-            const nextTask = wf.tasks[index + 1];
-            newEdges.push({ id: `${task.taskId}-${nextTask.taskId}`, source: task.taskId.toString(), target: nextTask.taskId.toString(), type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
-          }
-          
-          if (index === wf.tasks.length - 1) {
-            newEdges.push({ id: `${task.taskId}-end`, source: task.taskId.toString(), target: 'end', type: 'default', style: { stroke: '#3b82f6', strokeWidth: 2 } });
-          }
-        });
-        
-        setEdges(newEdges);
-      }
+      const { nodes: canvasNodes, edges: canvasEdges } = convertWorkflowToCanvas(wf);
+      setNodes(canvasNodes);
+      setEdges(canvasEdges);
       toast.success(`Loaded workflow: ${wf.name}`);
     } catch (error) {
       console.error("Failed to load workflow", error);
@@ -227,132 +254,19 @@ const CanvasWorkflowPage: NextPage = () => {
     try {
       const workflowData: ComprehensiveWorkflowDto = JSON.parse(jsonInput);
       
-      // Validate the JSON structure
       if (!workflowData.name || !workflowData.tasks || !Array.isArray(workflowData.tasks)) {
         toast.error('Invalid JSON structure. Please ensure it contains name and tasks array.');
+        setIsImporting(false);
         return;
       }
 
-      // Create the comprehensive workflow
       const createdWorkflow = await createComprehensiveWorkflow(workflowData);
       
-      // Convert the created workflow to canvas nodes and edges
-      const taskNodes: Node<NodeData>[] = [];
-      const newEdges: Edge[] = [];
-      
-      // Create nodes for each task
-      createdWorkflow.tasks?.forEach((task, index) => {
-        const nodeType = task.taskType === 'DECISION' ? 'decision' : 'action';
-        const xPosition = 250 + (index % 4) * 200; // Arrange in rows of 4
-        const yPosition = 150 + Math.floor(index / 4) * 150;
-        
-        taskNodes.push({
-          id: task.taskId.toString(),
-          type: nodeType,
-          position: { x: xPosition, y: yPosition },
-          data: {
-            description: task.name,
-            taskType: task.taskType,
-            taskDescription: task.taskDescription,
-            roleId: task.roleId,
-            expectedCompletion: task.expectedCompletion,
-            escalationRules: task.escalationRules,
-            fileRetentionDays: task.fileRetentionDays,
-            taskFiles: task.taskFiles,
-            decisionOutcomes: task.decisionOutcomes,
-            consolidationMode: task.consolidationMode,
-            fileSelectionStrategy: task.fileSelectionStrategy,
-            maxFileSelections: task.maxFileSelections,
-            minFileSelections: task.minFileSelections,
-            isDecisionTask: task.isDecisionTask,
-            decisionType: task.decisionType,
-            decisionRequiresApproval: task.decisionRequiresApproval,
-            decisionApprovalRoleId: task.decisionApprovalRoleId,
-            revisionStrategy: task.revisionStrategy,
-            taskPriority: task.taskPriority,
-            autoEscalationEnabled: task.autoEscalationEnabled,
-            notificationRequired: task.notificationRequired,
-            ...task
-          } as NodeData,
-        });
-      });
-
-      // Create edges based on task sequences and decision outcomes
-      createdWorkflow.tasks?.forEach((task, index) => {
-        const taskId = task.taskId.toString();
-        
-        // Connect start to first task
-        if (index === 0) {
-          newEdges.push({
-            id: `start-${taskId}`,
-            source: 'start',
-            target: taskId,
-            type: 'default',
-            style: { stroke: '#3b82f6', strokeWidth: 2 }
-          });
-        }
-
-        // Handle decision outcomes
-        if (task.decisionOutcomes && task.decisionOutcomes.length > 0) {
-          task.decisionOutcomes.forEach((outcome, outcomeIndex) => {
-            if (outcome.nextTaskId) {
-              const isRejectEdge = outcome.outcomeName.toLowerCase().includes('resubmit') || 
-                                 outcome.outcomeName.toLowerCase().includes('reject') ||
-                                 outcome.targetTaskSequence !== null && outcome.targetTaskSequence < task.taskSequence!;
-              
-              newEdges.push({
-                id: `${taskId}-${outcome.nextTaskId}-${outcomeIndex}`,
-                source: taskId,
-                target: outcome.nextTaskId.toString(),
-                type: isRejectEdge ? 'goBack' : 'default',
-                style: isRejectEdge 
-                  ? { stroke: '#ef4444', strokeWidth: 3, strokeDasharray: '8,4' }
-                  : { stroke: '#3b82f6', strokeWidth: 2 },
-                label: outcome.outcomeName
-              });
-            } else if (outcome.outcomeName.toLowerCase().includes('approve') || 
-                      outcome.outcomeName.toLowerCase().includes('complete')) {
-              // Connect to end node for approval/completion outcomes
-              newEdges.push({
-                id: `${taskId}-end-${outcomeIndex}`,
-                source: taskId,
-                target: 'end',
-                type: 'default',
-                style: { stroke: '#22c55e', strokeWidth: 2 },
-                label: outcome.outcomeName
-              });
-            }
-          });
-        } else {
-          // Connect sequential tasks
-          const nextTask = createdWorkflow.tasks?.[index + 1];
-          if (nextTask) {
-            newEdges.push({
-              id: `${taskId}-${nextTask.taskId}`,
-              source: taskId,
-              target: nextTask.taskId.toString(),
-              type: 'default',
-              style: { stroke: '#3b82f6', strokeWidth: 2 }
-            });
-          } else {
-            // Connect last task to end
-            newEdges.push({
-              id: `${taskId}-end`,
-              source: taskId,
-              target: 'end',
-              type: 'default',
-              style: { stroke: '#3b82f6', strokeWidth: 2 }
-            });
-          }
-        }
-      });
-
-      // Update the canvas
-      setNodes([...initialNodes, ...taskNodes]);
-      setEdges(newEdges);
+      const { nodes: canvasNodes, edges: canvasEdges } = convertWorkflowToCanvas(createdWorkflow);
+      setNodes(canvasNodes);
+      setEdges(canvasEdges);
       setWorkflow(createdWorkflow);
       
-      // Close dialog and clear input
       setIsImportDialogOpen(false);
       setJsonInput('');
       
