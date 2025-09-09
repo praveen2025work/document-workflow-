@@ -72,7 +72,7 @@ const CanvasWorkflowPage: NextPage = () => {
   const { user } = useUser();
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [allWorkflows, setAllWorkflows] = useState<Workflow[]>([]);
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>('1');
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>('4');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
