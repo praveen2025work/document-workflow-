@@ -1,4 +1,5 @@
 import { apiRequest } from './api';
+import { config } from './config';
 import {
   Query,
   QueryConversation,
@@ -19,7 +20,9 @@ import {
 
 // Query CRUD Operations
 export const createQuery = async (queryData: CreateQueryRequest): Promise<Query> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Using mock data for createQuery');
     const newId = Math.max(...mockQueries.map(q => q.id)) + 1;
     const newQuery: Query = {
@@ -57,7 +60,9 @@ export const createQuery = async (queryData: CreateQueryRequest): Promise<Query>
 };
 
 export const getQuery = async (queryId: number): Promise<Query> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     const query = mockQueries.find(q => q.id === queryId);
     if (query) {
       return Promise.resolve(query);
@@ -71,7 +76,9 @@ export const updateQueryStatus = async (
   queryId: number,
   statusData: UpdateQueryStatusRequest
 ): Promise<Query> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Using mock data for updateQueryStatus');
     const query = mockQueries.find(q => q.id === queryId);
     if (query) {
@@ -92,7 +99,9 @@ export const updateQueryStatus = async (
 };
 
 export const deleteQuery = async (queryId: number): Promise<void> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     const index = mockQueries.findIndex(q => q.id === queryId);
     if (index > -1) {
       mockQueries.splice(index, 1);
@@ -107,35 +116,45 @@ export const deleteQuery = async (queryId: number): Promise<void> => {
 
 // Query Lists and Filtering
 export const getQueriesAssignedToUser = async (userId: number): Promise<Query[]> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => q.assignedToUserId === userId));
   }
   return apiRequest<Query[]>(`/api/queries/assigned-to/${userId}`);
 };
 
 export const getQueriesRaisedByUser = async (userId: number): Promise<Query[]> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => q.raisedByUserId === userId));
   }
   return apiRequest<Query[]>(`/api/queries/raised-by/${userId}`);
 };
 
 export const getOpenQueries = async (userId: number): Promise<Query[]> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => (q.assignedToUserId === userId || q.raisedByUserId === userId) && q.queryStatus === 'OPEN'));
   }
   return apiRequest<Query[]>(`/api/queries/open/${userId}`);
 };
 
 export const getHighPriorityQueries = async (): Promise<Query[]> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => q.priority === 'HIGH' || q.priority === 'CRITICAL'));
   }
   return apiRequest<Query[]>('/api/queries/high-priority');
 };
 
 export const getWorkflowQueries = async (instanceId: number): Promise<Query[]> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => q.instanceTaskId === instanceId));
   }
   return apiRequest<Query[]>(`/api/queries/workflow/${instanceId}`);
@@ -148,7 +167,9 @@ export const getQueryDashboard = async (userId: number): Promise<{
   openQueries: Query[];
   resolvedQueries: Query[];
 }> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Using mock data for getQueryDashboard');
     return Promise.resolve(getMockQueryDashboardData(userId));
   }
@@ -168,7 +189,9 @@ export const getQueryConversation = async (
   sortBy: string = 'sentAt',
   sortDir: string = 'asc'
 ): Promise<QueryConversation> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Using mock data for getQueryConversation');
     if (mockQueryConversations[queryId]) {
       return Promise.resolve(mockQueryConversations[queryId]);
@@ -194,7 +217,9 @@ export const addQueryMessage = async (
   queryId: number,
   messageData: CreateQueryMessageRequest
 ): Promise<QueryConversation> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Using mock data for addQueryMessage');
     const query = mockQueries.find(q => q.id === queryId);
     if (query) {
@@ -239,7 +264,9 @@ export const uploadQueryAttachment = async (
   uploadedBy: string,
   description?: string
 ): Promise<void> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Mocking file upload for query', queryId);
     return Promise.resolve();
   }
@@ -260,12 +287,14 @@ export const uploadQueryAttachment = async (
 };
 
 export const downloadQueryAttachment = async (attachmentId: number): Promise<Blob> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Mocking file download for attachment', attachmentId);
     const blob = new Blob(["mock file content"], { type: "text/plain" });
     return Promise.resolve(blob);
   }
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/queries/attachments/${attachmentId}/download`);
+  const response = await fetch(`${config.api.baseUrl}/api/queries/attachments/${attachmentId}/download`);
   if (!response.ok) {
     throw new Error('Failed to download attachment');
   }
@@ -277,7 +306,9 @@ export const escalateQuery = async (
   queryId: number,
   escalationData: EscalateQueryRequest
 ): Promise<Query> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     const query = mockQueries.find(q => q.id === queryId);
     if (query) {
       query.priority = 'CRITICAL'; // Simple mock escalation
@@ -297,7 +328,9 @@ export const reassignQuery = async (
   queryId: number,
   reassignmentData: ReassignQueryRequest
 ): Promise<Query> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Using mock data for reassignQuery');
     const query = mockQueries.find(q => q.id === queryId);
     if (query) {
@@ -321,7 +354,9 @@ export const reassignQuery = async (
 export const bulkUpdateQueries = async (
   bulkUpdateData: BulkQueryUpdateRequest
 ): Promise<Query[]> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     const updatedQueries: Query[] = [];
     bulkUpdateData.queryIds.forEach(id => {
       const query = mockQueries.find(q => q.id === id);
@@ -342,7 +377,9 @@ export const bulkUpdateQueries = async (
 
 // Query Statistics and Analytics
 export const getQueryStatistics = async (userId: number): Promise<QueryStatistics> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     console.log('Using mock data for getQueryStatistics');
     return Promise.resolve({ ...mockQueryStatistics, userId });
   }
@@ -366,7 +403,9 @@ export const searchQueries = async (
   totalPages: number;
   currentPage: number;
 }> => {
-  if (process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock') {
+  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  
+  if (shouldUseMock) {
     let results = [...mockQueries];
     if (searchParams.q) {
       results = results.filter(q => q.queryTitle.includes(searchParams.q!) || q.queryDescription.includes(searchParams.q!));

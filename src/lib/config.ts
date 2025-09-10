@@ -11,7 +11,7 @@ const isPreviewEnvironment = typeof window !== 'undefined' &&
 
 export const config = {
   app: {
-    env: process.env.NEXT_PUBLIC_CO_DEV_ENV || 'local',
+    env: process.env.NEXT_PUBLIC_CO_DEV_ENV || process.env.NEXT_PUBLIC_APP_ENV || 'local',
     name: 'Workflow Designer',
     version: '1.0.0',
     isMock: process.env.NEXT_PUBLIC_CO_DEV_ENV === 'mock',
