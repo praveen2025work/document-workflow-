@@ -516,68 +516,91 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
         ) : (
           (formData.taskFiles || []).map((file, index) => (
             <Card key={index} className="p-3">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium flex items-center">
-                    <File className="h-4 w-4 mr-2" />
-                    File #{index + 1}
-                  </Label>
-                  <Button size="sm" variant="outline" onClick={() => removeFile(index)} className="text-destructive hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              <div className="flex justify-between items-start mb-3">
+                <Label className="text-sm font-medium flex items-center">
+                  <File className="h-4 w-4 mr-2" />
+                  File #{index + 1}
+                </Label>
+                <Button size="sm" variant="outline" onClick={() => removeFile(index)} className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {/* Left Column - Main Fields */}
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">File Name</Label>
+                    <Input 
+                      placeholder="e.g., document.pdf" 
+                      value={file.fileName || ''} 
+                      onChange={e => handleFileChange(index, 'fileName', e.target.value)} 
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">Description</Label>
+                    <Input 
+                      placeholder="File description" 
+                      value={file.fileDescription || ''} 
+                      onChange={e => handleFileChange(index, 'fileDescription', e.target.value)} 
+                      className="h-8 text-sm"
+                    />
+                  </div>
                 </div>
-                <Input 
-                  placeholder="File name (e.g., document.pdf)" 
-                  value={file.fileName || ''} 
-                  onChange={e => handleFileChange(index, 'fileName', e.target.value)} 
-                />
-                <Input 
-                  placeholder="File description (optional)" 
-                  value={file.fileDescription || ''} 
-                  onChange={e => handleFileChange(index, 'fileDescription', e.target.value)} 
-                />
-                <Input 
-                  placeholder="File Type Regex (e.g., *.xlsx)" 
-                  value={file.fileTypeRegex || ''} 
-                  onChange={e => handleFileChange(index, 'fileTypeRegex', e.target.value)} 
-                  className="mt-2"
-                />
-                <Textarea 
-                  placeholder="File Commentary" 
-                  value={file.fileCommentary || ''} 
-                  onChange={e => handleFileChange(index, 'fileCommentary', e.target.value)} 
-                  rows={2}
-                  className="mt-2"
-                />
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Required File?</Label>
-                    <Switch 
-                      checked={file.isRequired === 'Y'} 
-                      onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
+                
+                {/* Right Column - Regex, Commentary & Options */}
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">File Type Regex</Label>
+                    <Input 
+                      placeholder="e.g., *.xlsx" 
+                      value={file.fileTypeRegex || ''} 
+                      onChange={e => handleFileChange(index, 'fileTypeRegex', e.target.value)} 
+                      className="h-8 text-sm"
                     />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Keep Versions?</Label>
-                    <Switch 
-                      checked={file.keepFileVersions === 'Y'} 
-                      onCheckedChange={c => handleFileChange(index, 'keepFileVersions', c ? 'Y' : 'N' as YesNo)} 
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">Commentary</Label>
+                    <Input 
+                      placeholder="File commentary" 
+                      value={file.fileCommentary || ''} 
+                      onChange={e => handleFileChange(index, 'fileCommentary', e.target.value)} 
+                      className="h-8 text-sm"
                     />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Keep History?</Label>
-                    <Switch 
-                      checked={file.keepFileHistory === 'Y'} 
-                      onCheckedChange={c => handleFileChange(index, 'keepFileHistory', c ? 'Y' : 'N' as YesNo)} 
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Retain for Period?</Label>
-                    <Switch 
-                      checked={file.retainForCurrentPeriod === 'Y'} 
-                      onCheckedChange={c => handleFileChange(index, 'retainForCurrentPeriod', c ? 'Y' : 'N' as YesNo)} 
-                    />
-                  </div>
+                </div>
+              </div>
+              
+              {/* Options Row */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3 pt-3 border-t">
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    checked={file.isRequired === 'Y'} 
+                    onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
+                  />
+                  <Label className="text-xs">Required?</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    checked={file.keepFileVersions === 'Y'} 
+                    onCheckedChange={c => handleFileChange(index, 'keepFileVersions', c ? 'Y' : 'N' as YesNo)} 
+                  />
+                  <Label className="text-xs">Keep Versions?</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    checked={file.keepFileHistory === 'Y'} 
+                    onCheckedChange={c => handleFileChange(index, 'keepFileHistory', c ? 'Y' : 'N' as YesNo)} 
+                  />
+                  <Label className="text-xs">Keep History?</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    checked={file.retainForCurrentPeriod === 'Y'} 
+                    onCheckedChange={c => handleFileChange(index, 'retainForCurrentPeriod', c ? 'Y' : 'N' as YesNo)} 
+                  />
+                  <Label className="text-xs">Retain Period?</Label>
                 </div>
               </div>
             </Card>
@@ -1125,32 +1148,48 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ selectedNode, onUpdat
           </div>
           {(formData.taskFiles || []).map((file, index) => (
             <Card key={index} className="p-3">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium flex items-center">
-                    <File className="h-4 w-4 mr-2" />
-                    File #{index + 1}
-                  </Label>
-                  <Button size="sm" variant="outline" onClick={() => removeFile(index)} className="text-destructive hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              <div className="flex justify-between items-start mb-3">
+                <Label className="text-sm font-medium flex items-center">
+                  <File className="h-4 w-4 mr-2" />
+                  File #{index + 1}
+                </Label>
+                <Button size="sm" variant="outline" onClick={() => removeFile(index)} className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {/* Left Column - Main Fields */}
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">File Name</Label>
+                    <Input 
+                      placeholder="e.g., document.pdf" 
+                      value={file.fileName || ''} 
+                      onChange={e => handleFileChange(index, 'fileName', e.target.value)} 
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">Description</Label>
+                    <Input 
+                      placeholder="File description" 
+                      value={file.fileDescription || ''} 
+                      onChange={e => handleFileChange(index, 'fileDescription', e.target.value)} 
+                      className="h-8 text-sm"
+                    />
+                  </div>
                 </div>
-                <Input 
-                  placeholder="File name (e.g., document.pdf)" 
-                  value={file.fileName || ''} 
-                  onChange={e => handleFileChange(index, 'fileName', e.target.value)} 
-                />
-                <Input 
-                  placeholder="File description (optional)" 
-                  value={file.fileDescription || ''} 
-                  onChange={e => handleFileChange(index, 'fileDescription', e.target.value)} 
-                />
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Required File?</Label>
-                  <Switch 
-                    checked={file.isRequired === 'Y'} 
-                    onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
-                  />
+                
+                {/* Right Column - Options */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between pt-2">
+                    <Label className="text-xs">Required File?</Label>
+                    <Switch 
+                      checked={file.isRequired === 'Y'} 
+                      onCheckedChange={c => handleFileChange(index, 'isRequired', c ? 'Y' : 'N' as YesNo)} 
+                    />
+                  </div>
                 </div>
               </div>
             </Card>
