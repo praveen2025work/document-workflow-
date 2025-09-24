@@ -221,66 +221,67 @@ const CalendarManager: React.FC = () => {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>{editingCalendar ? 'Edit Calendar' : 'Add New Calendar'}</DialogTitle>
-            </DialogHeader>
-            <ScrollArea className="max-h-[70vh] p-4">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><Label>Name</Label><Input id="calendarName" value={formState.calendarName} onChange={handleInputChange} /></div>
-                  <div><Label>Description</Label><Input id="description" value={formState.description || ''} onChange={handleInputChange} /></div>
-                  <div>
-                    <Label>Start Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formState.startDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{formState.startDate ? format(new Date(formState.startDate), "PPP") : <span>Pick a date</span>}</Button></PopoverTrigger>
-                      <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={formState.startDate ? new Date(formState.startDate) : undefined} onSelect={(date) => handleDateChange(date, 'startDate')} initialFocus /></PopoverContent>
-                    </Popover>
-                  </div>
-                  <div>
-                    <Label>End Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formState.endDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{formState.endDate ? format(new Date(formState.endDate), "PPP") : <span>Pick a date</span>}</Button></PopoverTrigger>
-                      <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={formState.endDate ? new Date(formState.endDate) : undefined} onSelect={(date) => handleDateChange(date, 'endDate')} initialFocus /></PopoverContent>
-                    </Popover>
-                  </div>
-                  <div><Label>Recurrence</Label><Select onValueChange={(v: Recurrence) => handleSelectChange(v, 'recurrence')} value={formState.recurrence}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{RECURRENCE_TYPES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></div>
-                  <div><Label>Region</Label><Select onValueChange={(v: Region) => handleSelectChange(v, 'region')} value={formState.region}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="md:col-span-2"><Label>Timezone</Label><Select onValueChange={(v: string) => handleSelectChange(v, 'timezone')} value={formState.timezone}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TIMEZONES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="md:col-span-2"><Label>CRON Expression</Label><Input id="cronExpression" value={formState.cronExpression || ''} onChange={handleInputChange} /></div>
-                  <div><Label>Offset Days</Label><Input id="offsetDays" type="number" value={formState.offsetDays || 0} onChange={handleInputChange} /></div>
-                  <div className="flex items-center space-x-2 pt-6"><Switch id="isActive" checked={formState.isActive === 'Y'} onCheckedChange={(c) => handleSelectChange(c ? 'Y' : 'N', 'isActive')} /><Label htmlFor="isActive">Active</Label></div>
-                </div>
-
-                <div className="space-y-2 pt-4 border-t">
-                  <h3 className="text-lg font-semibold">Special Days (Holidays/Run Days)</h3>
-                  <div className="flex items-end gap-2">
-                    <div className="flex-1"><Label>Date</Label>
+              <DialogHeader>
+                <DialogTitle>{editingCalendar ? 'Edit Calendar' : 'Add New Calendar'}</DialogTitle>
+              </DialogHeader>
+              <ScrollArea className="max-h-[70vh] p-4">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><Label>Name</Label><Input id="calendarName" value={formState.calendarName} onChange={handleInputChange} /></div>
+                    <div><Label>Description</Label><Input id="description" value={formState.description || ''} onChange={handleInputChange} /></div>
+                    <div>
+                      <Label>Start Date</Label>
                       <Popover>
-                        <PopoverTrigger asChild><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !newDay.dayDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{newDay.dayDate ? format(new Date(newDay.dayDate), "PPP") : <span>Pick a date</span>}</Button></PopoverTrigger>
-                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={newDay.dayDate ? new Date(newDay.dayDate) : undefined} onSelect={(date) => setNewDay(prev => ({ ...prev, dayDate: date ? format(date, 'yyyy-MM-dd') : '' }))} initialFocus /></PopoverContent>
+                        <PopoverTrigger asChild><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formState.startDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{formState.startDate ? format(new Date(formState.startDate), "PPP") : <span>Pick a date</span>}</Button></PopoverTrigger>
+                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={formState.startDate ? new Date(formState.startDate) : undefined} onSelect={(date) => handleDateChange(date, 'startDate')} initialFocus /></PopoverContent>
                       </Popover>
                     </div>
-                    <div className="flex-1"><Label>Note</Label><Input value={newDay.note} onChange={(e) => setNewDay(prev => ({ ...prev, note: e.target.value }))} placeholder="e.g., New Year's Day" /></div>
-                    <div><Label>Type</Label><Select value={newDay.dayType} onValueChange={(v: DayType) => setNewDay(prev => ({ ...prev, dayType: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DAY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
-                    <Button onClick={handleAddDay} size="sm"><Plus className="h-4 w-4" /></Button>
+                    <div>
+                      <Label>End Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formState.endDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{formState.endDate ? format(new Date(formState.endDate), "PPP") : <span>Pick a date</span>}</Button></PopoverTrigger>
+                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={formState.endDate ? new Date(formState.endDate) : undefined} onSelect={(date) => handleDateChange(date, 'endDate')} initialFocus /></PopoverContent>
+                      </Popover>
+                    </div>
+                    <div><Label>Recurrence</Label><Select onValueChange={(v: Recurrence) => handleSelectChange(v, 'recurrence')} value={formState.recurrence}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{RECURRENCE_TYPES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></div>
+                    <div><Label>Region</Label><Select onValueChange={(v: Region) => handleSelectChange(v, 'region')} value={formState.region}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="md:col-span-2"><Label>Timezone</Label><Select onValueChange={(v: string) => handleSelectChange(v, 'timezone')} value={formState.timezone}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TIMEZONES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="md:col-span-2"><Label>CRON Expression</Label><Input id="cronExpression" value={formState.cronExpression || ''} onChange={handleInputChange} /></div>
+                    <div><Label>Offset Days</Label><Input id="offsetDays" type="number" value={formState.offsetDays || 0} onChange={handleInputChange} /></div>
+                    <div className="flex items-center space-x-2 pt-6"><Switch id="isActive" checked={formState.isActive === 'Y'} onCheckedChange={(c) => handleSelectChange(c ? 'Y' : 'N', 'isActive')} /><Label htmlFor="isActive">Active</Label></div>
                   </div>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {calendarDays.map((day, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md">
-                        <div><p className="font-medium">{day.note}</p><p className="text-sm text-muted-foreground">{format(new Date(day.dayDate!), "PPP")} - {day.dayType}</p></div>
-                        <Button variant="ghost" size="sm" onClick={() => handleRemoveDay(index)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+
+                  <div className="space-y-2 pt-4 border-t">
+                    <h3 className="text-lg font-semibold">Special Days (Holidays/Run Days)</h3>
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1"><Label>Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild><Button variant="outline" className={cn("w-full justify-start text-left font-normal", !newDay.dayDate && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{newDay.dayDate ? format(new Date(newDay.dayDate), "PPP") : <span>Pick a date</span>}</Button></PopoverTrigger>
+                          <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={newDay.dayDate ? new Date(newDay.dayDate) : undefined} onSelect={(date) => setNewDay(prev => ({ ...prev, dayDate: date ? format(date, 'yyyy-MM-dd') : '' }))} initialFocus /></PopoverContent>
+                        </Popover>
                       </div>
-                    ))}
+                      <div className="flex-1"><Label>Note</Label><Input value={newDay.note} onChange={(e) => setNewDay(prev => ({ ...prev, note: e.target.value }))} placeholder="e.g., New Year's Day" /></div>
+                      <div><Label>Type</Label><Select value={newDay.dayType} onValueChange={(v: DayType) => setNewDay(prev => ({ ...prev, dayType: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DAY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+                      <Button onClick={handleAddDay} size="sm"><Plus className="h-4 w-4" /></Button>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {calendarDays.map((day, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                          <div><p className="font-medium">{day.note}</p><p className="text-sm text-muted-foreground">{format(new Date(day.dayDate!), "PPP")} - {day.dayType}</p></div>
+                          <Button variant="ghost" size="sm" onClick={() => handleRemoveDay(index)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </ScrollArea>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setFormDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave}>{editingCalendar ? 'Save Changes' : 'Create Calendar'}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </ScrollArea>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setFormDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSave}>{editingCalendar ? 'Save Changes' : 'Create Calendar'}</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
