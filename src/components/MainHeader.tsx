@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 import UserInfo from '@/components/UserInfo';
 import { config } from '@/lib/config';
@@ -23,46 +23,79 @@ const MainHeader: React.FC<MainHeaderProps> = ({
     <motion.header
       initial={{ y: -60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass border-b border-border/50 px-6 py-4"
+      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+      className="glass border-b border-border/30 px-8 py-5 shadow-soft"
     >
       <div className="flex items-center justify-between">
         {/* Left side - Screen info and actions */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6">
+          <motion.div 
+            className="flex items-center gap-4"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
             {Icon && (
-              <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
-                <Icon className="h-6 w-6 text-primary" />
+              <div className="relative">
+                <div className="p-3 rounded-2xl bg-gradient-primary shadow-glow">
+                  <Icon className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background animate-pulse" />
               </div>
             )}
-            <div>
-              <h1 className="text-xl font-bold text-foreground">{title}</h1>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">{title}</h1>
               {subtitle && (
-                <p className="text-sm text-muted-foreground">{subtitle}</p>
+                <p className="text-sm text-muted-foreground font-medium">{subtitle}</p>
               )}
             </div>
-          </div>
+          </motion.div>
           
           {/* Environment badge */}
           {config.features.debug && (
-            <Badge variant="outline" className="ml-2">
-              {config.app.env.toUpperCase()}
-            </Badge>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Badge 
+                variant="outline" 
+                className="px-3 py-1 text-xs font-semibold bg-muted/50 border-border/50 rounded-full"
+              >
+                {config.app.env.toUpperCase()}
+              </Badge>
+            </motion.div>
           )}
           
           {/* Page-specific actions */}
           {children && (
-            <div className="flex items-center gap-2 ml-4">
-              {children}
-            </div>
+            <>
+              <Separator orientation="vertical" className="h-8 bg-border/50" />
+              <motion.div 
+                className="flex items-center gap-3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {children}
+              </motion.div>
+            </>
           )}
         </div>
         
         {/* Right side - User info and theme */}
-        <div className="flex items-center gap-4">
-          <UserInfo />
-          <ThemeSwitcher />
-        </div>
+        <motion.div 
+          className="flex items-center gap-4"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+            <Separator orientation="vertical" className="h-8 bg-border/50" />
+            <UserInfo />
+          </div>
+        </motion.div>
       </div>
     </motion.header>
   );

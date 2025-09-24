@@ -29,15 +29,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   const isCanvasWorkflow = router.pathname === '/canvas-workflow';
 
   return (
-    <div className={`flex h-screen w-full relative z-20 ${isCanvasWorkflow ? 'bg-background' : 'bg-slate-50 dark:bg-slate-900'}`}>
+    <div className="flex h-screen w-full relative overflow-hidden">
+      {/* Modern background with subtle patterns */}
+      <div className="absolute inset-0 bg-background">
+        <div className="absolute inset-0 gradient-mesh opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-secondary/5" />
+      </div>
+      
       {/* Left Navigation */}
-      <LeftNavigation 
-        isCollapsed={isNavCollapsed}
-        onToggleCollapse={toggleNavCollapse}
-      />
+      <div className="relative z-10">
+        <LeftNavigation 
+          isCollapsed={isNavCollapsed}
+          onToggleCollapse={toggleNavCollapse}
+        />
+      </div>
       
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0 relative z-10">
         {/* Header */}
         <MainHeader 
           title={title}
@@ -48,8 +56,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         </MainHeader>
         
         {/* Page Content */}
-        <main className={`flex-1 min-h-0 ${isCanvasWorkflow ? '' : 'bg-white dark:bg-slate-800'}`}>
-          {children}
+        <main className={`flex-1 min-h-0 relative ${
+          isCanvasWorkflow 
+            ? 'bg-transparent' 
+            : 'bg-gradient-to-br from-background/50 to-secondary/10'
+        }`}>
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+          <div className="relative z-10 h-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>

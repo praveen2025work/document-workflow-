@@ -727,62 +727,90 @@ const DashboardPage: NextPage = () => {
             >
               {/* Summary Cards - Show only when panel is closed or in compact mode when open */}
               {!isTaskPanelOpen && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <Card className="glass">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Active Tasks</p>
-                          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.active}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <Card className="card-modern">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Active Tasks</p>
+                            <p className="text-3xl font-bold text-primary">{stats.active}</p>
+                            <p className="text-xs text-muted-foreground mt-1">In progress</p>
+                          </div>
+                          <div className="p-3 rounded-2xl bg-primary/10 border border-primary/20">
+                            <Play className="h-6 w-6 text-primary" />
+                          </div>
                         </div>
-                        <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                          <Play className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                   
-                  <Card className="glass">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completed}</p>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <Card className="card-modern">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                            <p className="text-3xl font-bold text-success">{stats.completed}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Finished tasks</p>
+                          </div>
+                          <div className="p-3 rounded-2xl bg-success/10 border border-success/20">
+                            <CheckCircle className="h-6 w-6 text-success" />
+                          </div>
                         </div>
-                        <div className="h-8 w-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                   
-                  <Card className="glass">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Upcoming</p>
-                          <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.upcoming}</p>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Card className="card-modern">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Upcoming</p>
+                            <p className="text-3xl font-bold text-muted-foreground">{stats.upcoming}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Scheduled tasks</p>
+                          </div>
+                          <div className="p-3 rounded-2xl bg-muted/20 border border-border/50">
+                            <Clock className="h-6 w-6 text-muted-foreground" />
+                          </div>
                         </div>
-                        <div className="h-8 w-8 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center">
-                          <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                   
-                  <Card className="glass">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Available to Assign</p>
-                          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.assignable}</p>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <Card className="card-modern">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Available</p>
+                            <p className="text-3xl font-bold text-warning">{stats.assignable}</p>
+                            <p className="text-xs text-muted-foreground mt-1">To assign</p>
+                          </div>
+                          <div className="p-3 rounded-2xl bg-warning/10 border border-warning/20">
+                            <UserCheck className="h-6 w-6 text-warning" />
+                          </div>
                         </div>
-                        <div className="h-8 w-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
-                          <UserCheck className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 </div>
               )}
 
