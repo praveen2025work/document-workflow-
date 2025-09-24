@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, Settings, Sparkles, Workflow as WorkflowIcon, FileUp } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, Settings, Sparkles, Workflow as WorkflowIcon, FileUp, Save, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import ReactFlow, {
   Controls,
   useNodesState,
@@ -82,6 +84,10 @@ const CanvasWorkflowPage: NextPage = () => {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isNewWorkflowDialogOpen, setIsNewWorkflowDialogOpen] = useState(false);
+  const [newWorkflowName, setNewWorkflowName] = useState('');
+  const [newWorkflowDescription, setNewWorkflowDescription] = useState('');
 
   const convertWorkflowToCanvas = (wf: Workflow) => {
     const tasks = wf.tasks || [];
@@ -355,12 +361,126 @@ const CanvasWorkflowPage: NextPage = () => {
   };
 
   const handleCreateNew = () => {
-    setNodes(initialNodes);
-    setEdges([]);
-    setWorkflow(null);
-    setSelectedNodeId(null);
-    setSelectedEdgeId(null);
-    toast.success('New workflow canvas cleared!');
+    setIsNewWorkflowDialogOpen(true);
+  };
+
+  const handleCreateNewWorkflow = async () => {
+    if (!newWorkflowName.trim()) {
+      toast.error('Please provide a workflow name.');
+      return;
+    }
+
+    if (!user) {
+      toast.error('User not found.');
+      return;
+    }
+
+    try {
+      // Create a new workflow object
+      const newWorkflow: Workflow = {
+        workflowId: 0,
+        name: newWorkflowName.trim(),
+        description: newWorkflowDescription.trim() || 'New workflow created from canvas',
+        reminderBeforeDueMins: 60,
+        minutesAfterDue: 30,
+        escalationAfterMins: 120,
+        dueInMins: 1440,
+        isActive: 'Y',
+        calendarId: null,
+        createdBy: user.email,
+        createdOn: new Date().toISOString(),
+        updatedBy: null,
+        updatedOn: null,
+        tasks: [],
+        workflowRoles: [],
+        parameters: []
+      };
+
+      setWorkflow(newWorkflow);
+      setNodes(initialNodes);
+      setEdges([]);
+      setSelectedNodeId(null);
+      setSelectedEdgeId(null);
+      setSelectedWorkflowId('');
+      
+      // Close dialog and reset form
+      setIsNewWorkflowDialogOpen(false);
+      setNewWorkflowName('');
+      setNewWorkflowDescription('');
+      
+      toast.success(`New workflow "${newWorkflow.name}" created!`);
+    } catch (error) {
+      console.error('Failed to create new workflow:', error);
+      toast.error('Failed to create new workflow.');
+    }
+  };
+
+  const handleSaveWorkflow = async () => {
+    if (!validateWorkflow() || !workflow || !user) return;
+
+    setIsSaving(true);
+    toast.info('Saving workflow...');
+
+    try {
+      let savedWorkflow = workflow;
+      
+      if (workflow.workflowId === 0) {
+        // Create new comprehensive workflow
+        const comprehensiveWorkflow = convertCanvasToComprehensive(
+          workflow.name,
+          workflow.description || 'New workflow from canvas.',
+          nodes,
+          edges,
+          workflow.workflowRoles || [],
+          user.email
+        );
+
+        savedWorkflow = await createComprehensiveWorkflow(comprehensiveWorkflow);
+        setWorkflow(savedWorkflow);
+        setSelectedWorkflowId(savedWorkflow.workflowId.toString());
+        
+        // Refresh the workflows list
+        const response = await searchWorkflows('', 'Y', 0, 50);
+        setAllWorkflows(response.content);
+        
+        toast.success(`Workflow "${savedWorkflow.name}" created and saved successfully!`);
+      } else {
+        // Update existing workflow
+        const comprehensiveWorkflow = convertCanvasToComprehensive(
+          workflow.name,
+          workflow.description || 'Updated workflow from canvas.',
+          nodes,
+          edges,
+          workflow.workflowRoles || [],
+          user.email
+        );
+
+        // For updates, we need to use the update API
+        const updateData = {
+          name: workflow.name,
+          description: workflow.description,
+          reminderBeforeDueMins: workflow.reminderBeforeDueMins,
+          minutesAfterDue: workflow.minutesAfterDue,
+          escalationAfterMins: workflow.escalationAfterMins,
+          isActive: workflow.isActive,
+          updatedBy: user.email
+        };
+
+        savedWorkflow = await updateWorkflow(workflow.workflowId, updateData);
+        setWorkflow(savedWorkflow);
+        
+        // Refresh the workflows list
+        const response = await searchWorkflows('', 'Y', 0, 50);
+        setAllWorkflows(response.content);
+        
+        toast.success(`Workflow "${savedWorkflow.name}" updated successfully!`);
+      }
+    } catch (error) {
+      console.error('Failed to save workflow:', error);
+      toast.error('Failed to save workflow. Check console for details.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleImportFromJson = async () => {
@@ -527,6 +647,19 @@ const CanvasWorkflowPage: NextPage = () => {
         </SelectContent>
       </Select>
       <Button onClick={handleCreateNew} variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" />New</Button>
+      <Button onClick={handleSaveWorkflow} variant="outline" size="sm" disabled={isSaving}>
+        {isSaving ? (
+          <>
+            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Save
+          </>
+        )}
+      </Button>
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm"><FileUp className="mr-2 h-4 w-4" />Import JSON</Button>
@@ -655,6 +788,52 @@ const CanvasWorkflowPage: NextPage = () => {
           onSave={handleSaveSettings}
           settings={workflow}
         />
+
+        {/* New Workflow Dialog */}
+        <Dialog open={isNewWorkflowDialogOpen} onOpenChange={setIsNewWorkflowDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New Workflow</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="workflow-name">Workflow Name *</Label>
+                <Input
+                  id="workflow-name"
+                  placeholder="Enter workflow name..."
+                  value={newWorkflowName}
+                  onChange={(e) => setNewWorkflowName(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="workflow-description">Description</Label>
+                <Textarea
+                  id="workflow-description"
+                  placeholder="Enter workflow description..."
+                  value={newWorkflowDescription}
+                  onChange={(e) => setNewWorkflowDescription(e.target.value)}
+                  className="mt-1 min-h-[100px]"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsNewWorkflowDialogOpen(false);
+                    setNewWorkflowName('');
+                    setNewWorkflowDescription('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateNewWorkflow} disabled={!newWorkflowName.trim()}>
+                  Create Workflow
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
