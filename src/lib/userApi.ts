@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 import { User, UserApiResponse, NewUser, UpdateUser, UserSearchCriteria } from '@/types/user';
 import { mockUsers, mockPaginatedUsers } from './mock/users';
 import { config } from './config';

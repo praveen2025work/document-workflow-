@@ -23,7 +23,9 @@ import {
 
 // 1. Create Workflow
 export const createWorkflow = async (workflowData: CreateWorkflowDto): Promise<Workflow> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Creating workflow in environment:', config.app.env);
@@ -70,7 +72,9 @@ export const createWorkflow = async (workflowData: CreateWorkflowDto): Promise<W
 
 // 2. Get Workflow by ID
 export const getWorkflowById = async (workflowId: number): Promise<Workflow> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock workflow by ID data for environment:', config.app.env);
@@ -86,7 +90,9 @@ export const getWorkflowById = async (workflowId: number): Promise<Workflow> => 
 
 // 3. Get All Workflows
 export const getAllWorkflows = async (page = 0, size = 20): Promise<PaginatedWorkflowsResponse> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock all workflows data for environment:', config.app.env);
@@ -100,7 +106,9 @@ export const getAllWorkflows = async (page = 0, size = 20): Promise<PaginatedWor
 
 // New API functions
 export const getApiWorkflows = async (params?: { page?: number; size?: number; isActive?: 'Y' | 'N' }): Promise<ApiWorkflowApiResponse> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock API workflows data for environment:', config.app.env);
@@ -136,7 +144,9 @@ export const getApiWorkflows = async (params?: { page?: number; size?: number; i
 };
 
 export const createApiWorkflow = async (workflow: NewApiWorkflow): Promise<ApiWorkflow> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Creating API workflow in environment:', config.app.env);
@@ -159,7 +169,9 @@ export const createApiWorkflow = async (workflow: NewApiWorkflow): Promise<ApiWo
 
 // 4. Update Workflow
 export const updateWorkflow = async (workflowId: number, workflowData: UpdateWorkflowDto): Promise<Workflow> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Updating workflow in environment:', config.app.env);
@@ -180,7 +192,9 @@ export const updateWorkflow = async (workflowId: number, workflowData: UpdateWor
 
 // 5. Toggle Workflow Status
 export const toggleWorkflowStatus = async (workflowId: number, isActive: 'Y' | 'N'): Promise<Workflow> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Toggling workflow status in environment:', config.app.env);
@@ -200,7 +214,9 @@ export const toggleWorkflowStatus = async (workflowId: number, isActive: 'Y' | '
 
 // 6. Add Task to Workflow
 export const addTaskToWorkflow = async (workflowId: number, taskData: CreateTaskDto): Promise<WorkflowTask> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Adding task to workflow in environment:', config.app.env);
@@ -227,7 +243,9 @@ export const addTaskToWorkflow = async (workflowId: number, taskData: CreateTask
 
 // 7. Update Task
 export const updateTask = async (workflowId: number, taskId: number, taskData: UpdateTaskDto): Promise<WorkflowTask> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Updating task in environment:', config.app.env);
@@ -247,7 +265,9 @@ export const updateTask = async (workflowId: number, taskId: number, taskData: U
 
 // 8. Add Role to Workflow
 export const addRoleToWorkflow = async (workflowId: number, roleData: AddRoleDto): Promise<WorkflowRole> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Adding role to workflow in environment:', config.app.env);
@@ -271,7 +291,9 @@ export const addRoleToWorkflow = async (workflowId: number, roleData: AddRoleDto
 
 // 9. Search Workflows
 export const searchWorkflows = async (name: string, isActive: 'Y' | 'N', page = 0, size = 10): Promise<PaginatedWorkflowsResponse> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Searching workflows in environment:', config.app.env);
@@ -295,7 +317,9 @@ export const searchWorkflows = async (name: string, isActive: 'Y' | 'N', page = 
 
 // 10. Delete Workflow
 export const deleteWorkflow = async (workflowId: number): Promise<DeleteWorkflowResponse> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Deleting workflow in environment:', config.app.env);
@@ -321,7 +345,9 @@ export const deleteWorkflow = async (workflowId: number): Promise<DeleteWorkflow
 
 // 11. Create Comprehensive Workflow
 export const createComprehensiveWorkflow = async (workflowData: ComprehensiveWorkflowDto): Promise<Workflow> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mock: Creating comprehensive workflow in environment:', config.app.env);

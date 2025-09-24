@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 import { Role, RoleApiResponse, NewRole } from '@/types/role';
 import { mockRoles } from './mock/roles';
 import { config } from './config';

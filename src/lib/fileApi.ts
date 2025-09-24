@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 import { InstanceFile } from '@/types/file';
 
 export const uploadFile = async (formData: FormData): Promise<InstanceFile> => {

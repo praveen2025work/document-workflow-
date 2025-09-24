@@ -1,11 +1,13 @@
-import { api } from './api';
+import api from './api';
 import { UserDashboard, AssignableTask } from '@/types/dashboard';
 import { mockUserDashboard, mockAssignableTasks } from './mock/dashboard';
 import { config } from './config';
 
 export const getUserDashboard = async (userId: number): Promise<UserDashboard> => {
-  // Use mock data only for mock environment or when explicitly configured
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  // Use mock data for preview/mock environments or when not in dev/prod
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   console.log('Dashboard API - Environment check:', {
     isMock: config.app.isMock,
@@ -27,8 +29,10 @@ export const getUserDashboard = async (userId: number): Promise<UserDashboard> =
 };
 
 export const getAssignableTasks = async (userId: number): Promise<AssignableTask[]> => {
-  // Use mock data only for mock environment or when explicitly configured
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  // Use mock data for preview/mock environments or when not in dev/prod
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock assignable tasks data for environment:', config.app.env);
@@ -40,8 +44,10 @@ export const getAssignableTasks = async (userId: number): Promise<AssignableTask
 };
 
 export const assignTask = async (instanceTaskId: number, userId: number): Promise<void> => {
-  // Use mock data only for mock environment or when explicitly configured
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  // Use mock data for preview/mock environments or when not in dev/prod
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log(`Mock: Assigning task ${instanceTaskId} to user ${userId} in environment:`, config.app.env);

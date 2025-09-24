@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 import { WorkflowInstance, InstanceTask } from '@/types/execution';
 import { mockWorkflowInstances, mockInstanceTasks } from './mock/execution';
 import { config } from './config';

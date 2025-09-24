@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 import {
   Calendar,
   CalendarApiResponse,
@@ -15,6 +15,10 @@ import { config } from './config';
 const shouldUseMock = () => config.app.isMock || config.isPreview || !config.app.env || ['local', 'mock', 'development'].includes(config.app.env);
 
 // Calendar operations
+export const getCalendars = async (params: { page: number; size: number }): Promise<CalendarApiResponse> => {
+  return searchCalendars(params);
+};
+
 export const searchCalendars = async (params: any): Promise<CalendarApiResponse> => {
   if (shouldUseMock()) {
     console.log('Using mock calendar data for searchCalendars');

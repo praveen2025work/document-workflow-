@@ -812,20 +812,22 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
     return query.queryStatus === 'OPEN' && query.assignedToUserId === 1; // Current user ID
   };
 
-  const renderQueryListSection = () => {
-    const [showNewQueryForm, setShowNewQueryForm] = React.useState(false);
+  // Move the state outside of the render function to avoid conditional hook usage
+  const [showNewQueryForm, setShowNewQueryForm] = useState(false);
 
-    const handleCreateQueryAndClose = async () => {
-      await handleCreateQuery();
-      if (queryTitle && queryDescription && queryAssignedTo) {
-        setShowNewQueryForm(false);
-        // Reset form
-        setQueryTitle('');
-        setQueryDescription('');
-        setQueryAssignedTo(null);
-        setQueryPriority('MEDIUM');
-      }
-    };
+  const handleCreateQueryAndClose = async () => {
+    await handleCreateQuery();
+    if (queryTitle && queryDescription && queryAssignedTo) {
+      setShowNewQueryForm(false);
+      // Reset form
+      setQueryTitle('');
+      setQueryDescription('');
+      setQueryAssignedTo(null);
+      setQueryPriority('MEDIUM');
+    }
+  };
+
+  const renderQueryListSection = () => {
 
     return (
       <div className="space-y-4">
