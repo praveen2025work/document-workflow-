@@ -6,10 +6,10 @@
   --mode: light;
 }
 
-/* Modern Enhanced Theme */
+/* Light, Dark, and Blue Theme System */
 @layer base {
   :root {
-    /* Core colors with enhanced contrast and modern palette */
+    /* Light Theme - Default */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -69,7 +69,7 @@
   }
   
   .dark {
-    /* Dark mode with enhanced contrast and modern palette */
+    /* Dark Theme */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -127,120 +127,64 @@
     --focus-ring: 217 91% 60% / 0.3;
   }
 
-  /* Ocean Blue Theme */
+  /* Blue Theme - Using provided color codes */
   .theme-blue {
-    --background: 210 100% 98%;
-    --foreground: 210 100% 6%;
-    --card: 210 100% 100%;
-    --card-foreground: 210 100% 6%;
-    --popover: 210 100% 100%;
-    --popover-foreground: 210 100% 6%;
-    --primary: 210 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 60% 95%;
-    --secondary-foreground: 210 100% 15%;
-    --muted: 210 60% 95%;
-    --muted-foreground: 210 30% 40%;
-    --accent: 210 60% 95%;
-    --accent-foreground: 210 100% 15%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 210 40% 88%;
-    --input: 210 40% 88%;
-    --ring: 210 100% 50%;
+    /* Background Colors */
+    --background: 210 100% 98%; /* Very light blue-tinted white */
+    --foreground: 210 100% 15%; /* Very dark blue */
+    --card: 0 0% 100%; /* Pure white */
+    --card-foreground: 210 100% 15%; /* Very dark blue */
+    --popover: 0 0% 100%; /* Pure white */
+    --popover-foreground: 210 100% 15%; /* Very dark blue */
+    
+    /* Interactive Elements */
+    --primary: 195 100% 47%; /* Main blue #00aeef */
+    --primary-foreground: 0 0% 100%; /* White text on blue buttons */
+    --secondary: 195 20% 92%; /* Light blue-gray */
+    --secondary-foreground: 195 100% 25%; /* Dark blue */
+    --accent: 195 30% 88%; /* Light blue accent */
+    --accent-foreground: 195 100% 25%; /* Dark blue */
+    
+    /* UI Elements */
+    --muted: 195 20% 92%; /* Light blue-gray for muted elements */
+    --muted-foreground: 195 30% 45%; /* Medium blue for muted text */
+    --border: 195 30% 85%; /* Light blue for borders */
+    --input: 195 30% 85%; /* Light blue for input borders */
+    --ring: 195 100% 47%; /* Main blue for focus rings */
+    
+    /* Status Colors */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
     --success: 142 76% 36%;
     --success-foreground: 355 100% 97%;
     --warning: 38 92% 50%;
     --warning-foreground: 48 96% 89%;
-    --info: 199 89% 48%;
-    --info-foreground: 210 40% 98%;
-  }
-
-  /* Forest Green Theme */
-  .theme-green {
-    --background: 120 60% 97%;
-    --foreground: 120 100% 6%;
-    --card: 0 0% 100%;
-    --card-foreground: 120 100% 6%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 120 100% 6%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 120 40% 95%;
-    --secondary-foreground: 120 100% 15%;
-    --muted: 120 40% 95%;
-    --muted-foreground: 120 20% 40%;
-    --accent: 120 40% 95%;
-    --accent-foreground: 120 100% 15%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 120 30% 88%;
-    --input: 120 30% 88%;
-    --ring: 142 76% 36%;
-    --success: 142 76% 36%;
-    --success-foreground: 355 100% 97%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --info: 199 89% 48%;
-    --info-foreground: 210 40% 98%;
-  }
-
-  /* Royal Purple Theme */
-  .theme-purple {
-    --background: 270 100% 98%;
-    --foreground: 270 100% 6%;
-    --card: 0 0% 100%;
-    --card-foreground: 270 100% 6%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 270 100% 6%;
-    --primary: 270 95% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 270 40% 95%;
-    --secondary-foreground: 270 100% 15%;
-    --muted: 270 40% 95%;
-    --muted-foreground: 270 20% 40%;
-    --accent: 270 40% 95%;
-    --accent-foreground: 270 100% 15%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 270 30% 88%;
-    --input: 270 30% 88%;
-    --ring: 270 95% 60%;
-    --success: 142 76% 36%;
-    --success-foreground: 355 100% 97%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --info: 199 89% 48%;
-    --info-foreground: 210 40% 98%;
-  }
-
-  /* Sunset Orange Theme */
-  .theme-orange {
-    --background: 30 100% 98%;
-    --foreground: 30 100% 6%;
-    --card: 0 0% 100%;
-    --card-foreground: 30 100% 6%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 100% 6%;
-    --primary: 25 95% 53%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 30 40% 95%;
-    --secondary-foreground: 30 100% 15%;
-    --muted: 30 40% 95%;
-    --muted-foreground: 30 20% 40%;
-    --accent: 30 40% 95%;
-    --accent-foreground: 30 100% 15%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 30 30% 88%;
-    --input: 30 30% 88%;
-    --ring: 25 95% 53%;
-    --success: 142 76% 36%;
-    --success-foreground: 355 100% 97%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    --info: 199 89% 48%;
-    --info-foreground: 210 40% 98%;
+    --info: 195 100% 47%; /* Use main blue for info */
+    --info-foreground: 0 0% 100%;
+    
+    /* Chart Colors */
+    --chart-1: 195 100% 47%;
+    --chart-2: 142 76% 36%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 100% 70%;
+    --chart-5: 340 82% 52%;
+    
+    /* Blue theme gradient stops */
+    --gradient-primary-start: 195 100% 47%;
+    --gradient-primary-end: 210 100% 60%;
+    --gradient-secondary-start: 195 20% 92%;
+    --gradient-secondary-end: 195 30% 88%;
+    
+    /* Blue surface colors */
+    --surface-1: 0 0% 100%;
+    --surface-2: 195 30% 96%;
+    --surface-3: 195 20% 92%;
+    --surface-hover: 195 30% 88%;
+    
+    /* Blue interactive states */
+    --hover-overlay: 195 100% 47% / 0.05;
+    --active-overlay: 195 100% 47% / 0.1;
+    --focus-ring: 195 100% 47% / 0.2;
   }
 }
 

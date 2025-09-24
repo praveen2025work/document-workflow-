@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Palette, Monitor, Zap, Leaf, Flame } from 'lucide-react';
+import { Moon, Sun, Palette } from 'lucide-react';
 
-type Theme = 'light' | 'dark' | 'blue' | 'green' | 'purple' | 'orange';
+type Theme = 'light' | 'dark' | 'blue';
 
 const themes = [
   { id: 'light' as Theme, name: 'Light', icon: Sun },
   { id: 'dark' as Theme, name: 'Dark', icon: Moon },
-  { id: 'blue' as Theme, name: 'Ocean Blue', icon: Monitor },
-  { id: 'green' as Theme, name: 'Forest Green', icon: Leaf },
-  { id: 'purple' as Theme, name: 'Royal Purple', icon: Zap },
-  { id: 'orange' as Theme, name: 'Sunset Orange', icon: Flame },
+  { id: 'blue' as Theme, name: 'Blue', icon: Palette },
 ];
 
 const ThemeSwitcher: React.FC = () => {
@@ -25,13 +22,13 @@ const ThemeSwitcher: React.FC = () => {
 
   const applyTheme = (theme: Theme) => {
     // Remove all theme classes
-    document.documentElement.classList.remove('dark', 'theme-blue', 'theme-green', 'theme-purple', 'theme-orange');
+    document.documentElement.classList.remove('dark', 'theme-blue');
     
     // Apply new theme
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
-    } else if (theme !== 'light') {
-      document.documentElement.classList.add(`theme-${theme}`);
+    } else if (theme === 'blue') {
+      document.documentElement.classList.add('theme-blue');
     }
     
     localStorage.setItem('theme', theme);
