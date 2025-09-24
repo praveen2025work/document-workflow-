@@ -12,7 +12,9 @@ import {
   Layers,
   FileText,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  Settings,
+  PieChart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -23,10 +25,34 @@ interface NavigationItem {
   icon: React.ComponentType<{ className?: string }>;
   path: string;
   description: string;
-  category?: 'design' | 'manage' | 'monitor';
+  category?: 'dashboard' | 'design' | 'manage';
 }
 
 const navigationItems: NavigationItem[] = [
+  {
+    id: 'user-dashboard',
+    label: 'User Dashboard',
+    icon: LayoutDashboard,
+    path: '/dashboard',
+    description: 'Task management and execution',
+    category: 'dashboard'
+  },
+  {
+    id: 'process-owner-dashboard',
+    label: 'Process Owner Dashboard',
+    icon: BarChart3,
+    path: '/monitoring',
+    description: 'Monitor workflow execution',
+    category: 'dashboard'
+  },
+  {
+    id: 'queries',
+    label: 'Query Management',
+    icon: MessageSquare,
+    path: '/queries',
+    description: 'Manage and track queries',
+    category: 'dashboard'
+  },
   {
     id: 'workflow-designer',
     label: 'Workflow Designer',
@@ -74,30 +100,6 @@ const navigationItems: NavigationItem[] = [
     path: '/roles',
     description: 'Manage user roles',
     category: 'manage'
-  },
-  {
-    id: 'process-owner-dashboard',
-    label: 'Process Owner Dashboard',
-    icon: BarChart3,
-    path: '/monitoring',
-    description: 'Monitor workflow execution',
-    category: 'monitor'
-  },
-  {
-    id: 'user-dashboard',
-    label: 'User Dashboard',
-    icon: LayoutDashboard,
-    path: '/dashboard',
-    description: 'Task management and execution',
-    category: 'monitor'
-  },
-  {
-    id: 'queries',
-    label: 'Query Management',
-    icon: MessageSquare,
-    path: '/queries',
-    description: 'Manage and track queries',
-    category: 'monitor'
   }
 ];
 
@@ -151,15 +153,15 @@ const LeftNavigation: React.FC<LeftNavigationProps> = ({
   }, {} as Record<string, NavigationItem[]>);
 
   const categoryLabels = {
+    dashboard: 'Dashboard',
     design: 'Design',
-    manage: 'Management',
-    monitor: 'Monitoring'
+    manage: 'Management'
   };
 
   const categoryIcons = {
+    dashboard: PieChart,
     design: Sparkles,
-    manage: Users,
-    monitor: BarChart3
+    manage: Settings
   };
 
   return (
