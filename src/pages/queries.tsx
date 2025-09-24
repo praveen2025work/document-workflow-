@@ -310,6 +310,47 @@ const QueriesPage: NextPage = () => {
     // Check if the current user is relevant to this query (either raised by them or assigned to them)
     const isRelevantToUser = user && (query.raisedByUserId === user.userId || query.assignedToUserId === user.userId);
     
+    // If we're in chat mode (selectedQuery exists), show simplified list item
+    if (selectedQuery) {
+      return (
+        <div
+          key={query.id}
+          className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 mb-2 ${
+            selectedQuery.id === query.id
+              ? 'bg-primary/10 border-primary/30 shadow-sm'
+              : 'bg-card/30 border-border/30 hover:bg-card/50 hover:border-border/50'
+          }`}
+          onClick={() => setSelectedQuery(query)}
+        >
+          <div className="flex items-start justify-between mb-2">
+            <h4 className="font-medium text-sm text-foreground truncate">
+              {query.queryTitle}
+            </h4>
+            <Badge 
+              className={`text-xs ml-2 flex-shrink-0 ${getStatusColor(query.queryStatus)}`}
+            >
+              {query.queryStatus}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+            {query.queryDescription}
+          </p>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>#{query.id}</span>
+            <span>{new Date(query.createdAt).toLocaleDateString()}</span>
+          </div>
+          <div className="mt-2">
+            <Badge 
+              className={`text-xs ${getPriorityColor(query.priority)}`}
+            >
+              {query.priority}
+            </Badge>
+          </div>
+        </div>
+      );
+    }
+    
+    // Full card view when not in chat mode
     return (
       <Card key={query.id} className="mb-4 hover:shadow-md transition-shadow">
         <CardContent className="p-4">
