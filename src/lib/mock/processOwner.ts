@@ -4,6 +4,66 @@ export const mockProcessOwnerDashboardData: ProcessOwnerDashboardData = {
   totalManagedWorkflows: 8,
   activeInstances: 15,
   escalatedTasks: 4,
+  statistics: {
+    activeWorkflows: 8,
+    completedToday: 12,
+    delayedTasks: 4,
+    avgCompletionTime: '3.2 hours'
+  },
+  workflowHealth: [
+    {
+      workflowId: 1,
+      workflowName: 'Monthly Finance Review',
+      status: 'HEALTHY',
+      activeInstances: 3,
+      delayedTasks: 0,
+      avgCompletionTime: '2.5 hours'
+    },
+    {
+      workflowId: 2,
+      workflowName: 'Quarterly Audit',
+      status: 'AT_RISK',
+      activeInstances: 2,
+      delayedTasks: 1,
+      avgCompletionTime: '8.2 hours'
+    },
+    {
+      workflowId: 3,
+      workflowName: 'Customer Onboarding',
+      status: 'HEALTHY',
+      activeInstances: 5,
+      delayedTasks: 0,
+      avgCompletionTime: '1.8 hours'
+    },
+    {
+      workflowId: 4,
+      workflowName: 'Invoice Processing',
+      status: 'UNHEALTHY',
+      activeInstances: 4,
+      delayedTasks: 3,
+      avgCompletionTime: '6.5 hours'
+    }
+  ],
+  actionableInsights: [
+    {
+      taskId: 101,
+      taskName: 'Review Financial Documents',
+      workflowId: 4,
+      workflowName: 'Invoice Processing',
+      assignedTo: 'Bob Brown',
+      status: 'DELAYED',
+      delayedBy: '2 hours'
+    },
+    {
+      taskId: 102,
+      taskName: 'Audit Compliance Check',
+      workflowId: 2,
+      workflowName: 'Quarterly Audit',
+      assignedTo: 'Alice Johnson',
+      status: 'DELAYED',
+      delayedBy: '4 hours'
+    }
+  ]
 };
 
 export const mockProcessOwnerWorkload: ProcessOwnerWorkload = {
@@ -21,6 +81,36 @@ export const mockProcessOwnerWorkload: ProcessOwnerWorkload = {
   ],
   activeInstances: 15,
   escalatedTasks: 4,
+  userWorkloads: [
+    {
+      userId: 1,
+      userName: 'Alice Johnson',
+      assignedTasks: 8,
+      completedTasks: 45,
+      avgTaskCompletionTime: '2.5 hours'
+    },
+    {
+      userId: 2,
+      userName: 'Bob Brown',
+      assignedTasks: 6,
+      completedTasks: 38,
+      avgTaskCompletionTime: '3.1 hours'
+    },
+    {
+      userId: 7,
+      userName: 'Charlie Davis',
+      assignedTasks: 4,
+      completedTasks: 32,
+      avgTaskCompletionTime: '2.8 hours'
+    },
+    {
+      userId: 8,
+      userName: 'Diana Miller',
+      assignedTasks: 10,
+      completedTasks: 52,
+      avgTaskCompletionTime: '2.2 hours'
+    }
+  ]
 };
 
 // Additional mock data for process owner dashboard

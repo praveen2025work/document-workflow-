@@ -279,6 +279,9 @@ const CanvasWorkflowPage: NextPage = () => {
   const loadWorkflow = useCallback(async (workflowId: string | number) => {
     try {
       const wf = await getWorkflowById(Number(workflowId));
+      if (!wf) {
+        throw new Error('Workflow not found');
+      }
       setWorkflow(wf);
       const { nodes: canvasNodes, edges: canvasEdges } = convertWorkflowToCanvas(wf);
       setNodes(canvasNodes);
@@ -287,12 +290,29 @@ const CanvasWorkflowPage: NextPage = () => {
     } catch (error) {
       console.error("Failed to load workflow", error);
       toast.error("Failed to load workflow.");
-      setWorkflow({
-        workflowId: 0, name: 'Custom Workflow', description: 'New workflow from canvas',
-        reminderBeforeDueMins: 60, minutesAfterDue: 30, escalationAfterMins: 120, dueInMins: 1440,
-        isActive: 'Y', calendarId: null, createdBy: 'canvas-user@example.com', createdOn: new Date().toISOString(),
-        updatedBy: null, updatedOn: null, tasks: [], workflowRoles: [], parameters: []
-      });
+      // Set a default workflow structure
+      const defaultWorkflow: Workflow = {
+        workflowId: 0, 
+        name: 'Custom Workflow', 
+        description: 'New workflow from canvas',
+        triggerType: 'MANUAL',
+        reminderBeforeDueMins: 60, 
+        minutesAfterDue: 30, 
+        escalationAfterMins: 120, 
+        dueInMins: 1440,
+        isActive: 'Y', 
+        calendarId: null, 
+        createdBy: 'canvas-user@example.com', 
+        createdOn: new Date().toISOString(),
+        updatedBy: null, 
+        updatedOn: null, 
+        tasks: [], 
+        workflowRoles: [], 
+        parameters: []
+      };
+      setWorkflow(defaultWorkflow);
+      setNodes(initialNodes);
+      setEdges([]);
     }
   }, [setNodes, setEdges]);
 
@@ -381,6 +401,7 @@ const CanvasWorkflowPage: NextPage = () => {
         workflowId: 0,
         name: newWorkflowName.trim(),
         description: newWorkflowDescription.trim() || 'New workflow created from canvas',
+        triggerType: 'MANUAL',
         reminderBeforeDueMins: 60,
         minutesAfterDue: 30,
         escalationAfterMins: 120,

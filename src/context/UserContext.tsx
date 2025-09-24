@@ -30,9 +30,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUser = async () => {
-    // If in mock mode or development, immediately set mock user data
-    if (config.app.isMock || config.isDevelopment) {
-      debugLog('Using mock user data');
+    // Use mock data for preview/mock environments or when not in dev/prod
+    const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                         config.app.env === 'local' || config.app.env === 'mock' ||
+                         config.isDevelopment;
+    
+    if (shouldUseMock) {
+      debugLog('Using mock user data for environment:', config.app.env);
       setUser({
         userId: 1,
         id: 1,
