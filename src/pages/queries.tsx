@@ -46,6 +46,7 @@ import {
 import { Query, QueryStatistics, CreateQueryRequest } from '@/types/query';
 import { useUser } from '@/context/UserContext';
 import MainLayout from '@/components/MainLayout';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 
 const QueriesPage: NextPage = () => {
   const [dashboardData, setDashboardData] = useState<{
@@ -118,6 +119,13 @@ const QueriesPage: NextPage = () => {
       fetchDashboardData();
     }
   }, [user]);
+
+  // Auto-refresh every 30 seconds
+  useAutoRefresh({
+    onRefresh: fetchDashboardData,
+    interval: 30000,
+    enabled: true
+  });
 
   const handleCreateQuery = async () => {
     if (!user || !newQueryTitle || !newQueryDescription || !newQueryAssignedTo || !selectedInstanceTaskId) {
@@ -623,8 +631,7 @@ const QueriesPage: NextPage = () => {
               disabled={isLoading}
               className="glass border-border/60 hover:bg-muted/80 hover:border-border transition-all duration-200"
             >
-              <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
 

@@ -31,7 +31,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Plus, Trash2, Pencil } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2, Pencil, RefreshCw } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { searchCalendars, createCalendarWithDays, updateCalendarWithDays, getCalendarById } from '@/lib/calendarApi';
@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '../ui/badge';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 
 const RECURRENCE_TYPES: Recurrence[] = ['YEARLY', 'MONTHLY', 'WEEKLY', 'DAILY', 'NONE'];
 const REGIONS: Region[] = ['US', 'EU', 'APAC', 'GLOBAL'];
@@ -98,6 +99,13 @@ const CalendarManager: React.FC = () => {
   useEffect(() => {
     fetchCalendars();
   }, []);
+
+  // Auto-refresh every 30 seconds
+  useAutoRefresh({
+    onRefresh: fetchCalendars,
+    interval: 30000,
+    enabled: true
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type } = e.target;
@@ -193,16 +201,26 @@ const CalendarManager: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Calendar Management</h1>
-        <Dialog open={isFormDialogOpen} onOpenChange={(open) => {
-          if (!open) resetForm();
-          setFormDialogOpen(open);
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setFormDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Add Calendar
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-3xl">
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={fetchCalendars} 
+            variant="outline" 
+            size="sm"
+            disabled={loading}
+            className="glass border-border/60 hover:bg-muted/80 hover:border-border transition-all duration-200"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+          <Dialog open={isFormDialogOpen} onOpenChange={(open) => {
+            if (!open) resetForm();
+            setFormDialogOpen(open);
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setFormDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Add Calendar
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>{editingCalendar ? 'Edit Calendar' : 'Add New Calendar'}</DialogTitle>
             </DialogHeader>

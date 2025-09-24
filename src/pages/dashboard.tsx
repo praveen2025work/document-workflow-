@@ -13,6 +13,7 @@ import { useUser } from '@/context/UserContext';
 import { LayoutDashboard, RefreshCw, Clock, CheckCircle, AlertCircle, X, Check, Play, Pause, UserCheck, Timer, Target, FileText, User, Settings, Eye, Upload, FileCheck, GitBranch } from 'lucide-react';
 import MainLayout from '@/components/MainLayout';
 import { TaskDetailsPanel } from '@/components/TaskDetailsPanel';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 
 const DashboardPage: NextPage = () => {
   const [dashboardData, setDashboardData] = useState<UserDashboard | null>(null);
@@ -670,6 +671,13 @@ const DashboardPage: NextPage = () => {
       fetchAssignableTasks()
     ]);
   };
+
+  // Auto-refresh every 30 seconds
+  useAutoRefresh({
+    onRefresh: handleRefreshAll,
+    interval: 30000,
+    enabled: true
+  });
 
 
 

@@ -50,24 +50,6 @@ const MainHeader: React.FC<MainHeaderProps> = ({
               )}
             </div>
           </motion.div>
-          
-          {/* Environment badge */}
-          {config.features.debug && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Badge 
-                variant="outline" 
-                className="px-3 py-1 text-xs font-semibold bg-muted/50 border-border/50 rounded-full"
-              >
-                {config.app.env.toUpperCase()}
-              </Badge>
-            </motion.div>
-          )}
-          
-
         </div>
         
         {/* Right side - User info and theme */}
