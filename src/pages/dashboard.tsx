@@ -671,18 +671,7 @@ const DashboardPage: NextPage = () => {
     ]);
   };
 
-  // Header actions for dashboard
-  const headerActions = (
-    <Button 
-      onClick={handleRefreshAll} 
-      variant="outline" 
-      size="sm"
-      disabled={isLoading || isAssignableTasksLoading}
-    >
-      <RefreshCw className={`mr-2 h-4 w-4 ${(isLoading || isAssignableTasksLoading) ? 'animate-spin' : ''}`} />
-      Refresh
-    </Button>
-  );
+
 
   // Calculate summary statistics
   const getSummaryStats = () => {
@@ -713,7 +702,6 @@ const DashboardPage: NextPage = () => {
       title="User Dashboard"
       subtitle="Manage your tasks and workflow activities"
       icon={LayoutDashboard}
-      headerActions={headerActions}
     >
       <div className="flex h-full min-h-0">
         {/* Main Content */}
@@ -831,20 +819,33 @@ const DashboardPage: NextPage = () => {
               )}
 
               <Tabs defaultValue="active" className="w-full flex flex-col min-h-0">
-                <TabsList className={`grid w-full grid-cols-3 glass ${isTaskPanelOpen ? 'mb-2' : ''}`}>
-                  <TabsTrigger value="active" className="flex items-center gap-2">
-                    <Play className="h-4 w-4" />
-                    {isTaskPanelOpen ? `${stats.active}` : `Active (${stats.active})`}
-                  </TabsTrigger>
-                  <TabsTrigger value="completed" className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    {isTaskPanelOpen ? `${stats.completed}` : `Completed (${stats.completed})`}
-                  </TabsTrigger>
-                  <TabsTrigger value="upcoming" className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    {isTaskPanelOpen ? `${stats.upcoming}` : `Upcoming (${stats.upcoming})`}
-                  </TabsTrigger>
-                </TabsList>
+                <div className={`flex items-center justify-between ${isTaskPanelOpen ? 'mb-2' : 'mb-4'}`}>
+                  <TabsList className="grid grid-cols-3 glass flex-1 mr-3">
+                    <TabsTrigger value="active" className="flex items-center gap-2">
+                      <Play className="h-4 w-4" />
+                      {isTaskPanelOpen ? `${stats.active}` : `Active (${stats.active})`}
+                    </TabsTrigger>
+                    <TabsTrigger value="completed" className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      {isTaskPanelOpen ? `${stats.completed}` : `Completed (${stats.completed})`}
+                    </TabsTrigger>
+                    <TabsTrigger value="upcoming" className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {isTaskPanelOpen ? `${stats.upcoming}` : `Upcoming (${stats.upcoming})`}
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <Button 
+                    onClick={handleRefreshAll} 
+                    variant="outline" 
+                    size={isTaskPanelOpen ? "sm" : "default"}
+                    disabled={isLoading || isAssignableTasksLoading}
+                    className="glass border-border/60 hover:bg-muted/80 hover:border-border transition-all duration-200"
+                  >
+                    <RefreshCw className={`${isTaskPanelOpen ? 'h-3 w-3' : 'h-4 w-4'} ${(isLoading || isAssignableTasksLoading) ? 'animate-spin' : ''} ${isTaskPanelOpen ? '' : 'mr-2'}`} />
+                    {!isTaskPanelOpen && 'Refresh'}
+                  </Button>
+                </div>
                 
                 <TabsContent value="active" className="flex-1 min-h-0">
                   <Card className="glass h-full flex flex-col">

@@ -465,120 +465,13 @@ const QueriesPage: NextPage = () => {
     );
   };
 
-  const headerActions = (
-    <div className="flex items-center gap-2">
-      <Dialog open={isCreateQueryOpen} onOpenChange={setIsCreateQueryOpen}>
-        <DialogTrigger asChild>
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            New Query
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Create New Query</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="instance-task">Related Task *</Label>
-              <Select value={selectedInstanceTaskId?.toString() || ''} onValueChange={(value) => setSelectedInstanceTaskId(value ? parseInt(value) : null)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select a task for this query" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockInstanceTasks.map((task) => (
-                    <SelectItem key={task.instanceTaskId} value={task.instanceTaskId.toString()}>
-                      {task.taskName} - {task.workflowName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="query-title">Query Title</Label>
-              <Input
-                id="query-title"
-                value={newQueryTitle}
-                onChange={(e) => setNewQueryTitle(e.target.value)}
-                placeholder="Enter query title..."
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="query-description">Query Description</Label>
-              <Textarea
-                id="query-description"
-                value={newQueryDescription}
-                onChange={(e) => setNewQueryDescription(e.target.value)}
-                placeholder="Describe your query in detail..."
-                className="mt-1"
-                rows={4}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="query-priority">Priority</Label>
-                <Select value={newQueryPriority} onValueChange={(value: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL') => setNewQueryPriority(value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="LOW">Low</SelectItem>
-                    <SelectItem value="MEDIUM">Medium</SelectItem>
-                    <SelectItem value="HIGH">High</SelectItem>
-                    <SelectItem value="CRITICAL">Critical</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="query-assigned-to">Assign To</Label>
-                <Select value={newQueryAssignedTo?.toString() || ''} onValueChange={(value) => setNewQueryAssignedTo(value ? parseInt(value) : null)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select user" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workflowUsers.map((user) => (
-                      <SelectItem key={user.userId} value={user.userId.toString()}>
-                        {user.username} ({user.role})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreateQueryOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCreateQuery}
-                disabled={!newQueryTitle || !newQueryDescription || !newQueryAssignedTo || !selectedInstanceTaskId}
-              >
-                Create Query
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <Button 
-        onClick={fetchDashboardData} 
-        variant="outline" 
-        size="sm"
-        disabled={isLoading}
-      >
-        <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-        Refresh
-      </Button>
-    </div>
-  );
+
 
   return (
     <MainLayout
       title="Query Management"
       subtitle="Manage and track all your queries"
       icon={MessageSquare}
-      headerActions={headerActions}
     >
       <div className="p-6 h-full overflow-auto">
         <motion.div
@@ -590,7 +483,7 @@ const QueriesPage: NextPage = () => {
           {/* Statistics Cards */}
           {renderStatisticsCards()}
 
-          {/* Filters */}
+          {/* Filters and Actions */}
           <div className="flex items-center gap-4 mb-6">
             <div className="flex-1">
               <div className="relative">
@@ -627,6 +520,112 @@ const QueriesPage: NextPage = () => {
                 <SelectItem value="LOW">Low</SelectItem>
               </SelectContent>
             </Select>
+            
+            {/* Action Buttons */}
+            <Dialog open={isCreateQueryOpen} onOpenChange={setIsCreateQueryOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="glass border-border/60 hover:bg-primary/90 transition-all duration-200">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Query
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px] glass border-border/60">
+                <DialogHeader>
+                  <DialogTitle>Create New Query</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="instance-task">Related Task *</Label>
+                    <Select value={selectedInstanceTaskId?.toString() || ''} onValueChange={(value) => setSelectedInstanceTaskId(value ? parseInt(value) : null)}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select a task for this query" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {mockInstanceTasks.map((task) => (
+                          <SelectItem key={task.instanceTaskId} value={task.instanceTaskId.toString()}>
+                            {task.taskName} - {task.workflowName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="query-title">Query Title</Label>
+                    <Input
+                      id="query-title"
+                      value={newQueryTitle}
+                      onChange={(e) => setNewQueryTitle(e.target.value)}
+                      placeholder="Enter query title..."
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="query-description">Query Description</Label>
+                    <Textarea
+                      id="query-description"
+                      value={newQueryDescription}
+                      onChange={(e) => setNewQueryDescription(e.target.value)}
+                      placeholder="Describe your query in detail..."
+                      className="mt-1"
+                      rows={4}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="query-priority">Priority</Label>
+                      <Select value={newQueryPriority} onValueChange={(value: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL') => setNewQueryPriority(value)}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="LOW">Low</SelectItem>
+                          <SelectItem value="MEDIUM">Medium</SelectItem>
+                          <SelectItem value="HIGH">High</SelectItem>
+                          <SelectItem value="CRITICAL">Critical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="query-assigned-to">Assign To</Label>
+                      <Select value={newQueryAssignedTo?.toString() || ''} onValueChange={(value) => setNewQueryAssignedTo(value ? parseInt(value) : null)}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select user" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {workflowUsers.map((user) => (
+                            <SelectItem key={user.userId} value={user.userId.toString()}>
+                              {user.username} ({user.role})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setIsCreateQueryOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleCreateQuery}
+                      disabled={!newQueryTitle || !newQueryDescription || !newQueryAssignedTo || !selectedInstanceTaskId}
+                    >
+                      Create Query
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Button 
+              onClick={fetchDashboardData} 
+              variant="outline" 
+              size="sm"
+              disabled={isLoading}
+              className="glass border-border/60 hover:bg-muted/80 hover:border-border transition-all duration-200"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
 
           {isLoading ? (

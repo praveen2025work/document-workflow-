@@ -193,6 +193,9 @@ const LeftNavigation: React.FC<LeftNavigationProps> = ({
               <div>
                 <h2 className="font-bold text-lg text-foreground">Workflow Hub</h2>
                 <p className="text-xs text-muted-foreground font-medium">Modern Management</p>
+                <p className="text-[10px] text-muted-foreground/70 font-normal uppercase tracking-wide">
+                  {process.env.NEXT_PUBLIC_CO_DEV_ENV || 'local'}
+                </p>
               </div>
             </motion.div>
           )}

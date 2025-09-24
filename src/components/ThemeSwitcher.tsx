@@ -45,25 +45,33 @@ const ThemeSwitcher: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <CurrentIcon className="h-5 w-5" />
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="relative bg-background/80 border-border/60 hover:bg-muted/80 hover:border-border transition-all duration-200"
+        >
+          <CurrentIcon className="h-5 w-5 text-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-48 glass border-border/60">
         {themes.map((theme) => {
           const Icon = theme.icon;
           return (
             <DropdownMenuItem
               key={theme.id}
               onClick={() => handleThemeChange(theme.id)}
-              className={`flex items-center gap-2 cursor-pointer ${
-                currentTheme === theme.id ? 'bg-accent' : ''
+              className={`flex items-center gap-3 cursor-pointer transition-all duration-200 ${
+                currentTheme === theme.id 
+                  ? 'bg-primary/10 text-primary border-l-2 border-primary' 
+                  : 'hover:bg-muted/50 text-foreground'
               }`}
             >
-              <Icon className="h-4 w-4" />
-              <span>{theme.name}</span>
+              <Icon className={`h-4 w-4 ${
+                currentTheme === theme.id ? 'text-primary' : 'text-muted-foreground'
+              }`} />
+              <span className="font-medium">{theme.name}</span>
               {currentTheme === theme.id && (
-                <div className="ml-auto h-2 w-2 rounded-full bg-primary" />
+                <div className="ml-auto h-2 w-2 rounded-full bg-primary animate-pulse" />
               )}
             </DropdownMenuItem>
           );

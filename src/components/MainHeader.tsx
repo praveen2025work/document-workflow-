@@ -67,20 +67,7 @@ const MainHeader: React.FC<MainHeaderProps> = ({
             </motion.div>
           )}
           
-          {/* Page-specific actions */}
-          {children && (
-            <>
-              <Separator orientation="vertical" className="h-8 bg-border/50" />
-              <motion.div 
-                className="flex items-center gap-3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                {children}
-              </motion.div>
-            </>
-          )}
+
         </div>
         
         {/* Right side - User info and theme */}
