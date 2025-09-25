@@ -1051,29 +1051,30 @@ const CanvasWorkflowPage: NextPage = () => {
           </motion.aside>
 
           <motion.main initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="flex-1 glass rounded-r-xl rounded-l-none overflow-hidden">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onEdgeClick={onEdgeClick}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            fitView
-            className="bg-transparent"
-            connectionLineStyle={{ stroke: '#3b82f6', strokeWidth: 3 }}
-            snapToGrid={true}
-            snapGrid={[20, 20]}
-            connectionRadius={30}
-            minZoom={0.1}
-            maxZoom={3}
-            proOptions={{ hideAttribution: true }}
-          >
-            <Controls className="!bottom-4 !left-4" />
-          </ReactFlow>
-        </motion.main>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              onEdgeClick={onEdgeClick}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              fitView
+              className="bg-transparent"
+              connectionLineStyle={{ stroke: '#3b82f6', strokeWidth: 3 }}
+              snapToGrid={true}
+              snapGrid={[20, 20]}
+              connectionRadius={30}
+              minZoom={0.1}
+              maxZoom={3}
+              proOptions={{ hideAttribution: true }}
+            >
+              <Controls className="!bottom-4 !left-4" />
+            </ReactFlow>
+          </motion.main>
+        </div>
         
         <PropertiesPanel
           selectedNode={selectedNode}
