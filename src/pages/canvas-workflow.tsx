@@ -853,184 +853,175 @@ const CanvasWorkflowPage: NextPage = () => {
         {/* Workflow Management Header */}
         <div className="bg-background/80 backdrop-blur-sm border-b border-border/30 px-4 py-3 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <span className="text-sm font-medium text-muted-foreground">Workflow Management</span>
-              
-              <div className="flex items-center gap-3">
-                {/* Workflow Selection */}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Current:</span>
-                  <Select value={selectedWorkflowId} onValueChange={setSelectedWorkflowId}>
-                    <SelectTrigger className="w-48 h-8">
-                      <SelectValue placeholder="Select workflow..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allWorkflows.map((wf) => (
-                        <SelectItem key={wf.workflowId} value={wf.workflowId.toString()}>
-                          {wf.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="flex items-center gap-3">
+              {/* Workflow Selection */}
+              <Select value={selectedWorkflowId} onValueChange={setSelectedWorkflowId}>
+                <SelectTrigger className="w-48 h-8">
+                  <SelectValue placeholder="Select workflow..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {allWorkflows.map((wf) => (
+                    <SelectItem key={wf.workflowId} value={wf.workflowId.toString()}>
+                      {wf.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                <div className="h-6 w-px bg-border" />
+              <div className="h-6 w-px bg-border" />
 
-                {/* Workflow Actions */}
-                <div className="flex items-center gap-2">
-                  <Button onClick={handleCreateNew} variant="outline" size="sm">
-                    <Plus className="h-4 w-4 mr-1" />
-                    New
-                  </Button>
+              {/* Workflow Actions */}
+              <div className="flex items-center gap-2">
+                <Button onClick={handleCreateNew} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  New
+                </Button>
 
-                  <Button onClick={handleSaveWorkflow} variant="outline" size="sm" disabled={isSaving}>
-                    {isSaving ? (
-                      <>
-                        <div className="mr-1 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-1" />
-                        Save
-                      </>
-                    )}
-                  </Button>
-
-                  <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <FileUp className="h-4 w-4 mr-1" />
-                        Import
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[80vh]">
-                      <DialogHeader>
-                        <DialogTitle>Import Workflow from JSON</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <label htmlFor="json-input" className="text-sm font-medium">
-                            Paste your comprehensive workflow JSON here:
-                          </label>
-                          <Textarea
-                            id="json-input"
-                            placeholder="Paste your JSON workflow definition here..."
-                            value={jsonInput}
-                            onChange={(e) => setJsonInput(e.target.value)}
-                            className="min-h-[400px] font-mono text-sm"
-                          />
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={handleImportFromJson} disabled={isImporting}>
-                            {isImporting ? (
-                              <>
-                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                                Importing...
-                              </>
-                            ) : (
-                              <>
-                                <FileUp className="mr-2 h-4 w-4" />
-                                Import Workflow
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Button onClick={handleDeploy} variant="default" size="sm" disabled={isDeploying} className="bg-success text-success-foreground hover:bg-success/90">
-                    {isDeploying ? (
-                      <>
-                        <div className="mr-1 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                        Deploying...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-4 w-4 mr-1" />
-                        Deploy
-                      </>
-                    )}
-                  </Button>
-
-                  {workflow && workflow.workflowId !== 0 && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-destructive" />
-                            Delete Workflow
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete the workflow "{workflow.name}"? This action cannot be undone and will permanently remove the workflow and all its tasks.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={handleDeleteWorkflow}
-                            disabled={isDeleting}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            {isDeleting ? (
-                              <>
-                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                                Deleting...
-                              </>
-                            ) : (
-                              <>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Workflow
-                              </>
-                            )}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                <Button onClick={handleSaveWorkflow} variant="outline" size="sm" disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <div className="mr-1 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-1" />
+                      Save
+                    </>
                   )}
-                </div>
-              </div>
-            </div>
+                </Button>
 
-            {/* Node/Edge Actions */}
-            <div className="flex items-center gap-2">
-              {selectedNodeId && !['start', 'end'].includes(selectedNodeId) && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={handleDeleteNode} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete Node
+                <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <FileUp className="h-4 w-4 mr-1" />
+                      Import
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Delete Node (or press Delete)</TooltipContent>
-                </Tooltip>
-              )}
-              {selectedEdgeId && (
-                <>
-                  <Button variant="outline" size="sm" onClick={handleToggleEdgeType}>
-                    Toggle Type
-                  </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[80vh]">
+                    <DialogHeader>
+                      <DialogTitle>Import Workflow from JSON</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="json-input" className="text-sm font-medium">
+                          Paste your comprehensive workflow JSON here:
+                        </label>
+                        <Textarea
+                          id="json-input"
+                          placeholder="Paste your JSON workflow definition here..."
+                          value={jsonInput}
+                          onChange={(e) => setJsonInput(e.target.value)}
+                          className="min-h-[400px] font-mono text-sm"
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleImportFromJson} disabled={isImporting}>
+                          {isImporting ? (
+                            <>
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                              Importing...
+                            </>
+                          ) : (
+                            <>
+                              <FileUp className="mr-2 h-4 w-4" />
+                              Import Workflow
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Button onClick={handleDeploy} variant="default" size="sm" disabled={isDeploying} className="bg-success text-success-foreground hover:bg-success/90">
+                  {isDeploying ? (
+                    <>
+                      <div className="mr-1 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                      Deploying...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-1" />
+                      Deploy
+                    </>
+                  )}
+                </Button>
+
+                {/* Node/Edge Actions moved here - positioned after Deploy button */}
+                {selectedNodeId && !['start', 'end'].includes(selectedNodeId) && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={handleDeleteEdge} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                      <Button variant="outline" size="sm" onClick={handleDeleteNode} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
                         <Trash2 className="h-4 w-4 mr-1" />
-                        Delete Connection
+                        Delete Node
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Delete Connection (or press Delete)</TooltipContent>
+                    <TooltipContent>Delete Node (or press Delete)</TooltipContent>
                   </Tooltip>
-                </>
-              )}
+                )}
+                {selectedEdgeId && (
+                  <>
+                    <Button variant="outline" size="sm" onClick={handleToggleEdgeType}>
+                      Toggle Type
+                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="sm" onClick={handleDeleteEdge} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete Connection
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete Connection (or press Delete)</TooltipContent>
+                    </Tooltip>
+                  </>
+                )}
+
+                {workflow && workflow.workflowId !== 0 && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-destructive" />
+                          Delete Workflow
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete the workflow "{workflow.name}"? This action cannot be undone and will permanently remove the workflow and all its tasks.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteWorkflow}
+                          disabled={isDeleting}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {isDeleting ? (
+                            <>
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Workflow
+                            </>
+                          )}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
             </div>
           </div>
         </div>
