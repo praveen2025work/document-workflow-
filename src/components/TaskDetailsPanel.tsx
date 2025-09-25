@@ -828,7 +828,47 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   };
 
   const renderQueryListSection = () => {
+    // When chat is active, show simplified query list
+    if (showQueryChat) {
+      return (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Queries ({taskDetails?.queries?.length || 0})</Label>
+          <div className="space-y-1">
+            {taskDetails?.queries?.map((query) => (
+              <div
+                key={query.queryId}
+                className={`p-2 rounded cursor-pointer transition-colors ${
+                  selectedQuery?.queryId === query.queryId 
+                    ? 'bg-primary/15 border border-primary/20' 
+                    : 'hover:bg-muted/50 border border-transparent'
+                }`}
+                onClick={() => handleViewConversation(query)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-xs truncate">{query.queryTitle}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant={query.queryStatus === 'OPEN' ? 'destructive' : query.queryStatus === 'RESOLVED' ? 'default' : 'secondary'} className="text-xs h-4 px-1">
+                        {query.queryStatus}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs h-4 px-1">{query.priority}</Badge>
+                      {query.messages && query.messages.length > 0 && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3" />
+                          {query.messages.length}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
+    // Normal view when chat is not active
     return (
       <div className="space-y-4">
         {/* Existing Queries Section */}

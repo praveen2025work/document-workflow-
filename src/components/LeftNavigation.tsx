@@ -54,19 +54,11 @@ const navigationItems: NavigationItem[] = [
     category: 'dashboard'
   },
   {
-    id: 'workflow-designer',
+    id: 'canvas-workflow',
     label: 'Workflow Designer',
     icon: Workflow,
-    path: '/',
-    description: 'Create and manage workflows',
-    category: 'design'
-  },
-  {
-    id: 'canvas-workflow',
-    label: 'Canvas Workflow',
-    icon: Layers,
     path: '/canvas-workflow',
-    description: 'Visualize running workflow instances',
+    description: 'Create and manage workflows visually',
     category: 'design'
   },
   {
