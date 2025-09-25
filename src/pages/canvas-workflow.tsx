@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import type { NextPage } from 'next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Play, Upload, Download, Settings, Sparkles, Workflow as WorkflowIcon, FileUp, Save, X } from 'lucide-react';
+import { Plus, Trash2, Play, Upload, Download, Settings, Sparkles, Workflow as WorkflowIcon, FileUp, Save, X, AlertTriangle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +41,7 @@ import {
   searchWorkflows,
   createComprehensiveWorkflow,
   convertCanvasToComprehensive,
+  deleteWorkflow,
 } from '@/lib/workflowApi';
 import { startWorkflowWithCalendar, startWorkflowWithoutCalendar } from '@/lib/executionApi';
 import { useUser } from '@/context/UserContext';
@@ -88,6 +90,7 @@ const CanvasWorkflowPage: NextPage = () => {
   const [isNewWorkflowDialogOpen, setIsNewWorkflowDialogOpen] = useState(false);
   const [newWorkflowName, setNewWorkflowName] = useState('');
   const [newWorkflowDescription, setNewWorkflowDescription] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const convertWorkflowToCanvas = (wf: Workflow) => {
     const tasks = wf.tasks || [];
@@ -629,6 +632,57 @@ const CanvasWorkflowPage: NextPage = () => {
     toast.success('Node deleted!');
   }, [selectedNodeId, setNodes, setEdges]);
 
+  const handleDeleteWorkflow = async () => {
+    if (!workflow || workflow.workflowId === 0) {
+      toast.error('No workflow selected to delete.');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteWorkflow(workflow.workflowId);
+      
+      // Refresh the workflows list
+      const response = await searchWorkflows('', 'Y', 0, 50);
+      setAllWorkflows(response.content);
+      
+      // Reset to default state
+      const defaultWorkflow: Workflow = {
+        workflowId: 0,
+        name: 'Custom Workflow',
+        description: 'New workflow from canvas',
+        triggerType: 'MANUAL',
+        reminderBeforeDueMins: 60,
+        minutesAfterDue: 30,
+        escalationAfterMins: 120,
+        dueInMins: 1440,
+        isActive: 'Y',
+        calendarId: null,
+        createdBy: user?.email || 'canvas-user@example.com',
+        createdOn: new Date().toISOString(),
+        updatedBy: null,
+        updatedOn: null,
+        tasks: [],
+        workflowRoles: [],
+        parameters: []
+      };
+      
+      setWorkflow(defaultWorkflow);
+      setNodes(initialNodes);
+      setEdges([]);
+      setSelectedNodeId(null);
+      setSelectedEdgeId(null);
+      setSelectedWorkflowId('');
+      
+      toast.success('Workflow deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete workflow:', error);
+      toast.error('Failed to delete workflow. Check console for details.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Backspace' || event.key === 'Delete') {
@@ -726,6 +780,47 @@ const CanvasWorkflowPage: NextPage = () => {
       <Button onClick={handleDeploy} variant="default" size="sm" disabled={isDeploying} className="bg-success text-success-foreground hover:bg-success/90">
         {isDeploying ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />Deploying...</> : <><Play className="mr-2 h-4 w-4" />Deploy</>}
       </Button>
+      {workflow && workflow.workflowId !== 0 && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="sm" className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Workflow
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                Delete Workflow
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete the workflow "{workflow.name}"? This action cannot be undone and will permanently remove the workflow and all its tasks.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteWorkflow}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Workflow
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       {selectedNodeId && !['start', 'end'].includes(selectedNodeId) && (
         <Tooltip>
           <TooltipTrigger asChild>
