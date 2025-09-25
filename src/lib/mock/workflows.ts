@@ -429,7 +429,6 @@ export const mockWorkflows: Workflow[] = [
       { paramId: 45, workflowId: 3, paramKey: 'COMPLIANCE_STANDARD', paramValue: 'SOX', createdBy: 'system', createdOn: '2025-08-28T10:00:00.000Z' },
     ],
   },
-,
   {
     workflowId: 4,
     name: 'Document Processing Workflow',

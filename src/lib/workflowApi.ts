@@ -78,7 +78,12 @@ export const getWorkflowById = async (workflowId: number): Promise<Workflow> => 
   
   if (shouldUseMock) {
     console.log('Using mock workflow by ID data for environment:', config.app.env);
-    const workflow = mockWorkflows.find((w) => w.workflowId === workflowId);
+    // Ensure mockWorkflows is properly initialized and contains valid workflows
+    if (!mockWorkflows || mockWorkflows.length === 0) {
+      return Promise.reject(new Error('No mock workflows available'));
+    }
+    
+    const workflow = mockWorkflows.find((w) => w && w.workflowId === workflowId);
     if (workflow) {
       return Promise.resolve(workflow);
     }
@@ -116,7 +121,7 @@ export const getApiWorkflows = async (params?: { page?: number; size?: number; i
     const apiWorkflows: ApiWorkflow[] = mockWorkflows.map(w => ({
       workflowId: w.workflowId,
       name: w.name,
-      description: w.description,
+      description: w.description || '',
       isActive: w.isActive,
       createdBy: w.createdBy,
       createdOn: w.createdOn,

@@ -20,7 +20,9 @@ import {
 
 // Query CRUD Operations
 export const createQuery = async (queryData: CreateQueryRequest): Promise<Query> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock data for createQuery');
@@ -60,7 +62,9 @@ export const createQuery = async (queryData: CreateQueryRequest): Promise<Query>
 };
 
 export const getQuery = async (queryId: number): Promise<Query> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     const query = mockQueries.find(q => q.id === queryId);
@@ -76,7 +80,9 @@ export const updateQueryStatus = async (
   queryId: number,
   statusData: UpdateQueryStatusRequest
 ): Promise<Query> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock data for updateQueryStatus');
@@ -99,7 +105,9 @@ export const updateQueryStatus = async (
 };
 
 export const deleteQuery = async (queryId: number): Promise<void> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     const index = mockQueries.findIndex(q => q.id === queryId);
@@ -116,7 +124,9 @@ export const deleteQuery = async (queryId: number): Promise<void> => {
 
 // Query Lists and Filtering
 export const getQueriesAssignedToUser = async (userId: number): Promise<Query[]> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => q.assignedToUserId === userId));
@@ -125,7 +135,9 @@ export const getQueriesAssignedToUser = async (userId: number): Promise<Query[]>
 };
 
 export const getQueriesRaisedByUser = async (userId: number): Promise<Query[]> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => q.raisedByUserId === userId));
@@ -134,7 +146,9 @@ export const getQueriesRaisedByUser = async (userId: number): Promise<Query[]> =
 };
 
 export const getOpenQueries = async (userId: number): Promise<Query[]> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => (q.assignedToUserId === userId || q.raisedByUserId === userId) && q.queryStatus === 'OPEN'));
@@ -143,7 +157,9 @@ export const getOpenQueries = async (userId: number): Promise<Query[]> => {
 };
 
 export const getHighPriorityQueries = async (): Promise<Query[]> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => q.priority === 'HIGH' || q.priority === 'CRITICAL'));
@@ -152,7 +168,9 @@ export const getHighPriorityQueries = async (): Promise<Query[]> => {
 };
 
 export const getWorkflowQueries = async (instanceId: number): Promise<Query[]> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     return Promise.resolve(mockQueries.filter(q => q.instanceTaskId === instanceId));
@@ -167,7 +185,9 @@ export const getQueryDashboard = async (userId: number): Promise<{
   openQueries: Query[];
   resolvedQueries: Query[];
 }> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock data for getQueryDashboard');
@@ -189,7 +209,9 @@ export const getQueryConversation = async (
   sortBy: string = 'sentAt',
   sortDir: string = 'asc'
 ): Promise<QueryConversation> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock data for getQueryConversation');
@@ -217,7 +239,9 @@ export const addQueryMessage = async (
   queryId: number,
   messageData: CreateQueryMessageRequest
 ): Promise<QueryConversation> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock data for addQueryMessage');
@@ -264,7 +288,9 @@ export const uploadQueryAttachment = async (
   uploadedBy: string,
   description?: string
 ): Promise<void> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mocking file upload for query', queryId);
@@ -287,7 +313,9 @@ export const uploadQueryAttachment = async (
 };
 
 export const downloadQueryAttachment = async (attachmentId: number): Promise<Blob> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Mocking file download for attachment', attachmentId);
@@ -306,7 +334,9 @@ export const escalateQuery = async (
   queryId: number,
   escalationData: EscalateQueryRequest
 ): Promise<Query> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     const query = mockQueries.find(q => q.id === queryId);
@@ -328,7 +358,9 @@ export const reassignQuery = async (
   queryId: number,
   reassignmentData: ReassignQueryRequest
 ): Promise<Query> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock data for reassignQuery');
@@ -354,7 +386,9 @@ export const reassignQuery = async (
 export const bulkUpdateQueries = async (
   bulkUpdateData: BulkQueryUpdateRequest
 ): Promise<Query[]> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     const updatedQueries: Query[] = [];
@@ -377,7 +411,9 @@ export const bulkUpdateQueries = async (
 
 // Query Statistics and Analytics
 export const getQueryStatistics = async (userId: number): Promise<QueryStatistics> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     console.log('Using mock data for getQueryStatistics');
@@ -403,7 +439,9 @@ export const searchQueries = async (
   totalPages: number;
   currentPage: number;
 }> => {
-  const shouldUseMock = config.app.isMock || config.app.env === 'mock';
+  const shouldUseMock = config.app.isMock || config.isPreview || !config.app.env || 
+                       config.app.env === 'local' || config.app.env === 'mock' ||
+                       config.isDevelopment;
   
   if (shouldUseMock) {
     let results = [...mockQueries];

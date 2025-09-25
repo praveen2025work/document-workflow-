@@ -94,9 +94,9 @@ const WorkflowsPage: NextPage = () => {
     }
   };
 
-  const filteredWorkflows = workflowsResponse?.content.filter(workflow =>
+  const filteredWorkflows = workflowsResponse?.workflows?.filter(workflow =>
     workflow.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) || [];
 
   const headerActions = (
     <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
