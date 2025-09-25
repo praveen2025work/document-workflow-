@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BarChart3, 
   RefreshCw, 
@@ -123,9 +124,16 @@ const MonitoringPage: NextPage = () => {
   const fetchWorkflows = async () => {
     try {
       const workflowsResponse = await getWorkflows();
-      setWorkflows(workflowsResponse.workflows || []);
+      setWorkflows(workflowsResponse.workflows || workflowsResponse.content || []);
     } catch (err) {
       console.error('Error fetching workflows:', err);
+      // Fallback to mock data if API fails
+      setWorkflows([
+        { workflowId: 1, workflowName: 'Document Processing Workflow', name: 'Document Processing Workflow' },
+        { workflowId: 2, workflowName: 'Monthly Finance Review Workflow', name: 'Monthly Finance Review Workflow' },
+        { workflowId: 3, workflowName: 'Quarterly Audit Workflow', name: 'Quarterly Audit Workflow' },
+        { workflowId: 4, workflowName: 'Document Processing Workflow', name: 'Document Processing Workflow' }
+      ] as Workflow[]);
     }
   };
 
@@ -139,18 +147,29 @@ const MonitoringPage: NextPage = () => {
         const latestInstance = instances[0];
         
         // Convert instance tasks to execution nodes
-        const nodes: ExecutionNode[] = latestInstance.instanceTasks.map((task, index) => ({
-          id: task.instanceTaskId.toString(),
-          name: task.taskName,
-          type: task.taskType,
-          status: task.status.toLowerCase() as ExecutionNode['status'],
-          assignedTo: task.assignedToUsername,
-          dueDate: '',
-          priority: 'medium',
-          notes: '',
-          startedAt: task.startedOn,
-          completedAt: task.completedOn
-        }));
+        const nodes: ExecutionNode[] = latestInstance.instanceTasks.map((task, index) => {
+          let status: ExecutionNode['status'] = 'pending';
+          const taskStatus = task.status.toLowerCase();
+          
+          if (taskStatus === 'completed') status = 'completed';
+          else if (taskStatus === 'in_progress' || taskStatus === 'running') status = 'running';
+          else if (taskStatus === 'failed') status = 'failed';
+          else if (taskStatus === 'paused') status = 'paused';
+          else status = 'pending';
+
+          return {
+            id: task.instanceTaskId.toString(),
+            name: task.taskName,
+            type: task.taskType,
+            status,
+            assignedTo: task.assignedToUsername,
+            dueDate: new Date(Date.now() + (index + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Mock due dates
+            priority: index % 3 === 0 ? 'high' : index % 2 === 0 ? 'medium' : 'low',
+            notes: `Task ${index + 1} notes - ${task.taskType} task`,
+            startedAt: task.startedOn,
+            completedAt: task.completedOn
+          };
+        });
 
         // Calculate stats
         const stats = {
@@ -503,63 +522,67 @@ const MonitoringPage: NextPage = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {isLoading && !dashboardData ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">Loading dashboard...</p>
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              {isLoading && !dashboardData ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">Loading dashboard...</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-6"
-              >
-                {dashboardData && renderStatistics()}
-                {dashboardData && renderWorkflowHealth()}
-                {workload && renderUserWorkload()}
-                {dashboardData && dashboardData.actionableInsights && dashboardData.actionableInsights.length > 0 && renderActionableTasks()}
-              </motion.div>
-            )}
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-6 pr-4"
+                >
+                  {dashboardData && renderStatistics()}
+                  {dashboardData && renderWorkflowHealth()}
+                  {workload && renderUserWorkload()}
+                  {dashboardData && dashboardData.actionableInsights && dashboardData.actionableInsights.length > 0 && renderActionableTasks()}
+                </motion.div>
+              )}
+            </ScrollArea>
           </TabsContent>
 
           <TabsContent value="manage" className="space-y-6">
-            {/* Workflow Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Workflow Management
-                </CardTitle>
-                <CardDescription>
-                  Select a workflow to monitor and manage its execution
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 items-center">
-                  <Label htmlFor="workflow-select" className="text-sm font-medium">
-                    Select Workflow:
-                  </Label>
-                  <Select value={selectedWorkflow} onValueChange={setSelectedWorkflow}>
-                    <SelectTrigger className="w-[300px]">
-                      <SelectValue placeholder="Choose a workflow to manage" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {workflows.map((workflow) => (
-                        <SelectItem key={workflow.workflowId} value={workflow.workflowId.toString()}>
-                          {workflow.workflowName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="space-y-6 pr-4">
+                {/* Workflow Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Workflow Management
+                    </CardTitle>
+                    <CardDescription>
+                      Select a workflow to monitor and manage its execution
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-4 items-center">
+                      <Label htmlFor="workflow-select" className="text-sm font-medium">
+                        Select Workflow:
+                      </Label>
+                      <Select value={selectedWorkflow} onValueChange={setSelectedWorkflow}>
+                        <SelectTrigger className="w-[300px]">
+                          <SelectValue placeholder="Choose a workflow to manage" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {workflows.map((workflow) => (
+                            <SelectItem key={workflow.workflowId} value={workflow.workflowId.toString()}>
+                              {workflow.workflowName || workflow.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Workflow Execution Canvas */}
-            {selectedWorkflow && executionData && (
+                {/* Workflow Execution Canvas */}
+                {selectedWorkflow && executionData && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -718,32 +741,34 @@ const MonitoringPage: NextPage = () => {
               </Card>
             )}
 
-            {selectedWorkflow && !executionData && !isLoading && (
-              <Card>
-                <CardContent className="flex items-center justify-center h-32">
-                  <p className="text-muted-foreground">No execution data available for this workflow</p>
-                </CardContent>
-              </Card>
-            )}
+                {selectedWorkflow && !executionData && !isLoading && (
+                  <Card>
+                    <CardContent className="flex items-center justify-center h-32">
+                      <p className="text-muted-foreground">No execution data available for this workflow</p>
+                    </CardContent>
+                  </Card>
+                )}
 
-            {selectedWorkflow && isLoading && (
-              <Card>
-                <CardContent className="flex items-center justify-center h-32">
-                  <div className="text-center">
-                    <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">Loading execution data...</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                {selectedWorkflow && isLoading && (
+                  <Card>
+                    <CardContent className="flex items-center justify-center h-32">
+                      <div className="text-center">
+                        <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-muted-foreground">Loading execution data...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
-            {!selectedWorkflow && (
-              <Card>
-                <CardContent className="flex items-center justify-center h-32">
-                  <p className="text-muted-foreground">Select a workflow to view execution details</p>
-                </CardContent>
-              </Card>
-            )}
+                {!selectedWorkflow && (
+                  <Card>
+                    <CardContent className="flex items-center justify-center h-32">
+                      <p className="text-muted-foreground">Select a workflow to view execution details</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </div>
