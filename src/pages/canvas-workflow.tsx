@@ -848,22 +848,209 @@ const CanvasWorkflowPage: NextPage = () => {
   );
 
   return (
-    <MainLayout title="Canvas Workflow" subtitle="Visually design and configure your workflows" icon={WorkflowIcon} headerActions={headerActions}>
-      <div className="h-full flex">
-        <motion.aside initial={{ x: -80, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="w-24 glass rounded-l-xl rounded-r-none p-4 z-10">
-          <div className="flex flex-col items-center gap-4">
-            <h2 className="text-sm font-semibold text-foreground mb-2">Tools</h2>
-            <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_UPLOAD')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Upload className="h-6 w-6 text-cyan-600" /></motion.div></TooltipTrigger><TooltipContent side="right">File Upload</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_DOWNLOAD')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Download className="h-6 w-6 text-teal-700" /></motion.div></TooltipTrigger><TooltipContent side="right">File Download</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_UPDATE')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><UpdateIcon className="h-6 w-6 text-purple-700" /></motion.div></TooltipTrigger><TooltipContent side="right">File Update</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'CONSOLIDATE_FILES')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><ConsolidateIcon className="h-6 w-6 text-green-700" /></motion.div></TooltipTrigger><TooltipContent side="right">Consolidate Files</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('decision', 'DECISION')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><DecisionIcon className="h-6 w-6 text-blue-700" /></motion.div></TooltipTrigger><TooltipContent side="right">Decision</TooltipContent></Tooltip>
-            <div className="my-2 h-px w-full bg-border" />
-            <Tooltip><TooltipTrigger asChild><motion.div onClick={() => setIsSettingsOpen(true)} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:bg-muted/20 group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Settings className="h-6 w-6 text-muted-foreground group-hover:text-foreground" /></motion.div></TooltipTrigger><TooltipContent side="right">Workflow Settings</TooltipContent></Tooltip>
-          </div>
-        </motion.aside>
+    <MainLayout title="Canvas Workflow" subtitle="Visually design and configure your workflows" icon={WorkflowIcon}>
+      <div className="h-full flex flex-col">
+        {/* Workflow Management Header */}
+        <div className="bg-background/80 backdrop-blur-sm border-b border-border/30 px-4 py-3 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <span className="text-sm font-medium text-muted-foreground">Workflow Management</span>
+              
+              <div className="flex items-center gap-3">
+                {/* Workflow Selection */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Current:</span>
+                  <Select value={selectedWorkflowId} onValueChange={setSelectedWorkflowId}>
+                    <SelectTrigger className="w-48 h-8">
+                      <SelectValue placeholder="Select workflow..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allWorkflows.map((wf) => (
+                        <SelectItem key={wf.workflowId} value={wf.workflowId.toString()}>
+                          {wf.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <motion.main initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="flex-1 glass rounded-r-xl rounded-l-none overflow-hidden">
+                <div className="h-6 w-px bg-border" />
+
+                {/* Workflow Actions */}
+                <div className="flex items-center gap-2">
+                  <Button onClick={handleCreateNew} variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    New
+                  </Button>
+
+                  <Button onClick={handleSaveWorkflow} variant="outline" size="sm" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <div className="mr-1 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-1" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+
+                  <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <FileUp className="h-4 w-4 mr-1" />
+                        Import
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh]">
+                      <DialogHeader>
+                        <DialogTitle>Import Workflow from JSON</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <label htmlFor="json-input" className="text-sm font-medium">
+                            Paste your comprehensive workflow JSON here:
+                          </label>
+                          <Textarea
+                            id="json-input"
+                            placeholder="Paste your JSON workflow definition here..."
+                            value={jsonInput}
+                            onChange={(e) => setJsonInput(e.target.value)}
+                            className="min-h-[400px] font-mono text-sm"
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleImportFromJson} disabled={isImporting}>
+                            {isImporting ? (
+                              <>
+                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                                Importing...
+                              </>
+                            ) : (
+                              <>
+                                <FileUp className="mr-2 h-4 w-4" />
+                                Import Workflow
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Button onClick={handleDeploy} variant="default" size="sm" disabled={isDeploying} className="bg-success text-success-foreground hover:bg-success/90">
+                    {isDeploying ? (
+                      <>
+                        <div className="mr-1 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                        Deploying...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-1" />
+                        Deploy
+                      </>
+                    )}
+                  </Button>
+
+                  {workflow && workflow.workflowId !== 0 && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-destructive" />
+                            Delete Workflow
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete the workflow "{workflow.name}"? This action cannot be undone and will permanently remove the workflow and all its tasks.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteWorkflow}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {isDeleting ? (
+                              <>
+                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Workflow
+                              </>
+                            )}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Node/Edge Actions */}
+            <div className="flex items-center gap-2">
+              {selectedNodeId && !['start', 'end'].includes(selectedNodeId) && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={handleDeleteNode} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete Node
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Node (or press Delete)</TooltipContent>
+                </Tooltip>
+              )}
+              {selectedEdgeId && (
+                <>
+                  <Button variant="outline" size="sm" onClick={handleToggleEdgeType}>
+                    Toggle Type
+                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="sm" onClick={handleDeleteEdge} className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete Connection
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete Connection (or press Delete)</TooltipContent>
+                  </Tooltip>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex">
+          <motion.aside initial={{ x: -80, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="w-24 glass rounded-l-xl rounded-r-none p-4 z-10">
+            <div className="flex flex-col items-center gap-4">
+              <h2 className="text-sm font-semibold text-foreground mb-2">Tools</h2>
+              <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_UPLOAD')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Upload className="h-6 w-6 text-cyan-600" /></motion.div></TooltipTrigger><TooltipContent side="right">File Upload</TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_DOWNLOAD')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Download className="h-6 w-6 text-teal-700" /></motion.div></TooltipTrigger><TooltipContent side="right">File Download</TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'FILE_UPDATE')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><UpdateIcon className="h-6 w-6 text-purple-700" /></motion.div></TooltipTrigger><TooltipContent side="right">File Update</TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('action', 'CONSOLIDATE_FILES')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><ConsolidateIcon className="h-6 w-6 text-green-700" /></motion.div></TooltipTrigger><TooltipContent side="right">Consolidate Files</TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><motion.div onClick={() => addNode('decision', 'DECISION')} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl bg-white border border-border/50 p-2 transition-all hover:shadow-md group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><DecisionIcon className="h-6 w-6 text-blue-700" /></motion.div></TooltipTrigger><TooltipContent side="right">Decision</TooltipContent></Tooltip>
+              <div className="my-2 h-px w-full bg-border" />
+              <Tooltip><TooltipTrigger asChild><motion.div onClick={() => setIsSettingsOpen(true)} className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border/50 p-2 transition-all hover:bg-muted/20 group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}><Settings className="h-6 w-6 text-muted-foreground group-hover:text-foreground" /></motion.div></TooltipTrigger><TooltipContent side="right">Workflow Settings</TooltipContent></Tooltip>
+            </div>
+          </motion.aside>
+
+          <motion.main initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="flex-1 glass rounded-r-xl rounded-l-none overflow-hidden">
           <ReactFlow
             nodes={nodes}
             edges={edges}
