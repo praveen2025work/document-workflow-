@@ -832,7 +832,17 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
     if (showQueryChat) {
       return (
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Queries ({taskDetails?.queries?.length || 0})</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Queries ({taskDetails?.queries?.length || 0})</Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToQueryList}
+              className="h-6 w-6 p-0"
+            >
+              <ArrowLeft className="h-3 w-3" />
+            </Button>
+          </div>
           <div className="space-y-1">
             {taskDetails?.queries?.map((query) => (
               <div
