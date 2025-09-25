@@ -747,6 +747,7 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   const handleSendMessage = async () => {
     if ((!newMessage.trim() && selectedMessageFiles.length === 0) || !selectedQuery) return;
     
+    setIsLoading(true);
     try {
       const messageData: any = {
         messageText: newMessage,
@@ -764,14 +765,27 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
         }));
       }
 
-      await addQueryMessage(selectedQuery.id, messageData);
+      const updatedConversation = await addQueryMessage(selectedQuery.id, messageData);
+      
+      // Update the selected query with new messages
+      const updatedQuery = {
+        ...selectedQuery,
+        messages: updatedConversation.messages,
+        updatedAt: new Date().toISOString()
+      };
+      
+      setSelectedQuery(updatedQuery);
       setNewMessage('');
       setSelectedMessageFiles([]);
       toast.success('Message sent successfully');
-      // Refresh conversation
+      
+      // Refresh task details to update the query list
+      await fetchTaskDetails();
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -809,8 +823,15 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
   };
 
   const canUserComment = (query: any) => {
-    // User can comment if query is assigned to them and is in OPEN status
-    return query.queryStatus === 'OPEN' && query.assignedToUserId === 1; // Current user ID
+    // User can comment if:
+    // 1. Query is not resolved/closed
+    // 2. User is either assigned to the query, raised the query, or is part of the workflow
+    const currentUserId = 1; // Current user ID - should come from context
+    const isQueryOpen = query.queryStatus !== 'RESOLVED' && query.queryStatus !== 'CLOSED';
+    const isAssignedUser = query.assignedToUserId === currentUserId;
+    const isQueryRaiser = query.raisedByUserId === currentUserId;
+    
+    return isQueryOpen && (isAssignedUser || isQueryRaiser);
   };
 
   // Move the state outside of the render function to avoid conditional hook usage
@@ -1250,24 +1271,27 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
             {/* File attachments preview */}
             {selectedMessageFiles.length > 0 && (
               <div className="mb-3 space-y-2">
-                <Label className="text-xs">Attachments:</Label>
-                {selectedMessageFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-background rounded border">
-                    <Paperclip className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs font-medium flex-1">{file.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({formatFileSize(file.size)})
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
+                <Label className="text-xs font-medium">Attachments ({selectedMessageFiles.length}):</Label>
+                <div className="max-h-24 overflow-y-auto space-y-1">
+                  {selectedMessageFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-background rounded border">
+                      <Paperclip className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="text-xs font-medium flex-1 truncate">{file.name}</span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
+                        ({formatFileSize(file.size)})
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        className="h-6 w-6 p-0 flex-shrink-0"
+                        disabled={isLoading}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -1277,8 +1301,17 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your message..."
-                  className="resize-none"
+                  className="resize-none min-h-[60px]"
                   rows={2}
+                  disabled={isLoading}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if ((newMessage.trim() || selectedMessageFiles.length > 0) && !isLoading) {
+                        handleSendMessage();
+                      }
+                    }
+                  }}
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -1288,24 +1321,41 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
                   onChange={handleFileSelect}
                   className="hidden"
                   id="message-file-input"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
+                  disabled={isLoading}
                 />
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => document.getElementById('message-file-input')?.click()}
                   className="h-8 w-8 p-0"
+                  disabled={isLoading}
+                  title="Attach files"
                 >
                   <Paperclip className="h-3 w-3" />
                 </Button>
                 <Button 
                   onClick={handleSendMessage}
-                  disabled={!newMessage.trim() && selectedMessageFiles.length === 0}
+                  disabled={(!newMessage.trim() && selectedMessageFiles.length === 0) || isLoading}
                   size="sm"
                   className="h-8 w-8 p-0"
+                  title="Send message (Enter)"
                 >
-                  <Send className="h-3 w-3" />
+                  {isLoading ? (
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                  ) : (
+                    <Send className="h-3 w-3" />
+                  )}
                 </Button>
               </div>
+            </div>
+            
+            {/* Helper text */}
+            <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+              <span>Press Enter to send, Shift+Enter for new line</span>
+              {selectedMessageFiles.length > 0 && (
+                <span>{selectedMessageFiles.length} file{selectedMessageFiles.length > 1 ? 's' : ''} attached</span>
+              )}
             </div>
           </div>
         )}
