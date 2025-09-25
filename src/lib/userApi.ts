@@ -77,6 +77,7 @@ export const createUser = async (user: NewUser): Promise<User> => {
       createdBy: user.createdBy,
       createdOn: new Date().toISOString(),
     };
+    mockUsers.push(newUser);
     return Promise.resolve(newUser);
   }
   
@@ -105,14 +106,15 @@ export const updateUser = async (userId: number, user: UpdateUser): Promise<User
   
   if (shouldUseMock) {
     console.log('Mock: Updating user in environment:', config.app.env);
-    const existingUser = mockUsers.find(u => u.userId === userId);
-    if (!existingUser) {
+    const userIndex = mockUsers.findIndex(u => u.userId === userId);
+    if (userIndex === -1) {
       throw new Error(`User with ID ${userId} not found`);
     }
     const updatedUser: User = {
-      ...existingUser,
+      ...mockUsers[userIndex],
       ...user,
     };
+    mockUsers[userIndex] = updatedUser;
     return Promise.resolve(updatedUser);
   }
   
@@ -125,6 +127,10 @@ export const toggleUserStatus = async (userId: number, isActive: 'Y' | 'N'): Pro
   
   if (shouldUseMock) {
     console.log(`Mock: Toggling user ${userId} status to ${isActive} in environment:`, config.app.env);
+    const userIndex = mockUsers.findIndex(u => u.userId === userId);
+    if (userIndex !== -1) {
+      mockUsers[userIndex].isActive = isActive;
+    }
     return Promise.resolve();
   }
   
