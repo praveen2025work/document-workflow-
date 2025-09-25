@@ -1,5 +1,5 @@
 import type { NextPage } from 'next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ReactFlow, {
+  Controls,
+  useNodesState,
+  useEdgesState,
+  Node,
+  Edge,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 import { 
   BarChart3, 
   RefreshCw, 
@@ -31,10 +39,12 @@ import {
   Save,
   X,
   Activity,
-  PieChart
+  PieChart,
+  Eye,
+  List
 } from 'lucide-react';
 import { getProcessOwnerDashboard, getProcessOwnerWorkload, reassignTask, escalateWorkflow } from '@/lib/processOwnerApi';
-import { getWorkflows } from '@/lib/workflowApi';
+import { getWorkflows, getWorkflowById } from '@/lib/workflowApi';
 import { getWorkflowInstances } from '@/lib/executionApi';
 import { ProcessOwnerDashboardData, ProcessOwnerWorkload } from '@/types/processOwner';
 import { WorkflowInstance } from '@/types/execution';
@@ -42,6 +52,9 @@ import { Workflow } from '@/types/workflow';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
 import MainLayout from '@/components/MainLayout';
+import WorkflowNode from '@/components/workflow/WorkflowNode';
+import PropertiesPanel from '@/components/workflow/PropertiesPanel';
+import { NodeData } from '@/components/workflow/types';
 
 interface WorkflowHealth {
   workflowId: number;
@@ -95,11 +108,19 @@ const MonitoringPage: NextPage = () => {
   const [workload, setWorkload] = useState<ProcessOwnerWorkload | null>(null);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>('');
+  const [selectedWorkflowData, setSelectedWorkflowData] = useState<Workflow | null>(null);
   const [executionData, setExecutionData] = useState<ExecutionData | null>(null);
   const [editingNode, setEditingNode] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [workflowViewTab, setWorkflowViewTab] = useState('visual');
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  
+  // ReactFlow states for visual view
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  
   const { user } = useUser();
 
   const fetchOverviewData = async () => {
@@ -140,6 +161,18 @@ const MonitoringPage: NextPage = () => {
   const fetchExecutionData = async (workflowId: string) => {
     try {
       setIsLoading(true);
+      
+      // Fetch workflow definition for visual view
+      const workflowData = await getWorkflowById(parseInt(workflowId));
+      setSelectedWorkflowData(workflowData);
+      
+      // Convert workflow to canvas nodes and edges for visual view
+      if (workflowData) {
+        const { nodes: canvasNodes, edges: canvasEdges } = convertWorkflowToCanvas(workflowData);
+        setNodes(canvasNodes);
+        setEdges(canvasEdges);
+      }
+      
       const instancesResponse = await getWorkflowInstances({ workflowId: parseInt(workflowId) });
       const instances = instancesResponse.content || [];
       
@@ -196,10 +229,105 @@ const MonitoringPage: NextPage = () => {
     } catch (err) {
       console.error('Error fetching execution data:', err);
       setExecutionData(null);
+      setSelectedWorkflowData(null);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Convert workflow to canvas format (similar to canvas-workflow page)
+  const convertWorkflowToCanvas = (wf: Workflow) => {
+    const tasks = wf.tasks || [];
+    const initialNodes = [
+      { id: 'start', type: 'start', position: { x: 50, y: 200 }, data: { description: 'Workflow Start' } },
+      { id: 'end', type: 'end', position: { x: 1200, y: 200 }, data: { description: 'Workflow End' } },
+    ];
+
+    if (tasks.length === 0) {
+      return { nodes: initialNodes, edges: [] };
+    }
+
+    // Simple layout - arrange tasks horizontally
+    const xSpacing = 275;
+    const ySpacing = 175;
+    const startX = 250;
+
+    const taskNodes: Node<NodeData>[] = tasks.map((task, index) => ({
+      id: task.taskId.toString(),
+      type: task.taskType === 'DECISION' ? 'decision' : 'action',
+      position: { 
+        x: startX + index * xSpacing, 
+        y: 200 + (index % 2 === 0 ? 0 : ySpacing) 
+      },
+      data: { 
+        description: task.name, 
+        taskType: task.taskType, 
+        ...task 
+      } as NodeData,
+    }));
+
+    // Create simple edges between tasks
+    const newEdges: Edge[] = [];
+    
+    // Connect start to first task
+    if (taskNodes.length > 0) {
+      newEdges.push({ 
+        id: `start-${taskNodes[0].id}`, 
+        source: 'start', 
+        target: taskNodes[0].id, 
+        type: 'default', 
+        style: { stroke: '#3b82f6', strokeWidth: 2 } 
+      });
+    }
+
+    // Connect tasks sequentially
+    for (let i = 0; i < taskNodes.length - 1; i++) {
+      newEdges.push({
+        id: `${taskNodes[i].id}-${taskNodes[i + 1].id}`,
+        source: taskNodes[i].id,
+        target: taskNodes[i + 1].id,
+        type: 'default',
+        style: { stroke: '#3b82f6', strokeWidth: 2 }
+      });
+    }
+
+    // Connect last task to end
+    if (taskNodes.length > 0) {
+      newEdges.push({ 
+        id: `${taskNodes[taskNodes.length - 1].id}-end`, 
+        source: taskNodes[taskNodes.length - 1].id, 
+        target: 'end', 
+        type: 'default', 
+        style: { stroke: '#3b82f6', strokeWidth: 2 } 
+      });
+    }
+
+    const finalNodes = [...initialNodes, ...taskNodes];
+    return { nodes: finalNodes, edges: newEdges };
+  };
+
+  // Handle node click in visual view
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
+  }, []);
+
+  // Handle node update from properties panel
+  const handleUpdateNode = useCallback((nodeId: string, data: Partial<NodeData>) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
+      )
+    );
+    toast.success('Node updated successfully!');
+  }, [setNodes]);
+
+  // Node types for ReactFlow
+  const nodeTypes = useMemo(() => ({ 
+    start: WorkflowNode, 
+    end: WorkflowNode, 
+    action: WorkflowNode, 
+    decision: WorkflowNode 
+  }), []);
 
   useEffect(() => {
     if (user && activeTab === 'overview') {
@@ -581,165 +709,213 @@ const MonitoringPage: NextPage = () => {
                   </CardContent>
                 </Card>
 
-                {/* Workflow Execution Canvas */}
+                {/* Workflow Execution with Visual and List Views */}
                 {selectedWorkflow && executionData && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    Workflow Execution Status
-                  </CardTitle>
-                  <CardDescription>
-                    Monitor and manage workflow execution in real-time
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {/* Workflow Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">{executionData.stats.completed}</div>
-                        <div className="text-sm text-muted-foreground">Completed</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">{executionData.stats.running}</div>
-                        <div className="text-sm text-muted-foreground">Running</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-yellow-600">{executionData.stats.pending}</div>
-                        <div className="text-sm text-muted-foreground">Pending</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-red-600">{executionData.stats.failed}</div>
-                        <div className="text-sm text-muted-foreground">Failed</div>
-                      </div>
-                    </div>
-
-                    {/* Execution Nodes */}
-                    <div className="space-y-4">
-                      {executionData.nodes.map((node, index) => (
-                        <div key={node.id} className="relative">
-                          {/* Connection Line */}
-                          {index < executionData.nodes.length - 1 && (
-                            <div className="absolute left-6 top-16 w-0.5 h-8 bg-border" />
-                          )}
-                          
-                          {/* Node Card */}
-                          <div className={`border-2 rounded-lg p-4 ${getNodeStatusColor(node.status)}`}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                {getStatusIcon(node.status)}
-                                <div>
-                                  <h4 className="font-medium">{node.name}</h4>
-                                  <p className="text-sm text-muted-foreground">{node.type}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">{node.status}</Badge>
-                                {node.status !== 'completed' && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleEditNode(node.id)}
-                                    disabled={editingNode === node.id}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Node Details */}
-                            <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Assigned to:</span>
-                                <p className="font-medium">{node.assignedTo || 'Unassigned'}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Due date:</span>
-                                <p className="font-medium">{node.dueDate || 'Not set'}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Priority:</span>
-                                <Badge variant={node.priority === 'high' ? 'destructive' : node.priority === 'medium' ? 'default' : 'secondary'}>
-                                  {node.priority || 'medium'}
-                                </Badge>
-                              </div>
-                            </div>
-
-                            {node.notes && (
-                              <div className="mt-3">
-                                <span className="text-muted-foreground text-sm">Notes:</span>
-                                <p className="text-sm mt-1">{node.notes}</p>
-                              </div>
-                            )}
-
-                            {/* Edit Form */}
-                            {editingNode === node.id && (
-                              <div className="mt-4 p-4 bg-background rounded-lg border space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <Label htmlFor="assignedTo">Assigned To</Label>
-                                    <Input
-                                      id="assignedTo"
-                                      value={editForm.assignedTo}
-                                      onChange={(e) => setEditForm({...editForm, assignedTo: e.target.value})}
-                                      placeholder="Enter assignee"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="dueDate">Due Date</Label>
-                                    <Input
-                                      id="dueDate"
-                                      type="date"
-                                      value={editForm.dueDate}
-                                      onChange={(e) => setEditForm({...editForm, dueDate: e.target.value})}
-                                    />
-                                  </div>
-                                </div>
-                                <div>
-                                  <Label htmlFor="priority">Priority</Label>
-                                  <Select value={editForm.priority} onValueChange={(value) => setEditForm({...editForm, priority: value})}>
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="low">Low</SelectItem>
-                                      <SelectItem value="medium">Medium</SelectItem>
-                                      <SelectItem value="high">High</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div>
-                                  <Label htmlFor="notes">Notes</Label>
-                                  <Textarea
-                                    id="notes"
-                                    value={editForm.notes}
-                                    onChange={(e) => setEditForm({...editForm, notes: e.target.value})}
-                                    placeholder="Add notes or comments"
-                                    rows={3}
-                                  />
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button onClick={handleSaveEdit} size="sm">
-                                    <Save className="h-4 w-4 mr-2" />
-                                    Save Changes
-                                  </Button>
-                                  <Button onClick={handleCancelEdit} variant="outline" size="sm">
-                                    <X className="h-4 w-4 mr-2" />
-                                    Cancel
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Activity className="h-5 w-5" />
+                        Workflow Execution Status
+                      </CardTitle>
+                      <CardDescription>
+                        Monitor and manage workflow execution in real-time
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {/* Workflow Overview Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-600">{executionData.stats.completed}</div>
+                            <div className="text-sm text-muted-foreground">Completed</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-600">{executionData.stats.running}</div>
+                            <div className="text-sm text-muted-foreground">Running</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-yellow-600">{executionData.stats.pending}</div>
+                            <div className="text-sm text-muted-foreground">Pending</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-red-600">{executionData.stats.failed}</div>
+                            <div className="text-sm text-muted-foreground">Failed</div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+
+                        {/* Visual and List View Tabs */}
+                        <Tabs value={workflowViewTab} onValueChange={setWorkflowViewTab} className="space-y-4">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="visual" className="flex items-center gap-2">
+                              <Eye className="h-4 w-4" />
+                              Visual
+                            </TabsTrigger>
+                            <TabsTrigger value="list" className="flex items-center gap-2">
+                              <List className="h-4 w-4" />
+                              List
+                            </TabsTrigger>
+                          </TabsList>
+
+                          {/* Visual View */}
+                          <TabsContent value="visual" className="space-y-4">
+                            <div className="relative h-[600px] border rounded-lg bg-background">
+                              <ReactFlow
+                                nodes={nodes}
+                                edges={edges}
+                                onNodesChange={onNodesChange}
+                                onEdgesChange={onEdgesChange}
+                                onNodeClick={onNodeClick}
+                                nodeTypes={nodeTypes}
+                                fitView
+                                className="bg-transparent"
+                                minZoom={0.1}
+                                maxZoom={3}
+                                proOptions={{ hideAttribution: true }}
+                              >
+                                <Controls className="!bottom-4 !left-4" />
+                              </ReactFlow>
+                              
+                              {/* Properties Panel for Visual View */}
+                              <PropertiesPanel
+                                selectedNode={nodes.find(node => node.id === selectedNodeId) || null}
+                                onUpdateNode={handleUpdateNode}
+                                onClose={() => setSelectedNodeId(null)}
+                                roles={selectedWorkflowData?.workflowRoles || []}
+                                allNodes={nodes}
+                                edges={edges}
+                                onUpdateEdges={setEdges}
+                              />
+                            </div>
+                          </TabsContent>
+
+                          {/* List View */}
+                          <TabsContent value="list" className="space-y-4">
+                            <div className="space-y-4">
+                              {executionData.nodes.map((node, index) => (
+                                <div key={node.id} className="relative">
+                                  {/* Connection Line */}
+                                  {index < executionData.nodes.length - 1 && (
+                                    <div className="absolute left-6 top-16 w-0.5 h-8 bg-border" />
+                                  )}
+                                  
+                                  {/* Node Card */}
+                                  <div className={`border-2 rounded-lg p-4 ${getNodeStatusColor(node.status)}`}>
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        {getStatusIcon(node.status)}
+                                        <div>
+                                          <h4 className="font-medium">{node.name}</h4>
+                                          <p className="text-sm text-muted-foreground">{node.type}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline">{node.status}</Badge>
+                                        {node.status !== 'completed' && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleEditNode(node.id)}
+                                            disabled={editingNode === node.id}
+                                          >
+                                            <Edit className="h-4 w-4" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Node Details */}
+                                    <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                      <div>
+                                        <span className="text-muted-foreground">Assigned to:</span>
+                                        <p className="font-medium">{node.assignedTo || 'Unassigned'}</p>
+                                      </div>
+                                      <div>
+                                        <span className="text-muted-foreground">Due date:</span>
+                                        <p className="font-medium">{node.dueDate || 'Not set'}</p>
+                                      </div>
+                                      <div>
+                                        <span className="text-muted-foreground">Priority:</span>
+                                        <Badge variant={node.priority === 'high' ? 'destructive' : node.priority === 'medium' ? 'default' : 'secondary'}>
+                                          {node.priority || 'medium'}
+                                        </Badge>
+                                      </div>
+                                    </div>
+
+                                    {node.notes && (
+                                      <div className="mt-3">
+                                        <span className="text-muted-foreground text-sm">Notes:</span>
+                                        <p className="text-sm mt-1">{node.notes}</p>
+                                      </div>
+                                    )}
+
+                                    {/* Edit Form */}
+                                    {editingNode === node.id && (
+                                      <div className="mt-4 p-4 bg-background rounded-lg border space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div>
+                                            <Label htmlFor="assignedTo">Assigned To</Label>
+                                            <Input
+                                              id="assignedTo"
+                                              value={editForm.assignedTo}
+                                              onChange={(e) => setEditForm({...editForm, assignedTo: e.target.value})}
+                                              placeholder="Enter assignee"
+                                            />
+                                          </div>
+                                          <div>
+                                            <Label htmlFor="dueDate">Due Date</Label>
+                                            <Input
+                                              id="dueDate"
+                                              type="date"
+                                              value={editForm.dueDate}
+                                              onChange={(e) => setEditForm({...editForm, dueDate: e.target.value})}
+                                            />
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <Label htmlFor="priority">Priority</Label>
+                                          <Select value={editForm.priority} onValueChange={(value) => setEditForm({...editForm, priority: value})}>
+                                            <SelectTrigger>
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="low">Low</SelectItem>
+                                              <SelectItem value="medium">Medium</SelectItem>
+                                              <SelectItem value="high">High</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <div>
+                                          <Label htmlFor="notes">Notes</Label>
+                                          <Textarea
+                                            id="notes"
+                                            value={editForm.notes}
+                                            onChange={(e) => setEditForm({...editForm, notes: e.target.value})}
+                                            placeholder="Add notes or comments"
+                                            rows={3}
+                                          />
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Button onClick={handleSaveEdit} size="sm">
+                                            <Save className="h-4 w-4 mr-2" />
+                                            Save Changes
+                                          </Button>
+                                          <Button onClick={handleCancelEdit} variant="outline" size="sm">
+                                            <X className="h-4 w-4 mr-2" />
+                                            Cancel
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </TabsContent>
+                        </Tabs>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {selectedWorkflow && !executionData && !isLoading && (
                   <Card>
