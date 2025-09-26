@@ -25,8 +25,19 @@ export const getRoles = async (params?: { page?: number; size?: number; isActive
     });
   }
   
-  const response = await api.get('/roles', { params });
-  return response.data;
+  // For production/dev environments, call the actual API
+  const response = await api.get('/api/roles', { params });
+  
+  // Transform the direct array response to match RoleApiResponse format
+  const roles = Array.isArray(response.data) ? response.data : response.data.content || [];
+  
+  return {
+    content: roles,
+    totalElements: roles.length,
+    totalPages: 1,
+    size: params?.size || 10,
+    number: params?.page || 0,
+  };
 };
 
 export const createRole = async (role: NewRole): Promise<Role> => {
@@ -38,12 +49,16 @@ export const createRole = async (role: NewRole): Promise<Role> => {
       roleName: role.roleName,
       isActive: role.isActive,
       createdBy: role.createdBy,
+      createdOn: new Date().toISOString(),
+      updatedBy: role.updatedBy,
+      updatedOn: role.updatedOn,
     };
     mockRoles.push(newRole);
     return Promise.resolve(newRole);
   }
   
-  const response = await api.post('/roles', role);
+  // For production/dev environments, call the actual API
+  const response = await api.post('/api/roles', role);
   return response.data;
 };
 
@@ -58,7 +73,8 @@ export const updateRole = async (role: Role): Promise<Role> => {
     return Promise.resolve(mockRoles[roleIndex]);
   }
   
-  const response = await api.put(`/roles/${role.roleId}`, role);
+  // For production/dev environments, call the actual API
+  const response = await api.put(`/api/roles/${role.roleId}`, role);
   return response.data;
 };
 
@@ -73,7 +89,8 @@ export const getRoleById = async (roleId: number): Promise<Role> => {
     return Promise.resolve(role);
   }
   
-  const response = await api.get(`/roles/${roleId}`);
+  // For production/dev environments, call the actual API
+  const response = await api.get(`/api/roles/${roleId}`);
   return response.data;
 };
 
@@ -84,5 +101,6 @@ export const assignRoleToUser = async (roleId: number, userId: number): Promise<
     return Promise.resolve();
   }
   
-  await api.post(`/roles/${roleId}/assign/user/${userId}`);
+  // For production/dev environments, call the actual API
+  await api.post(`/api/roles/${roleId}/assign/user/${userId}`);
 };

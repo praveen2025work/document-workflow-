@@ -5,6 +5,9 @@ export interface Role {
   roleName: string;
   isActive: YesNo;
   createdBy: string;
+  createdOn: string;
+  updatedBy?: string | null;
+  updatedOn?: string | null;
 }
 
 export interface RoleApiResponse {
@@ -19,4 +22,6 @@ export interface NewRole {
   roleName: string;
   isActive: YesNo;
   createdBy: string;
+  updatedBy?: string | null;
+  updatedOn?: string | null;
 }
